@@ -13,7 +13,7 @@
             background-color: #f4f4f4;
         }
         .container {
-            width: 80%;
+            max-width: 1000px;
             margin: auto;
             overflow: hidden;
             padding: 20px;
@@ -43,6 +43,18 @@
             margin-top: 20px;
             padding: 20px;
             border-radius: 5px;
+            display: flex;
+            flex-wrap: wrap;
+        }
+        .left-column {
+            flex: 1;
+            min-width: 300px;
+            padding-right: 20px;
+        }
+        .right-column {
+            flex: 0 0 250px;
+            padding-left: 20px;
+            border-left: 1px solid #ddd;
         }
         .section {
             margin-bottom: 20px;
@@ -55,6 +67,21 @@
             padding: 15px;
             margin-bottom: 10px;
             border-radius: 5px;
+        }
+        .headshot {
+            width: 100%;
+            max-width: 200px;
+            border-radius: 50%;
+            margin-bottom: 20px;
+        }
+        .social-links {
+            margin-top: 20px;
+        }
+        .social-links a {
+            display: block;
+            margin-bottom: 10px;
+            color: #333;
+            text-decoration: none;
         }
         footer {
             background: #333;
@@ -80,87 +107,98 @@
     </header>
 
     <div class="container main-content">
-        <section id="about" class="section">
-            <h2>About Me</h2>
-            <p>Currently researching consumer markets @ NielsenIQ. Interested in AI, ML, and beautiful maths.</p>
-        </section>
+        <div class="left-column">
+            <section id="about" class="section">
+                <h2>About Me</h2>
+                <p>Currently researching consumer markets @ NielsenIQ. Interested in AI, ML, and beautiful maths.</p>
+            </section>
 
-        <section id="experience" class="section">
-            <h2>Work Experience</h2>
-            <div class="experience-item">
-                <h3>Executive Trainee - NielsenIQ</h3>
-                <p>February 2023 - Present</p>
+            <section id="experience" class="section">
+                <h2>Work Experience</h2>
+                <div class="experience-item">
+                    <h3>Consumer Insights Executive - NielsenIQ</h3>
+                    <p>February 2023 - Present</p>
+                    <ul>
+                        <li>Designed and maintained Tableau dashboards for client forecasts and profit insights.</li>
+                        <li>Developed MSSQL data pipeline to process revenue, market share, and profit projections.</li>
+                        <li>Automated feature selection for cigarette market forecasting, achieving 95% accuracy using evolutionary algorithms.</li>
+                    </ul>
+                </div>
+                <div class="experience-item">
+                    <h3>Apprentice - PT Citra Tubindo Tbk</h3>
+                    <p>September 2022 - February 2023</p>
+                    <ul>
+                        <li>Optimized AI-based pipe detection, reducing inference latency by 35x and increasing accuracy by 20%.</li>
+                        <li>Developed sales forecasting model using Monte Carlo simulation and Brownian motion.</li>
+                        <li>Conducted fuel consumption analysis using sensor data correlation and regression models.</li>
+                    </ul>
+                </div>
+                <div class="experience-item">
+                    <h3>Intern - CV Rawin Agro Nusa</h3>
+                    <p>December 2021 - June 2022</p>
+                    <ul>
+                        <li>Oversaw product shipments and built an ensemble of predictive models for agricultural price forecasting with 95% accuracy.</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section id="education" class="section">
+                <h2>Education</h2>
+                <div class="education-item">
+                    <h3>Bachelor of Engineering in Industrial Engineering - Institut Teknologi Sepuluh Nopember</h3>
+                    <p>August 2018 - September 2022</p>
+                    <p>GPA: 3.31/4.00</p>
+                    <p>Leadership: Head of Training Subdivision, ITS MUN Club; Manager, HMTI ITS Community Service Bureau.</p>
+                    <p>Achievements: 1st Place Power Danger CS:GO Community Cup (2018), 2nd Place ROGxVAE FTIRS VALORANT Tournament (2021).</p>
+                </div>
+            </section>
+
+            <section id="skills" class="section">
+                <h2>Skills</h2>
                 <ul>
-                    <li>Designed and maintained Tableau dashboards for client forecasts and profit insights.</li>
-                    <li>Developed MSSQL data pipeline to process revenue, market share, and profit projections.</li>
-                    <li>Automated feature selection for cigarette market forecasting, achieving 95% accuracy using evolutionary algorithms.</li>
+                    <li>Programming: Python, HTML, CSS, JavaScript, TypeScript, SQL</li>
+                    <li>Frameworks: Pandas, Numpy, JAX, Flask, FastAPI, TensorFlow, PyTorch</li>
+                    <li>Tools: Tableau, MSSQL, Docker, MongoDB</li>
+                    <li>Languages: English (IELTS 8.0), Indonesian, Javanese</li>
                 </ul>
-            </div>
-            <div class="experience-item">
-                <h3>Apprentice - PT Citra Tubindo Tbk</h3>
-                <p>September 2022 - February 2023</p>
-                <ul>
-                    <li>Optimized AI-based pipe detection, reducing inference latency by 35x and increasing accuracy by 20%.</li>
-                    <li>Developed sales forecasting model using Monte Carlo simulation and Brownian motion.</li>
-                    <li>Conducted fuel consumption analysis using sensor data correlation and regression models.</li>
-                </ul>
-            </div>
-            <div class="experience-item">
-                <h3>Intern - CV Rawin Agro Nusa</h3>
-                <p>December 2021 - June 2022</p>
-                <ul>
-                    <li>Oversaw product shipments and built predictive models for agricultural price forecasting with 95% accuracy.</li>
-                </ul>
-            </div>
-        </section>
+            </section>
 
-        <section id="education" class="section">
-            <h2>Education</h2>
-            <div class="education-item">
-                <h3>Bachelor of Engineering in Industrial Engineering - Institut Teknologi Sepuluh Nopember</h3>
-                <p>August 2018 - September 2022</p>
-                <p>GPA: 3.31/4.00</p>
-                <p>Leadership: Head of Training Subdivision, ITS MUN Club; Manager, HMTI ITS Community Service Bureau.</p>
-                <p>Achievements: 1st Place Power Danger CS:GO Community Cup (2018), 2nd Place ROGxVAE FTIRS VALORANT Tournament (2021).</p>
+            <section id="portfolio" class="section">
+                <h2>Personal Projects</h2>
+                <div class="portfolio-item">
+                    <h3>Face Recognition API</h3>
+                    <p>A Facial Recognition API that extract facial embeddings and matches it to the existing embedding in the database.</p>
+                    <a href="https://github.com/anoordzaky/face_recognition">View Project</a>
+                </div>
+                <div class="portfolio-item">
+                    <h3>Julia Set Animation</h3>
+                    <p>Built a script to generate a Julia Set animation, utilizing JAX for faster rendering times.</p>
+                    <a href="https://github.com/anoordzaky/julia">View Project</a>
+                    <a href="https://drive.google.com/file/d/1YcpoYkiB571VElE8nYYpfbn-dNtoBvSu/view?usp=sharing">Sample Animation</a>
+                </div>
+                <div class="portfolio-item">
+                    <h3>Ray Tracing using Numpy</h3>
+                    <p>A simple ray tracing script built using numpy.</p>
+                    <a href="https://github.com/anoordzaky/ball">View Project</a>
+                    <a href="https://www.linkedin.com/posts/anoordzaky_this-image-was-rendered-in-python-at-1080p-activity-7212882344653860864-pxex?utm_source=share&utm_medium=member_desktop">Linkedin Post</a>
+                </div>
+                <div class="portfolio-item">
+                    <h3>Drawing Contours using Discrete Fourier Transformation</h3>
+                    <p>Script to generate drawings of a contour using Discrete Fourier Transformation.</p>
+                    <a href="https://github.com/anoordzaky/drawing_with_fourier_series">View Project</a>
+                    <a href="https://drive.google.com/file/d/1aDw1u-I1uDGH-UfBwKJId0FuFuTdWGJP/view?usp=sharing">Sample Animation</a>
+                </div>
+            </section>
+        </div>
+        <div class="right-column">
+            <img src="https://lh3.googleusercontent.com/d/1jQa2DkSc8d5m_TbGS8I_965vyhet_T5G" alt="Achmadi Noor Dzaky" class="headshot">
+            <div class="social-links">
+                <a href="https://linkedin.com/in/anoordzaky">LinkedIn</a>
+                <a href="https://github.com/anoordzaky">GitHub</a>
+                <a href="https://medium.com/@achmadinoord">Medium</a>
+                <a href="https://www.instagram.com/anoordzaky">Instagram</a>
             </div>
-        </section>
-
-        <section id="skills" class="section">
-            <h2>Skills</h2>
-            <ul>
-                <li>Programming: Python, HTML, CSS, JavaScript, TypeScript, SQL</li>
-                <li>Frameworks: Pandas, Numpy, JAX, Flask, FastAPI, TensorFlow, PyTorch</li>
-                <li>Tools: Tableau, MSSQL, Docker, MongoDB</li>
-                <li>Languages: English (IELTS 8.0), Indonesian, Javanese</li>
-            </ul>
-        </section>
-
-        <section id="portfolio" class="section">
-            <h2>Personal Projects</h2>
-            <div class="portfolio-item">
-                <h3>Face Recognition API</h3>
-                <p>A Facial Recognition API that extract facial embeddings and matches it to the existing embedding in the database.</p>
-                <a href="https://github.com/anoordzaky/face_recognition">View Project</a>
-            </div>
-            <div class="portfolio-item">
-                <h3>Julia Set Animation</h3>
-                <p>Built a script to generate a Julia Set animation, utilizing JAX for faster rendering times.</p>
-                <a href="https://github.com/anoordzaky/julia">View Project</a>
-                <a href="https://drive.google.com/file/d/1YcpoYkiB571VElE8nYYpfbn-dNtoBvSu/view?usp=sharing">Sample Animation</a>
-            </div>
-            <div class="portfolio-item">
-                <h3>Ray Tracing using Numpy</h3>
-                <p>A simple ray tracing script built using numpy.</p>
-                <a href="https://github.com/anoordzaky/ball">View Project</a>
-                <a href="https://www.linkedin.com/posts/anoordzaky_this-image-was-rendered-in-python-at-1080p-activity-7212882344653860864-pxex?utm_source=share&utm_medium=member_desktop">Linkedin Post</a>
-            </div>
-            <div class="portfolio-item">
-                <h3>Drawing Contours with Discrete Fourier Transformation</h3>
-                <p>Script to generate drawings of a contour using Discrete Fourier Transformation</p>
-                <a href="https://github.com/anoordzaky/drawing_with_fourier_series">View Project</a>
-                <a href="https://drive.google.com/file/d/1aDw1u-I1uDGH-UfBwKJId0FuFuTdWGJP/view?usp=sharing">Sample Animation</a>
-            </div>
-        </section>
+        </div>
     </div>
 
     <footer>
