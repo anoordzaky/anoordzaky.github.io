@@ -59,11 +59,28 @@
             color: #000000;
             margin-bottom: 15px;
         }
+        .portfolio-section {
+            margin-bottom: 30px;
+        }
+        .portfolio-section h2 {
+            color: #000000;
+            margin-bottom: 10px;
+        }
+        .portfolio-container {
+            display: grid;
+            gap: 15px;
+        }
         .portfolio-item {
             background: #f4f4f4;
             padding: 15px;
-            margin-bottom: 15px;
             border-radius: 5px;
+        }
+        .portfolio-item h3 {
+            margin-top: 0;
+            margin-bottom: 10px;
+        }
+        .portfolio-item p {
+            margin-bottom: 10px;
         }
         .headshot {
             width: 100%;
@@ -179,39 +196,41 @@
                 </ul>
             </section>
 
-            <section id="portfolio" class="section">
+            <section id="portfolio" class="portfolio-section">
                 <h2>Personal Projects</h2>
-                <div class="portfolio-item">
-                    <h3>Face Recognition API</h3>
-                    <p>A Facial Recognition API that extract facial embeddings and matches it to the existing embedding in the database.</p>
-                    <a href="https://github.com/anoordzaky/face_recognition">View Project</a>
-                </div>
-                <div class="portfolio-item">
-                    <h3>Julia Set Animation</h3>
-                    <p>Built a script to generate a Julia Set animation, utilizing JAX for faster rendering times.</p>
-                    <a href="https://github.com/anoordzaky/julia">View Project</a>
-                    <a href="https://drive.google.com/file/d/1YcpoYkiB571VElE8nYYpfbn-dNtoBvSu/view?usp=sharing">Sample Animation</a>
-                </div>
-                <div class="portfolio-item">
-                    <h3>Ray Tracing using Numpy</h3>
-                    <p>A simple ray tracing script built using numpy.</p>
-                    <a href="https://github.com/anoordzaky/ball">View Project</a>
-                    <a href="https://www.linkedin.com/posts/anoordzaky_this-image-was-rendered-in-python-at-1080p-activity-7212882344653860864-pxex?utm_source=share&utm_medium=member_desktop">Linkedin Post</a>
-                </div>
-                <div class="portfolio-item">
-                    <h3>Drawing Contours using Discrete Fourier Transformation</h3>
-                    <p>Script to generate drawings of a contour using Discrete Fourier Transformation.</p>
-                    <a href="https://github.com/anoordzaky/drawing_with_fourier_series">View Project</a>
-                    <a href="https://drive.google.com/file/d/1aDw1u-I1uDGH-UfBwKJId0FuFuTdWGJP/view?usp=sharing">Sample Animation</a>
+                <div class="portfolio-container">
+                    <div class="portfolio-item">
+                        <h3>Face Recognition API</h3>
+                        <p>A Facial Recognition API that extract facial embeddings and matches it to the existing embedding in the database.</p>
+                        <a href="https://github.com/anoordzaky/face_recognition">View Project</a>
+                    </div>
+                    <div class="portfolio-item">
+                        <h3>Julia Set Animation</h3>
+                        <p>Built a script to generate a Julia Set animation, utilizing JAX for faster rendering times.</p>
+                        <a href="https://github.com/anoordzaky/julia">View Project</a>
+                        <a href="https://drive.google.com/file/d/1YcpoYkiB571VElE8nYYpfbn-dNtoBvSu/view?usp=sharing">Sample Animation</a>
+                    </div>
+                    <div class="portfolio-item">
+                        <h3>Ray Tracing using Numpy</h3>
+                        <p>A simple ray tracing script built using numpy.</p>
+                        <a href="https://github.com/anoordzaky/ball">View Project</a>
+                        <a href="https://www.linkedin.com/posts/anoordzaky_this-image-was-rendered-in-python-at-1080p-activity-7212882344653860864-pxex?utm_source=share&utm_medium=member_desktop">Linkedin Post</a>
+                    </div>
+                    <div class="portfolio-item">
+                        <h3>Drawing Contours using Discrete Fourier Transformation</h3>
+                        <p>Script to generate drawings of a contour using Discrete Fourier Transformation.</p>
+                        <a href="https://github.com/anoordzaky/drawing_with_fourier_series">View Project</a>
+                        <a href="https://drive.google.com/file/d/1aDw1u-I1uDGH-UfBwKJId0FuFuTdWGJP/view?usp=sharing">Sample Animation</a>
+                    </div>
                 </div>
             </section>
         </div>
         <div class="right-column">
             <img src="https://lh3.googleusercontent.com/d/1ZAz0YvAs0uduz0eRsBjeF2zOa2pjjCiF" alt="Achmadi Noor Dzaky" class="headshot">
             <div class="email-section">
-                <a href="mailto:achmadinoord@gmail.com">
+                <a href="mailto:your.email@example.com">
                     <i class="fas fa-envelope"></i>
-                    achmadinoord@gmail.com
+                    your.email@example.com
                 </a>
             </div>
             <div class="social-links">
