@@ -67,19 +67,22 @@
         }
         .portfolio-container {
             display: grid;
-            gap: 15px;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
         }
         .portfolio-item {
             background: #f4f4f4;
-            padding: 15px;
+            padding: 1.5rem;
             border-radius: 5px;
         }
         .portfolio-item h3 {
+            font-size: 1.25rem;
             margin-top: 0;
-            margin-bottom: 10px;
+            margin-bottom: 0.75rem;
         }
         .portfolio-item p {
-            margin-bottom: 10px;
+            font-size: 0.9rem;
+            margin-bottom: 0.75rem;
         }
         .headshot {
             width: 100%;
@@ -133,6 +136,15 @@
         }
         ul {
             padding-left: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .portfolio-item h3 {
+                font-size: 1.1rem;
+            }
+            .portfolio-item p {
+                font-size: 0.8rem;
+            }
         }
     </style>
 </head>
