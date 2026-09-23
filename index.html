@@ -146,6 +146,75 @@
                 font-size: 0.8rem;
             }
         }
+
+        .music-section {
+            background: #1a1a1a;
+            color: #fff;
+            border-radius: 5px;
+            padding: 1.5rem;
+            margin: 30px 0;
+        }
+        .music-section h2 {
+            color: #fff;
+            margin: 0 0 1.25rem;
+        }
+        .track {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #333;
+        }
+        .track:last-child {
+            border-bottom: none;
+        }
+        .track-play {
+            flex: 0 0 auto;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: none;
+            background: #0077be;
+            color: #fff;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s ease;
+        }
+        .track-play:hover {
+            background: #005c93;
+        }
+        .track-info {
+            flex: 0 0 150px;
+            min-width: 0;
+        }
+        .track-info .title {
+            font-weight: bold;
+            font-size: 0.9rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .track-info .artist {
+            font-size: 0.8rem;
+            color: #aaa;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .track-waveform {
+            flex: 1;
+            min-width: 0;
+            height: 44px;
+            cursor: pointer;
+        }
+        @media (max-width: 600px) {
+            .track-info {
+                flex-basis: 90px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -259,6 +328,96 @@
                 </section>
             </div>
         </div>
+
+        <section class="music-section" id="music" aria-label="Favorite songs">
+            <h2>What I'm Listening To</h2>
+            <div id="track-list"></div>
+        </section>
     </div>
+
+    <script>
+        const TRACKS = [
+            { title: 'b2b', artist: 'Charli XCX', src: 'assets/audio/b2b.mp3', peaks: 'assets/audio/peaks/b2b.json' },
+            { title: 'Careful', artist: 'D.O.D ft. Izzy Bizu', src: 'assets/audio/careful.mp3', peaks: 'assets/audio/peaks/careful.json' },
+            { title: 'E85', artist: 'Don Toliver', src: 'assets/audio/e85.mp3', peaks: 'assets/audio/peaks/e85.json' },
+            { title: 'Sweet Sour', artist: 'KiiiKiii', src: 'assets/audio/sweet-sour.mp3', peaks: 'assets/audio/peaks/sweet-sour.json' },
+            { title: 'soulless', artist: 'sosocamo', src: 'assets/audio/soulless.mp3', peaks: 'assets/audio/peaks/soulless.json' },
+        ];
+
+        function drawWaveform(canvas, peaks, progress) {
+            const ctx = canvas.getContext('2d');
+            const dpr = window.devicePixelRatio || 1;
+            const cssWidth = canvas.clientWidth;
+            const cssHeight = canvas.clientHeight;
+            canvas.width = cssWidth * dpr;
+            canvas.height = cssHeight * dpr;
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            ctx.clearRect(0, 0, cssWidth, cssHeight);
+
+            const barGap = 1;
+            const barWidth = cssWidth / peaks.length - barGap;
+            const playedBars = Math.floor(progress * peaks.length);
+
+            peaks.forEach((peak, i) => {
+                const barHeight = Math.max(2, peak * cssHeight);
+                const x = i * (barWidth + barGap);
+                const y = (cssHeight - barHeight) / 2;
+                ctx.fillStyle = i < playedBars ? '#0077be' : '#555';
+                ctx.fillRect(x, y, barWidth, barHeight);
+            });
+        }
+
+        async function initTrack(container, track) {
+            const el = document.createElement('div');
+            el.className = 'track';
+            el.innerHTML = `
+                <button class="track-play" aria-label="Play ${track.title}"><i class="fas fa-play"></i></button>
+                <div class="track-info">
+                    <div class="title">${track.title}</div>
+                    <div class="artist">${track.artist}</div>
+                </div>
+                <canvas class="track-waveform"></canvas>
+            `;
+            container.appendChild(el);
+
+            const playBtn = el.querySelector('.track-play');
+            const icon = playBtn.querySelector('i');
+            const canvas = el.querySelector('.track-waveform');
+            const audio = new Audio(track.src);
+            audio.preload = 'none';
+
+            const peaks = await fetch(track.peaks).then(r => r.json());
+            let progress = 0;
+            const redraw = () => drawWaveform(canvas, peaks, progress);
+            redraw();
+            window.addEventListener('resize', redraw);
+
+            playBtn.addEventListener('click', () => {
+                if (audio.paused) {
+                    document.querySelectorAll('audio').forEach(a => { if (a !== audio) a.pause(); });
+                    audio.play();
+                } else {
+                    audio.pause();
+                }
+            });
+            audio.addEventListener('play', () => { icon.className = 'fas fa-pause'; });
+            audio.addEventListener('pause', () => { icon.className = 'fas fa-play'; });
+            audio.addEventListener('ended', () => { progress = 0; redraw(); });
+            audio.addEventListener('timeupdate', () => {
+                progress = audio.duration ? audio.currentTime / audio.duration : 0;
+                redraw();
+            });
+            canvas.addEventListener('click', (e) => {
+                const rect = canvas.getBoundingClientRect();
+                const fraction = (e.clientX - rect.left) / rect.width;
+                if (audio.duration) {
+                    audio.currentTime = fraction * audio.duration;
+                }
+            });
+        }
+
+        const trackList = document.getElementById('track-list');
+        TRACKS.forEach(track => initTrack(trackList, track));
+    </script>
 </body>
 </html>
