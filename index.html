@@ -1442,24 +1442,29 @@
             ];
             // Each generation is a candidate feature subset the GA tries.
             // `bad` marks features whose coefficient sign breaks the prior
-            // (here: GDP growth) for that particular combination.
-            const GEN_COUNT = 125;
+            // for that particular combination. Only the final, winning
+            // combination gets every included feature's sign right.
+            const GEN_COUNT = 6;
+            const GEN_DUR = 400;
             const WINNER = [0, 1, 2, 3];
             function generateCandidates(n) {
                 let seed = 42;
                 const rand = () => { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
+                const shuffle = (arr) => {
+                    const a = arr.slice();
+                    for (let i = a.length - 1; i > 0; i--) {
+                        const j = Math.floor(rand() * (i + 1));
+                        [a[i], a[j]] = [a[j], a[i]];
+                    }
+                    return a;
+                };
                 const list = [];
                 for (let g = 0; g < n; g++) {
                     if (g === n - 1) { list.push({ included: WINNER.slice(), bad: [] }); continue; }
-                    const size = 2 + Math.floor(rand() * 4);
-                    const pool = [0, 1, 2, 3, 4];
-                    for (let i = pool.length - 1; i > 0; i--) {
-                        const j = Math.floor(rand() * (i + 1));
-                        [pool[i], pool[j]] = [pool[j], pool[i]];
-                    }
-                    const included = pool.slice(0, size).sort((a, b) => a - b);
-                    const isWinner = included.length === WINNER.length && included.every((v, i) => v === WINNER[i]);
-                    const bad = (!isWinner && included.includes(0)) ? [0] : [];
+                    const size = 3 + Math.floor(rand() * 3); // 3..5 features
+                    const included = shuffle([0, 1, 2, 3, 4]).slice(0, size).sort((a, b) => a - b);
+                    const badCount = 1 + Math.floor(rand() * (included.length - 1)); // always a red/green mix
+                    const bad = shuffle(included).slice(0, badCount).sort((a, b) => a - b);
                     list.push({ included, bad });
                 }
                 return list;
@@ -1467,7 +1472,7 @@
             const CANDIDATES = generateCandidates(GEN_COUNT);
             const MODEL_POS = { x: 0.68, y: 0.5 };
 
-            const ACT1 = 6000, ACT2 = 4500, ACT3 = 5000;
+            const ACT1 = GEN_COUNT * GEN_DUR, ACT2 = 4500, ACT3 = 5000;
             const TOTAL = ACT1 + ACT2 + ACT3;
 
             const clamp01 = (v) => Math.max(0, Math.min(1, v));
@@ -1512,21 +1517,9 @@
 
             function drawAct1(w, h, elapsed) {
                 const fade = clamp01(elapsed / 300);
-                // Race through every generation but for the last: it wins, so
-                // it gets a beat to actually sit on screen before act 2.
-                const lastIdx = CANDIDATES.length - 1;
-                const holdSpan = 1200;
-                const raceSpan = ACT1 - holdSpan;
-                const genDur = raceSpan / lastIdx;
-                let gen, genElapsed;
-                if (elapsed < raceSpan) {
-                    gen = Math.min(lastIdx - 1, Math.floor(elapsed / genDur));
-                    genElapsed = elapsed - gen * genDur;
-                } else {
-                    gen = lastIdx;
-                    genElapsed = elapsed - raceSpan;
-                }
-                const genFade = clamp01(genElapsed / Math.min(400, genDur * 0.8));
+                const gen = Math.min(CANDIDATES.length - 1, Math.floor(elapsed / GEN_DUR));
+                const genElapsed = elapsed - gen * GEN_DUR;
+                const genFade = clamp01(genElapsed / (GEN_DUR * 0.6));
                 const candidate = CANDIDATES[gen];
 
                 ctx.font = `${Math.max(10, h * 0.04)}px ${MONO}`;
