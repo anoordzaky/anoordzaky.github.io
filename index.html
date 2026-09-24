@@ -739,12 +739,7 @@
                 analyser.connect(audioCtx.destination);
             }
 
-            function playScratch() {
-                const frac = volumeSlider.value / 100;
-                if (audio.muted || frac <= 0) return;
-                ensureAudioGraph();
-                if (audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
-
+            function scheduleScratch(frac) {
                 const now = audioCtx.currentTime;
                 const dur = 0.22;
                 const buffer = audioCtx.createBuffer(1, Math.floor(audioCtx.sampleRate * dur), audioCtx.sampleRate);
@@ -771,6 +766,22 @@
                 noise.connect(filter).connect(scratchGain).connect(audioCtx.destination);
                 noise.start(now);
                 noise.stop(now + dur);
+            }
+
+            function playScratch() {
+                const frac = volumeSlider.value / 100;
+                if (audio.muted || frac <= 0) return;
+                ensureAudioGraph();
+                if (audioCtx.state === 'suspended') {
+                    // Scheduling against a suspended context's stale currentTime
+                    // silently produces no sound, so wait for it to actually
+                    // resume before scheduling. This is what was skipping the
+                    // scratch on auto-advance (no fresh user gesture backing
+                    // it), most noticeably on the wrap back to track 0.
+                    audioCtx.resume().then(() => scheduleScratch(frac)).catch(() => {});
+                } else {
+                    scheduleScratch(frac);
+                }
             }
 
             let trackIndex = 0;
