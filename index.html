@@ -258,14 +258,12 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            gap: 0.5rem;
             max-width: 280px;
             margin-top: 0.5rem;
         }
         .demo-hint {
             font-size: 0.72rem;
             color: var(--text-muted);
-            margin-right: auto;
         }
         .demo-controls button {
             background: transparent;
@@ -276,13 +274,8 @@
             padding: 0.3rem 0.7rem;
             border-radius: 3px;
             cursor: pointer;
-            flex: 0 0 auto;
         }
         .demo-controls button:hover { border-color: var(--accent); color: var(--accent); }
-        .demo-controls button[aria-pressed="true"] {
-            border-color: var(--accent);
-            color: var(--accent);
-        }
 
         footer {
             max-width: 1100px;
@@ -381,7 +374,6 @@
                             <canvas id="julia-canvas" class="demo-canvas" aria-label="Move your cursor to reshape a live Julia set"></canvas>
                             <div class="demo-controls">
                                 <span class="demo-hint">move over it to reshape, scroll to zoom</span>
-                                <button id="julia-sync" type="button" aria-pressed="true" title="Toggle music sync">synced</button>
                                 <button id="julia-reset" type="button">reset</button>
                             </div>
                         </div>
@@ -619,11 +611,6 @@
                 else drawEqualizer(w, h);
             }
             render();
-
-            window.musicViz = {
-                getFreqData: () => freqData,
-                isPlaying: () => !!audioCtx && !audio.paused,
-            };
 
             loadTrack(TRACKS[0]);
         })();
@@ -919,39 +906,18 @@
                 lastInteraction = -Infinity;
             });
 
-            let syncEnabled = true;
-            const syncBtn = document.getElementById('julia-sync');
-            syncBtn.addEventListener('click', () => {
-                syncEnabled = !syncEnabled;
-                syncBtn.setAttribute('aria-pressed', String(syncEnabled));
-                syncBtn.textContent = syncEnabled ? 'synced' : 'unsynced';
-            });
-
-            function bandAvg(arr, from, to) {
-                let sum = 0;
-                for (let i = from; i < to; i++) sum += arr[i];
-                return sum / (to - from) / 255;
-            }
-
             function render() {
-                const music = syncEnabled && window.musicViz && window.musicViz.isPlaying() ? window.musicViz.getFreqData() : null;
-                const bass = music ? bandAvg(music, 0, 10) : 0;
-                const mid = music ? bandAvg(music, 10, 50) : 0;
-                const treble = music ? bandAvg(music, 50, music.length) : 0;
-
                 const idleFor = performance.now() - lastInteraction;
                 let c;
                 if (targetC && idleFor < 4000) {
                     c = targetC;
                 } else {
-                    if (!reduceMotion) autoT += 0.004 + treble * 0.02;
-                    const radius = 0.7885 + mid * 0.15 * Math.sin(autoT * 3);
-                    c = { x: radius * Math.cos(autoT), y: radius * Math.sin(autoT) };
+                    if (!reduceMotion) autoT += 0.004;
+                    c = { x: 0.7885 * Math.cos(autoT), y: 0.7885 * Math.sin(autoT) };
                 }
-                const effectiveZoom = zoom * (1 - bass * 0.3);
                 gl.uniform2f(uResolution, canvas.width, canvas.height);
                 gl.uniform2f(uC, c.x, c.y);
-                gl.uniform1f(uZoom, effectiveZoom);
+                gl.uniform1f(uZoom, zoom);
                 gl.drawArrays(gl.TRIANGLES, 0, 6);
                 requestAnimationFrame(render);
             }
