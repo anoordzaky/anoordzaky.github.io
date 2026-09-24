@@ -763,7 +763,7 @@
                 filter.frequency.linearRampToValueAtTime(400, now + dur);
 
                 const scratchGain = audioCtx.createGain();
-                const peak = 0.4 * frac * frac;
+                const peak = 0.7 * frac * frac;
                 scratchGain.gain.setValueAtTime(0, now);
                 scratchGain.gain.linearRampToValueAtTime(peak, now + 0.015);
                 scratchGain.gain.exponentialRampToValueAtTime(0.001, now + dur);
