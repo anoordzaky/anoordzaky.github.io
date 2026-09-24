@@ -420,7 +420,7 @@
                 { title: 'Sweet Sour', artist: 'KiiiKiii', src: 'assets/audio/sweet-sour.mp3' },
                 { title: 'soulless', artist: 'sosocamo', src: 'assets/audio/soulless.mp3' },
             ];
-            const PRESETS = ['bars & waves', 'plasma', 'particles'];
+            const PRESETS = ['bars & waves', 'plasma', 'equalizer'];
 
             const canvas = document.getElementById('viz-canvas');
             const ctx = canvas.getContext('2d');
@@ -480,11 +480,10 @@
             });
 
             let presetIndex = 0;
-            let particles = [];
             cycleBtn.addEventListener('click', () => {
                 presetIndex = (presetIndex + 1) % PRESETS.length;
                 presetNameEl.textContent = PRESETS[presetIndex];
-                particles = [];
+                eqPeaks = [];
             });
 
             function resizeCanvas() {
@@ -559,30 +558,42 @@
                 ctx.globalCompositeOperation = 'source-over';
             }
 
-            function drawParticles(w, h) {
-                ctx.fillStyle = 'rgba(23, 22, 26, 0.3)';
+            let eqPeaks = [];
+
+            function drawEqualizer(w, h) {
+                ctx.fillStyle = '#17161a';
                 ctx.fillRect(0, 0, w, h);
 
-                const bass = bandAvg(freqData, 0, 10);
-                const spawnCount = Math.floor(bass * 6) + 1;
-                for (let i = 0; i < spawnCount && particles.length < 300; i++) {
-                    particles.push({
-                        x: w / 2,
-                        y: h,
-                        vx: (Math.random() - 0.5) * 2.5,
-                        vy: -(1 + Math.random() * 3) * (0.5 + bass),
-                        life: 1,
-                        hue: Math.random() * 360,
-                    });
+                const barCount = 28;
+                const usableHeight = h * 0.92;
+                const step = Math.floor(freqData.length / barCount);
+                const gap = Math.max(1, w * 0.006);
+                const barWidth = (w / barCount) - gap;
+                const segments = 14;
+                const segHeight = usableHeight / segments;
+
+                if (eqPeaks.length !== barCount) eqPeaks = new Array(barCount).fill(0);
+
+                for (let i = 0; i < barCount; i++) {
+                    const v = freqData[i * step] / 255;
+                    const barHeight = v * usableHeight;
+
+                    eqPeaks[i] = barHeight > eqPeaks[i] ? barHeight : Math.max(barHeight, eqPeaks[i] - usableHeight * 0.025);
+
+                    const x = i * (barWidth + gap);
+                    const litSegments = Math.round((barHeight / usableHeight) * segments);
+                    for (let s = 0; s < litSegments; s++) {
+                        const frac = s / segments;
+                        const hue = 130 - frac * 130;
+                        ctx.fillStyle = `hsl(${hue}, 85%, 50%)`;
+                        const y = h - (s + 1) * segHeight + 1;
+                        ctx.fillRect(x, y, barWidth, segHeight - Math.max(1, segHeight * 0.15));
+                    }
+
+                    const peakY = h - eqPeaks[i] - 2;
+                    ctx.fillStyle = '#f4f2ec';
+                    ctx.fillRect(x, peakY, barWidth, Math.max(2, h * 0.012));
                 }
-                particles.forEach(p => { p.x += p.vx; p.y += p.vy; p.life -= 0.018; });
-                particles = particles.filter(p => p.life > 0 && p.y > -10);
-                particles.forEach(p => {
-                    ctx.fillStyle = `hsla(${p.hue}, 90%, 60%, ${p.life})`;
-                    ctx.beginPath();
-                    ctx.arc(p.x, p.y, 3 * p.life + 1, 0, Math.PI * 2);
-                    ctx.fill();
-                });
             }
 
             function render() {
@@ -597,7 +608,7 @@
                 }
                 if (presetIndex === 0) drawBarsAndWaves(w, h);
                 else if (presetIndex === 1) drawPlasma(w, h);
-                else drawParticles(w, h);
+                else drawEqualizer(w, h);
             }
             render();
 
