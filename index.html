@@ -559,9 +559,24 @@
                     <canvas id="ga-canvas" class="ga-canvas" aria-label="Animated diagram: a genetic algorithm narrows a pool of candidate features down to a subset whose coefficients stay economically consistent, which then fits a demand forecast"></canvas>
 
                     <div class="article">
-                        <p>This one's from NielsenIQ, forecasting cigarette demand with a plain linear model. Linear regression is about as boring as forecasting gets, which is exactly why we picked it: a category like this doesn't need a fancier model, it needs one a category manager can actually reason about.</p>
+                        <p>This one's from NielsenIQ, forecasting demand with a plain linear model. Linear regression is about as boring as forecasting gets, which is exactly why we picked it: a category like this doesn't need a fancier model, it needs one a category manager can actually reason about.</p>
                         <p>The catch is that boring only holds if you're careful about which features go in. Throw every candidate variable at the regression and it'll happily optimize its way to a lower error, sometimes at the cost of a coefficient that makes no sense, like GDP growth coming out negative when everyone in the room knows demand should move with the economy, not against it.</p>
                         <p>So feature selection became the actual modeling problem. A genetic algorithm searches over subsets of the candidate features, and each candidate subset is scored not just on fit but on whether its coefficients hold the sign we'd expect. A subset that nails accuracy but flips the GDP sign loses to one that's slightly worse on error and gets the story right. We're explicitly trading a bit of accuracy for a model whose explanation survives being said out loud to a stakeholder.</p>
+                    </div>
+                    </div>
+                </details>
+
+                <details class="pro-project">
+                    <summary><img class="pro-logo" src="assets/images/citratubindo-icon.png" alt="PT Citra Tubindo Tbk"><h3>Drone Pipe-Count Inference</h3><i class="fas fa-chevron-down"></i></summary>
+                    <div class="pro-body">
+                    <p class="pro-context">Cutting drone inference time 35x by trading a stale YOLOv3 CPU build for a small, better-trained YOLOv5</p>
+
+                    <canvas id="citra-canvas" class="ga-canvas" aria-label="Animated diagram: pipes in a storage yard get manually labeled and augmented into a larger dataset, a lightweight model trains vastly faster than the old one, then a drone sweeps the yard counting pipes automatically"></canvas>
+
+                    <div class="article">
+                        <p>PT Citra Tubindo Tbk stores pipes in a yard that's also full of heavy vehicles moving product around. Counting inventory by walking the yard is exactly as dangerous as it sounds, so the proposal was to put a drone on it instead and let a model count pipes from the footage.</p>
+                        <p>The model that was already in place was the problem: YOLOv3 running on an unoptimized TensorFlow build, on CPU. It technically worked, but not at a speed anyone could call real-time, and its accuracy wasn't much to defend either since it had barely any labeled data to learn from.</p>
+                        <p>So the fix started before any model training: I went and manually collected and labeled pipe footage myself, then leaned on data augmentation, flips, rotations, lighting variation, to stretch that small labeled set into something a model could actually learn from. Paired with swapping YOLOv3 for a small YOLOv5, inference went from a CPU crawl to something a drone could run against live footage, about 35x faster, and more accurate than the model it replaced.</p>
                     </div>
                     </div>
                 </details>
@@ -1435,9 +1450,9 @@
 
             const FEATURES = [
                 { name: 'GDP growth', x: 0.16, y: 0.20 },
-                { name: 'price index', x: 0.36, y: 0.22 },
+                { name: 'price index', x: 0.46, y: 0.22 },
                 { name: 'seasonality', x: 0.24, y: 0.55 },
-                { name: 'prior-period sales', x: 0.36, y: 0.68 },
+                { name: 'prior-period sales', x: 0.48, y: 0.68 },
                 { name: 'promo activity', x: 0.20, y: 0.85 },
             ];
             // Each generation is a candidate feature subset the GA tries.
@@ -1445,7 +1460,7 @@
             // for that particular combination. Only the final, winning
             // combination gets every included feature's sign right.
             const GEN_COUNT = 6;
-            const GEN_DUR = 400;
+            const GEN_DUR = 700;
             const WINNER = [0, 1, 2, 3];
             function generateCandidates(n) {
                 let seed = 42;
@@ -1473,7 +1488,7 @@
             const MODEL_POS = { x: 0.68, y: 0.5 };
 
             const RACE_DUR = (GEN_COUNT - 1) * GEN_DUR;
-            const FINAL_HOLD = 1600; // let the winning combination sit before act 2
+            const FINAL_HOLD = 1800; // let the winning combination sit before act 2
             const ACT1 = RACE_DUR + FINAL_HOLD, ACT2 = 4500, ACT3 = 5000;
             const TOTAL = ACT1 + ACT2 + ACT3;
 
@@ -1650,6 +1665,275 @@
                     ctx.lineTo(plotX0 + x1 * (plotX1 - plotX0), plotY1 - clamp01(intercept + slope * x1) * (plotY1 - plotY0));
                     ctx.stroke();
                 }
+                ctx.globalAlpha = 1;
+            }
+
+            function drawFrame(now) {
+                const w = canvas.width, h = canvas.height;
+                ctx.fillStyle = COLOR.bg;
+                ctx.fillRect(0, 0, w, h);
+                if (reduceMotion) {
+                    drawAct3(w, h, ACT3);
+                    return;
+                }
+                const cyclePos = now % TOTAL;
+                if (cyclePos < ACT1) drawAct1(w, h, cyclePos);
+                else if (cyclePos < ACT1 + ACT2) drawAct2(w, h, cyclePos - ACT1);
+                else drawAct3(w, h, cyclePos - ACT1 - ACT2);
+            }
+
+            function resizeCanvas() {
+                const rect = canvas.getBoundingClientRect();
+                if (!rect.width || !rect.height) return;
+                const dpr = Math.min(window.devicePixelRatio || 1, 2);
+                canvas.width = rect.width * dpr;
+                canvas.height = rect.height * dpr;
+                drawFrame(performance.now());
+            }
+            new ResizeObserver(resizeCanvas).observe(canvas);
+            resizeCanvas();
+
+            if (!reduceMotion) {
+                let inView = false;
+                let looping = false;
+                function loop(now) {
+                    if (!inView) { looping = false; return; }
+                    drawFrame(now);
+                    requestAnimationFrame(loop);
+                }
+                new IntersectionObserver((entries) => {
+                    inView = entries[0].isIntersecting;
+                    if (inView && !looping) {
+                        looping = true;
+                        requestAnimationFrame(loop);
+                    }
+                }, { threshold: 0.1 }).observe(canvas);
+            }
+        })();
+    </script>
+
+    <script>
+        (function () {
+            const canvas = document.getElementById('citra-canvas');
+            const ctx = canvas.getContext('2d');
+            const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+            const rootStyle = getComputedStyle(document.documentElement);
+            const COLOR = {
+                bg: rootStyle.getPropertyValue('--bg-elevated').trim(),
+                text: rootStyle.getPropertyValue('--text').trim(),
+                muted: rootStyle.getPropertyValue('--text-muted').trim(),
+                accent: rootStyle.getPropertyValue('--accent').trim(),
+                ok: rootStyle.getPropertyValue('--ok').trim(),
+            };
+            const MONO = rootStyle.getPropertyValue('--mono').trim();
+
+            const clamp01 = (v) => Math.max(0, Math.min(1, v));
+            const ease = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+
+            const ROWS = 3, COLS = 6;
+            const GRID = { x0: 0.1, x1: 0.9, y0: 0.3, y1: 0.86 };
+            const PIPES = [];
+            for (let r = 0; r < ROWS; r++) {
+                for (let c = 0; c < COLS; c++) {
+                    PIPES.push({
+                        x: GRID.x0 + (c / (COLS - 1)) * (GRID.x1 - GRID.x0),
+                        y: GRID.y0 + (r / (ROWS - 1)) * (GRID.y1 - GRID.y0),
+                    });
+                }
+            }
+            const LABELED = [2, 7, 11, 14];
+            const AUGMENT_SOURCE = LABELED[LABELED.length - 1];
+
+            const ACT1 = 6000, ACT2 = 4500, ACT3 = 5000;
+            const TOTAL = ACT1 + ACT2 + ACT3;
+
+            function drawPipe(x, y, r, stroke) {
+                ctx.beginPath();
+                ctx.arc(x, y, r, 0, Math.PI * 2);
+                ctx.strokeStyle = stroke;
+                ctx.lineWidth = 1.3;
+                ctx.stroke();
+            }
+
+            function drawAct1(w, h, elapsed) {
+                const p = clamp01(elapsed / ACT1);
+                const fade = clamp01(elapsed / 300);
+                const r = h * 0.024;
+
+                ctx.font = `${Math.max(10, h * 0.04)}px ${MONO}`;
+                ctx.textAlign = 'left';
+                ctx.fillStyle = COLOR.muted;
+                ctx.globalAlpha = fade;
+                ctx.fillText('manual labeling → augmentation', w * 0.05, h * 0.14);
+                ctx.globalAlpha = 1;
+
+                const labelProgress = clamp01((p - 0.05) / 0.5);
+                const numLabeled = Math.floor(labelProgress * LABELED.length + 0.0001);
+
+                PIPES.forEach((pt, i) => {
+                    const x = pt.x * w, y = pt.y * h;
+                    const labeledIdx = LABELED.indexOf(i);
+                    const isLabeled = labeledIdx >= 0 && labeledIdx < numLabeled;
+                    ctx.globalAlpha = fade;
+                    drawPipe(x, y, r, isLabeled ? COLOR.accent : COLOR.muted);
+                    if (isLabeled) {
+                        ctx.strokeStyle = COLOR.accent;
+                        ctx.setLineDash([3, 3]);
+                        ctx.strokeRect(x - r * 2, y - r * 2, r * 4, r * 4);
+                        ctx.setLineDash([]);
+                    }
+                    ctx.globalAlpha = 1;
+                });
+
+                const augPhase = clamp01((p - 0.55) / 0.4);
+                if (augPhase > 0) {
+                    const src = PIPES[AUGMENT_SOURCE];
+                    const sx = src.x * w, sy = src.y * h;
+                    const offsets = [
+                        { dx: 0.09, dy: -0.05 },
+                        { dx: 0.13, dy: 0.02 },
+                        { dx: 0.09, dy: 0.09 },
+                    ];
+                    offsets.forEach((o, i) => {
+                        const gx = sx + o.dx * w, gy = sy + o.dy * h;
+                        ctx.globalAlpha = augPhase * 0.75;
+                        ctx.strokeStyle = COLOR.muted;
+                        ctx.beginPath();
+                        ctx.moveTo(sx, sy);
+                        ctx.lineTo(gx, gy);
+                        ctx.stroke();
+                        ctx.save();
+                        ctx.translate(gx, gy);
+                        ctx.rotate((i - 1) * 0.35);
+                        drawPipe(0, 0, r * 0.85, COLOR.accent);
+                        ctx.restore();
+                        ctx.globalAlpha = 1;
+                    });
+                    ctx.globalAlpha = augPhase * fade;
+                    ctx.textAlign = 'left';
+                    ctx.fillStyle = COLOR.muted;
+                    ctx.font = `${Math.max(9, h * 0.032)}px ${MONO}`;
+                    ctx.fillText('augmented copies', sx + 0.02 * w, sy - r * 2.4);
+                    ctx.globalAlpha = 1;
+                }
+            }
+
+            function drawTimingBar(w, h, cy, label, growDur, elapsed, color) {
+                const trackX0 = w * 0.32, trackX1 = w * 0.92;
+                const fillP = clamp01(elapsed / growDur);
+                ctx.strokeStyle = COLOR.muted;
+                ctx.globalAlpha = 0.4;
+                ctx.lineWidth = 6;
+                ctx.beginPath();
+                ctx.moveTo(trackX0, cy);
+                ctx.lineTo(trackX1, cy);
+                ctx.stroke();
+                ctx.globalAlpha = 1;
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 6;
+                ctx.beginPath();
+                ctx.moveTo(trackX0, cy);
+                ctx.lineTo(trackX0 + (trackX1 - trackX0) * ease(fillP), cy);
+                ctx.stroke();
+                ctx.font = `${Math.max(10, h * 0.038)}px ${MONO}`;
+                ctx.textAlign = 'right';
+                ctx.fillStyle = COLOR.muted;
+                ctx.fillText(label, trackX0 - w * 0.02, cy + h * 0.014);
+            }
+
+            function drawAct2(w, h, elapsed) {
+                const fade = clamp01(elapsed / 300);
+                ctx.globalAlpha = fade;
+                ctx.font = `${Math.max(10, h * 0.04)}px ${MONO}`;
+                ctx.textAlign = 'center';
+                ctx.fillStyle = COLOR.text;
+                ctx.fillText('inference time per frame', w * 0.5, h * 0.14);
+
+                const oldDur = 1800, newDur = 90;
+                drawTimingBar(w, h, h * 0.35, 'YOLOv3 · TF-CPU', oldDur, elapsed, COLOR.muted);
+                drawTimingBar(w, h, h * 0.5, 'YOLOv5s · optimized', newDur, elapsed, COLOR.accent);
+
+                const labelAlpha = clamp01((elapsed - oldDur - 200) / 400);
+                if (labelAlpha > 0) {
+                    ctx.globalAlpha = fade * labelAlpha;
+                    ctx.fillStyle = COLOR.accent;
+                    ctx.font = `${Math.max(12, h * 0.05)}px ${MONO}`;
+                    ctx.fillText('~35x faster', w * 0.5, h * 0.62);
+                }
+
+                const accAlpha = clamp01((elapsed - 2600) / 400);
+                if (accAlpha > 0) {
+                    const baseline = h * 0.82;
+                    const barHalf = w * 0.045;
+                    const grow = clamp01((elapsed - 2600) / 500);
+                    ctx.globalAlpha = fade * accAlpha;
+                    ctx.font = `${Math.max(9, h * 0.032)}px ${MONO}`;
+                    ctx.textAlign = 'center';
+                    ctx.fillStyle = COLOR.muted;
+                    ctx.fillText('accuracy', w * 0.5, h * 0.74);
+
+                    const oldH = ease(grow) * h * 0.08;
+                    ctx.fillStyle = COLOR.muted;
+                    ctx.fillRect(w * 0.38 - barHalf, baseline - oldH, barHalf * 2, oldH);
+                    ctx.fillText('before', w * 0.38, baseline + h * 0.05);
+
+                    const newH = ease(grow) * h * 0.13;
+                    ctx.fillStyle = COLOR.ok;
+                    ctx.fillRect(w * 0.62 - barHalf, baseline - newH, barHalf * 2, newH);
+                    ctx.fillText('after', w * 0.62, baseline + h * 0.05);
+                }
+                ctx.globalAlpha = 1;
+            }
+
+            function drawAct3(w, h, elapsed) {
+                const p = clamp01(elapsed / ACT3);
+                const fade = clamp01(elapsed / 300);
+                const r = h * 0.024;
+
+                ctx.font = `${Math.max(10, h * 0.04)}px ${MONO}`;
+                ctx.textAlign = 'left';
+                ctx.fillStyle = COLOR.muted;
+                ctx.globalAlpha = fade;
+                ctx.fillText('drone sweep → automatic count', w * 0.05, h * 0.14);
+                ctx.globalAlpha = 1;
+
+                const sweepP = clamp01((p - 0.05) / 0.85);
+                const passedCount = Math.min(PIPES.length, Math.floor(sweepP * (PIPES.length + 1)));
+
+                PIPES.forEach((pt, i) => {
+                    const x = pt.x * w, y = pt.y * h;
+                    const counted = i < passedCount;
+                    ctx.globalAlpha = fade;
+                    drawPipe(x, y, r, counted ? COLOR.ok : COLOR.muted);
+                    if (counted) {
+                        ctx.strokeStyle = COLOR.ok;
+                        ctx.strokeRect(x - r * 1.6, y - r * 1.6, r * 3.2, r * 3.2);
+                    }
+                    ctx.globalAlpha = 1;
+                });
+
+                const droneIdx = Math.min(PIPES.length - 1, passedCount);
+                const dp = PIPES[droneIdx];
+                if (sweepP > 0 && sweepP < 1) {
+                    const dx = dp.x * w, dy = dp.y * h - h * 0.08;
+                    ctx.globalAlpha = fade;
+                    ctx.fillStyle = COLOR.accent;
+                    ctx.beginPath();
+                    ctx.moveTo(dx, dy - r * 1.2);
+                    ctx.lineTo(dx + r * 1.2, dy);
+                    ctx.lineTo(dx, dy + r * 1.2);
+                    ctx.lineTo(dx - r * 1.2, dy);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.globalAlpha = 1;
+                }
+
+                ctx.textAlign = 'right';
+                ctx.fillStyle = COLOR.accent;
+                ctx.font = `${Math.max(12, h * 0.05)}px ${MONO}`;
+                ctx.globalAlpha = fade;
+                ctx.fillText(`${passedCount} / ${PIPES.length} counted`, w * 0.95, h * 0.14);
                 ctx.globalAlpha = 1;
             }
 
