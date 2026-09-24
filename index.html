@@ -699,19 +699,25 @@
 
             const audio = new Audio();
             audio.preload = 'none';
-            audio.volume = volumeSlider.value / 100;
+            audio.volume = (volumeSlider.value / 100) ** 2;
 
             function volumeIconClass() {
-                if (audio.muted || audio.volume === 0) return 'fas fa-volume-xmark';
-                if (audio.volume < 0.5) return 'fas fa-volume-low';
+                const frac = volumeSlider.value / 100;
+                if (audio.muted || frac === 0) return 'fas fa-volume-xmark';
+                if (frac < 0.5) return 'fas fa-volume-low';
                 return 'fas fa-volume-high';
             }
             function updateVolumeIcon() {
                 volumeIcon.className = volumeIconClass();
             }
+            // A linear slider mapped straight to audio.volume feels quadratic:
+            // human loudness perception is roughly logarithmic, so most of the
+            // audible range gets crammed into the top of the slider. Squaring
+            // the slider fraction compensates so the slider feels linear.
             volumeSlider.addEventListener('input', () => {
-                audio.volume = volumeSlider.value / 100;
-                if (audio.volume > 0) audio.muted = false;
+                const frac = volumeSlider.value / 100;
+                audio.volume = frac * frac;
+                if (frac > 0) audio.muted = false;
                 updateVolumeIcon();
             });
             volumeToggle.addEventListener('click', () => {
