@@ -1472,7 +1472,9 @@
             const CANDIDATES = generateCandidates(GEN_COUNT);
             const MODEL_POS = { x: 0.68, y: 0.5 };
 
-            const ACT1 = GEN_COUNT * GEN_DUR, ACT2 = 4500, ACT3 = 5000;
+            const RACE_DUR = (GEN_COUNT - 1) * GEN_DUR;
+            const FINAL_HOLD = 1600; // let the winning combination sit before act 2
+            const ACT1 = RACE_DUR + FINAL_HOLD, ACT2 = 4500, ACT3 = 5000;
             const TOTAL = ACT1 + ACT2 + ACT3;
 
             const clamp01 = (v) => Math.max(0, Math.min(1, v));
@@ -1517,8 +1519,9 @@
 
             function drawAct1(w, h, elapsed) {
                 const fade = clamp01(elapsed / 300);
-                const gen = Math.min(CANDIDATES.length - 1, Math.floor(elapsed / GEN_DUR));
-                const genElapsed = elapsed - gen * GEN_DUR;
+                const isFinal = elapsed >= RACE_DUR;
+                const gen = isFinal ? CANDIDATES.length - 1 : Math.min(CANDIDATES.length - 2, Math.floor(elapsed / GEN_DUR));
+                const genElapsed = isFinal ? elapsed - RACE_DUR : elapsed - gen * GEN_DUR;
                 const genFade = clamp01(genElapsed / (GEN_DUR * 0.6));
                 const candidate = CANDIDATES[gen];
 
