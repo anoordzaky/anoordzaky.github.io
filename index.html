@@ -739,6 +739,40 @@
                 analyser.connect(audioCtx.destination);
             }
 
+            function playScratch() {
+                const frac = volumeSlider.value / 100;
+                if (audio.muted || frac <= 0) return;
+                ensureAudioGraph();
+                if (audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
+
+                const now = audioCtx.currentTime;
+                const dur = 0.22;
+                const buffer = audioCtx.createBuffer(1, Math.floor(audioCtx.sampleRate * dur), audioCtx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
+
+                const noise = audioCtx.createBufferSource();
+                noise.buffer = buffer;
+
+                const filter = audioCtx.createBiquadFilter();
+                filter.type = 'bandpass';
+                filter.Q.value = 5;
+                filter.frequency.setValueAtTime(2200, now);
+                filter.frequency.linearRampToValueAtTime(250, now + dur * 0.35);
+                filter.frequency.linearRampToValueAtTime(1600, now + dur * 0.65);
+                filter.frequency.linearRampToValueAtTime(400, now + dur);
+
+                const scratchGain = audioCtx.createGain();
+                const peak = 0.4 * frac * frac;
+                scratchGain.gain.setValueAtTime(0, now);
+                scratchGain.gain.linearRampToValueAtTime(peak, now + 0.015);
+                scratchGain.gain.exponentialRampToValueAtTime(0.001, now + dur);
+
+                noise.connect(filter).connect(scratchGain).connect(audioCtx.destination);
+                noise.start(now);
+                noise.stop(now + dur);
+            }
+
             let trackIndex = 0;
 
             function loadTrack(index) {
@@ -758,8 +792,8 @@
             }
 
             loadTrack(0);
-            prevBtn.addEventListener('click', () => loadTrack(trackIndex - 1));
-            nextBtn.addEventListener('click', () => loadTrack(trackIndex + 1));
+            prevBtn.addEventListener('click', () => { playScratch(); loadTrack(trackIndex - 1); });
+            nextBtn.addEventListener('click', () => { playScratch(); loadTrack(trackIndex + 1); });
             playBtn.addEventListener('click', () => {
                 ensureAudioGraph();
                 if (audioCtx.state === 'suspended') audioCtx.resume().catch(err => console.error('Audio context resume failed:', err));
@@ -772,6 +806,7 @@
             audio.addEventListener('play', () => { playIcon.className = 'fas fa-pause'; });
             audio.addEventListener('pause', () => { playIcon.className = 'fas fa-play'; });
             audio.addEventListener('ended', () => {
+                playScratch();
                 loadTrack(trackIndex + 1);
                 ensureAudioGraph();
                 audio.play().catch(err => console.error('Playback failed:', err));
