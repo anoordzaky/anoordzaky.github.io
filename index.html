@@ -113,21 +113,23 @@
             font-size: 0.82rem;
             border-radius: 3px;
         }
-        .waveform-3d {
+        .viz-canvas {
             width: 100%;
             height: 150px;
             margin-top: 0.85rem;
-            cursor: grab;
+            display: block;
+            background: var(--bg);
+            border-radius: 2px;
+            cursor: pointer;
             touch-action: none;
         }
-        .waveform-3d:active { cursor: grabbing; }
         .player-row {
             display: flex;
             align-items: center;
             gap: 0.75rem;
             margin-top: 0.6rem;
         }
-        #player-toggle {
+        #player-toggle, #viz-cycle {
             width: 32px;
             height: 32px;
             flex: 0 0 auto;
@@ -142,16 +144,20 @@
             font-size: 0.75rem;
             transition: border-color 0.2s ease, color 0.2s ease;
         }
-        #player-toggle:hover { border-color: var(--accent); color: var(--accent); }
+        #player-toggle:hover, #viz-cycle:hover { border-color: var(--accent); color: var(--accent); }
         #player-time {
             font-family: var(--mono);
             font-size: 0.75rem;
             color: var(--text-muted);
         }
+        #viz-cycle { margin-left: auto; }
         .waveform-hint {
             font-size: 0.72rem;
             color: var(--text-muted);
             margin: 0.5rem 0 0;
+        }
+        .waveform-hint #viz-preset-name {
+            color: var(--text);
         }
 
         /* Main content */
@@ -325,12 +331,13 @@
             <div class="music-widget">
                 <label class="music-label" for="track-select">now playing</label>
                 <select id="track-select"></select>
-                <div class="waveform-3d" id="waveform-3d"></div>
+                <canvas id="viz-canvas" class="viz-canvas" aria-label="Real-time audio visualizer"></canvas>
                 <div class="player-row">
                     <button id="player-toggle" aria-label="Play"><i class="fas fa-play"></i></button>
                     <span id="player-time">0:00</span>
+                    <button id="viz-cycle" aria-label="Change visualization" title="Change visualization"><i class="fas fa-shuffle"></i></button>
                 </div>
-                <p class="waveform-hint">drag to rotate, click a bar to seek</p>
+                <p class="waveform-hint"><span id="viz-preset-name">bars &amp; waves</span> — click to seek</p>
             </div>
         </aside>
 
@@ -402,151 +409,197 @@
         </main>
     </div>
 
-    <footer>Built with ffmpeg, three.js, and too much coffee.</footer>
+    <footer>Built with ffmpeg, Web Audio, and too much coffee.</footer>
 
-    <script type="importmap">
-    {
-        "imports": {
-            "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
-            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
-        }
-    }
-    </script>
-    <script type="module">
-        import * as THREE from 'three';
-        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    <script>
+        (function () {
+            const TRACKS = [
+                { title: 'b2b', artist: 'Charli XCX', src: 'assets/audio/b2b.mp3' },
+                { title: 'Careful', artist: 'D.O.D ft. Izzy Bizu', src: 'assets/audio/careful.mp3' },
+                { title: 'E85', artist: 'Don Toliver', src: 'assets/audio/e85.mp3' },
+                { title: 'Sweet Sour', artist: 'KiiiKiii', src: 'assets/audio/sweet-sour.mp3' },
+                { title: 'soulless', artist: 'sosocamo', src: 'assets/audio/soulless.mp3' },
+            ];
+            const PRESETS = ['bars & waves', 'plasma', 'particles'];
 
-        const TRACKS = [
-            { title: 'b2b', artist: 'Charli XCX', src: 'assets/audio/b2b.mp3', peaks: 'assets/audio/peaks/b2b.json' },
-            { title: 'Careful', artist: 'D.O.D ft. Izzy Bizu', src: 'assets/audio/careful.mp3', peaks: 'assets/audio/peaks/careful.json' },
-            { title: 'E85', artist: 'Don Toliver', src: 'assets/audio/e85.mp3', peaks: 'assets/audio/peaks/e85.json' },
-            { title: 'Sweet Sour', artist: 'KiiiKiii', src: 'assets/audio/sweet-sour.mp3', peaks: 'assets/audio/peaks/sweet-sour.json' },
-            { title: 'soulless', artist: 'sosocamo', src: 'assets/audio/soulless.mp3', peaks: 'assets/audio/peaks/soulless.json' },
-        ];
+            const canvas = document.getElementById('viz-canvas');
+            const ctx = canvas.getContext('2d');
+            const select = document.getElementById('track-select');
+            const playBtn = document.getElementById('player-toggle');
+            const playIcon = playBtn.querySelector('i');
+            const timeEl = document.getElementById('player-time');
+            const cycleBtn = document.getElementById('viz-cycle');
+            const presetNameEl = document.getElementById('viz-preset-name');
 
-        const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            const audio = new Audio();
+            audio.preload = 'none';
+            audio.crossOrigin = 'anonymous';
 
-        const container = document.getElementById('waveform-3d');
-        const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(40, container.clientWidth / container.clientHeight, 0.1, 100);
-        camera.position.set(0, 4, 15);
+            let audioCtx, analyser, freqData, timeData;
+            function ensureAudioGraph() {
+                if (audioCtx) return;
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                analyser = audioCtx.createAnalyser();
+                analyser.fftSize = 256;
+                freqData = new Uint8Array(analyser.frequencyBinCount);
+                timeData = new Uint8Array(analyser.fftSize);
+                const source = audioCtx.createMediaElementSource(audio);
+                source.connect(analyser);
+                analyser.connect(audioCtx.destination);
+            }
 
-        const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
-        renderer.setSize(container.clientWidth, container.clientHeight);
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-        container.appendChild(renderer.domElement);
+            select.innerHTML = TRACKS.map((t, i) => `<option value="${i}">${t.title} by ${t.artist}</option>`).join('');
 
-        const controls = new OrbitControls(camera, renderer.domElement);
-        controls.enableDamping = true;
-        controls.enablePan = false;
-        controls.minDistance = 9;
-        controls.maxDistance = 22;
-        controls.autoRotate = !reduceMotion;
-        controls.autoRotateSpeed = 1.1;
-        controls.addEventListener('start', () => { controls.autoRotate = false; });
+            function loadTrack(track) {
+                audio.pause();
+                audio.src = track.src;
+                playIcon.className = 'fas fa-play';
+                timeEl.textContent = '0:00';
+            }
 
-        scene.add(new THREE.AmbientLight(0xffffff, 0.65));
-        const dirLight = new THREE.DirectionalLight(0xffffff, 0.85);
-        dirLight.position.set(5, 10, 7);
-        scene.add(dirLight);
-
-        const BASE_COLOR = new THREE.Color(0x55535d);
-        const ACCENT_COLOR = new THREE.Color(0xffb000);
-        const SPACING = 0.09;
-        const BAR_W = SPACING * 0.7;
-        const HEIGHT_SCALE = 3;
-
-        let bars = [];
-
-        function buildBars(peaks) {
-            bars.forEach(b => { scene.remove(b); b.geometry.dispose(); b.material.dispose(); });
-            bars = [];
-            const totalWidth = peaks.length * SPACING;
-            peaks.forEach((peak, i) => {
-                const h = Math.max(0.12, peak * HEIGHT_SCALE);
-                const geo = new THREE.BoxGeometry(BAR_W, h, BAR_W);
-                const mat = new THREE.MeshStandardMaterial({ color: BASE_COLOR, roughness: 0.5, metalness: 0.1 });
-                const mesh = new THREE.Mesh(geo, mat);
-                mesh.position.x = i * SPACING - totalWidth / 2;
-                mesh.position.y = h / 2 - 1;
-                mesh.userData.index = i;
-                scene.add(mesh);
-                bars.push(mesh);
+            select.addEventListener('change', () => loadTrack(TRACKS[select.value]));
+            playBtn.addEventListener('click', () => {
+                ensureAudioGraph();
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                if (audio.paused) audio.play(); else audio.pause();
             });
-        }
+            audio.addEventListener('play', () => { playIcon.className = 'fas fa-pause'; });
+            audio.addEventListener('pause', () => { playIcon.className = 'fas fa-play'; });
+            audio.addEventListener('timeupdate', () => {
+                const mins = Math.floor(audio.currentTime / 60);
+                const secs = String(Math.floor(audio.currentTime % 60)).padStart(2, '0');
+                timeEl.textContent = `${mins}:${secs}`;
+            });
+            canvas.addEventListener('click', (e) => {
+                if (!audio.duration) return;
+                const rect = canvas.getBoundingClientRect();
+                audio.currentTime = ((e.clientX - rect.left) / rect.width) * audio.duration;
+            });
 
-        function updateProgress(fraction) {
-            const played = Math.floor(fraction * bars.length);
-            bars.forEach((b, i) => b.material.color.copy(i < played ? ACCENT_COLOR : BASE_COLOR));
-        }
+            let presetIndex = 0;
+            let particles = [];
+            cycleBtn.addEventListener('click', () => {
+                presetIndex = (presetIndex + 1) % PRESETS.length;
+                presetNameEl.textContent = PRESETS[presetIndex];
+                particles = [];
+            });
 
-        function animate() {
-            requestAnimationFrame(animate);
-            controls.update();
-            renderer.render(scene, camera);
-        }
-        animate();
-
-        window.addEventListener('resize', () => {
-            camera.aspect = container.clientWidth / container.clientHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(container.clientWidth, container.clientHeight);
-        });
-
-        // Audio + track selection
-        const select = document.getElementById('track-select');
-        const playBtn = document.getElementById('player-toggle');
-        const playIcon = playBtn.querySelector('i');
-        const timeEl = document.getElementById('player-time');
-        const audio = new Audio();
-        audio.preload = 'none';
-
-        select.innerHTML = TRACKS.map((t, i) => `<option value="${i}">${t.title} by ${t.artist}</option>`).join('');
-
-        async function loadTrack(track, autoplay) {
-            audio.pause();
-            audio.src = track.src;
-            playIcon.className = 'fas fa-play';
-            timeEl.textContent = '0:00';
-            try {
-                const peaks = await fetch(track.peaks).then(r => r.json());
-                buildBars(peaks);
-                updateProgress(0);
-            } catch (err) {
-                console.error(`Waveform failed to load for "${track.title}" (served over file:// instead of http(s)?):`, err);
+            function resizeCanvas() {
+                const rect = canvas.getBoundingClientRect();
+                const dpr = Math.min(window.devicePixelRatio || 1, 2);
+                canvas.width = rect.width * dpr;
+                canvas.height = rect.height * dpr;
             }
-            if (autoplay) audio.play();
-        }
+            window.addEventListener('resize', resizeCanvas);
+            resizeCanvas();
 
-        select.addEventListener('change', () => loadTrack(TRACKS[select.value], false));
-        playBtn.addEventListener('click', () => {
-            if (audio.paused) audio.play(); else audio.pause();
-        });
-        audio.addEventListener('play', () => { playIcon.className = 'fas fa-pause'; });
-        audio.addEventListener('pause', () => { playIcon.className = 'fas fa-play'; });
-        audio.addEventListener('ended', () => updateProgress(0));
-        audio.addEventListener('timeupdate', () => {
-            const fraction = audio.duration ? audio.currentTime / audio.duration : 0;
-            updateProgress(fraction);
-            const mins = Math.floor(audio.currentTime / 60);
-            const secs = String(Math.floor(audio.currentTime % 60)).padStart(2, '0');
-            timeEl.textContent = `${mins}:${secs}`;
-        });
-
-        const raycaster = new THREE.Raycaster();
-        const pointer = new THREE.Vector2();
-        renderer.domElement.addEventListener('click', (e) => {
-            const rect = renderer.domElement.getBoundingClientRect();
-            pointer.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-            pointer.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
-            raycaster.setFromCamera(pointer, camera);
-            const hits = raycaster.intersectObjects(bars);
-            if (hits.length && audio.duration) {
-                audio.currentTime = (hits[0].object.userData.index / bars.length) * audio.duration;
+            function bandAvg(arr, from, to) {
+                let sum = 0;
+                for (let i = from; i < to; i++) sum += arr[i];
+                return sum / (to - from) / 255;
             }
-        });
 
-        loadTrack(TRACKS[0], false);
+            let hueShift = 0;
+            let plasmaT = 0;
+
+            function drawBarsAndWaves(w, h) {
+                ctx.fillStyle = 'rgba(23, 22, 26, 0.35)';
+                ctx.fillRect(0, 0, w, h);
+                hueShift = (hueShift + 0.4) % 360;
+
+                const barCount = 48;
+                const step = Math.floor(freqData.length / barCount);
+                const barWidth = w / barCount;
+                for (let i = 0; i < barCount; i++) {
+                    const v = freqData[i * step] / 255;
+                    const barHeight = v * h * 0.9;
+                    const hue = (i / barCount) * 300 + hueShift;
+                    ctx.fillStyle = `hsl(${hue}, 85%, 55%)`;
+                    ctx.fillRect(i * barWidth, h - barHeight, barWidth - 1, barHeight);
+                }
+
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                for (let i = 0; i < timeData.length; i++) {
+                    const x = (i / (timeData.length - 1)) * w;
+                    const y = (timeData[i] / 255) * h;
+                    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+                }
+                ctx.stroke();
+            }
+
+            function drawPlasma(w, h) {
+                ctx.fillStyle = 'rgba(23, 22, 26, 0.25)';
+                ctx.fillRect(0, 0, w, h);
+                plasmaT += 0.012;
+
+                const bass = bandAvg(freqData, 0, 10);
+                const mid = bandAvg(freqData, 10, 50);
+                const treble = bandAvg(freqData, 50, freqData.length);
+                const energies = [bass, mid, treble];
+
+                ctx.globalCompositeOperation = 'lighter';
+                energies.forEach((energy, i) => {
+                    const cx = w / 2 + Math.sin(plasmaT * (0.7 + i * 0.3)) * w * 0.32;
+                    const cy = h / 2 + Math.cos(plasmaT * (0.5 + i * 0.4)) * h * 0.32;
+                    const r = 14 + energy * Math.min(w, h) * 0.5;
+                    const hue = (plasmaT * 35 + i * 120) % 360;
+                    const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+                    grad.addColorStop(0, `hsla(${hue}, 90%, 60%, 0.9)`);
+                    grad.addColorStop(1, `hsla(${hue}, 90%, 60%, 0)`);
+                    ctx.fillStyle = grad;
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+                ctx.globalCompositeOperation = 'source-over';
+            }
+
+            function drawParticles(w, h) {
+                ctx.fillStyle = 'rgba(23, 22, 26, 0.3)';
+                ctx.fillRect(0, 0, w, h);
+
+                const bass = bandAvg(freqData, 0, 10);
+                const spawnCount = Math.floor(bass * 6) + 1;
+                for (let i = 0; i < spawnCount && particles.length < 300; i++) {
+                    particles.push({
+                        x: w / 2,
+                        y: h,
+                        vx: (Math.random() - 0.5) * 2.5,
+                        vy: -(1 + Math.random() * 3) * (0.5 + bass),
+                        life: 1,
+                        hue: Math.random() * 360,
+                    });
+                }
+                particles.forEach(p => { p.x += p.vx; p.y += p.vy; p.life -= 0.018; });
+                particles = particles.filter(p => p.life > 0 && p.y > -10);
+                particles.forEach(p => {
+                    ctx.fillStyle = `hsla(${p.hue}, 90%, 60%, ${p.life})`;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, 3 * p.life + 1, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+            }
+
+            function render() {
+                requestAnimationFrame(render);
+                const w = canvas.width, h = canvas.height;
+                if (analyser) {
+                    analyser.getByteFrequencyData(freqData);
+                    analyser.getByteTimeDomainData(timeData);
+                } else {
+                    freqData = freqData || new Uint8Array(64);
+                    timeData = timeData || new Uint8Array(64).fill(128);
+                }
+                if (presetIndex === 0) drawBarsAndWaves(w, h);
+                else if (presetIndex === 1) drawPlasma(w, h);
+                else drawParticles(w, h);
+            }
+            render();
+
+            loadTrack(TRACKS[0]);
+        })();
     </script>
 
     <script>
