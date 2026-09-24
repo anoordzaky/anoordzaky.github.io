@@ -433,7 +433,6 @@
 
             const audio = new Audio();
             audio.preload = 'none';
-            audio.crossOrigin = 'anonymous';
 
             let audioCtx, analyser, freqData, timeData;
             function ensureAudioGraph() {
@@ -460,8 +459,12 @@
             select.addEventListener('change', () => loadTrack(TRACKS[select.value]));
             playBtn.addEventListener('click', () => {
                 ensureAudioGraph();
-                if (audioCtx.state === 'suspended') audioCtx.resume();
-                if (audio.paused) audio.play(); else audio.pause();
+                if (audioCtx.state === 'suspended') audioCtx.resume().catch(err => console.error('Audio context resume failed:', err));
+                if (audio.paused) {
+                    audio.play().catch(err => console.error('Playback failed:', err));
+                } else {
+                    audio.pause();
+                }
             });
             audio.addEventListener('play', () => { playIcon.className = 'fas fa-pause'; });
             audio.addEventListener('pause', () => { playIcon.className = 'fas fa-play'; });
