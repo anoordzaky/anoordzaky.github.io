@@ -5,230 +5,310 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Achmadi Noor Dzaky - Resume & Portfolio</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --bg: #17161a;
+            --bg-elevated: #1e1d22;
+            --text: #efece6;
+            --text-muted: #8b8983;
+            --accent: #ffb000;
+            --rule: rgba(239, 236, 230, 0.1);
+            --mono: 'JetBrains Mono', monospace;
+            --sans: 'Inter', sans-serif;
+        }
+        * { box-sizing: border-box; }
         body {
-            font-family: Arial, sans-serif;
+            font-family: var(--sans);
             line-height: 1.6;
             margin: 0;
-            padding: 0;
-            background-color: #f4f4f4;
+            background: var(--bg);
+            color: var(--text);
         }
-        .container {
-            max-width: 1000px;
-            margin: 20px auto;
-            padding: 10px;
-            background-color: white;
-            border-radius: 5px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        a { color: inherit; }
+        :focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 2px;
         }
-        header {
-            background: #333;
-            color: #fff;
-            padding: 10px 0;
-        }
-        header h1 {
-            margin: 0;
-            text-align: center;
-        }
-        nav {
-            text-align: center;
-            margin-top: 20px;
-        }
-        nav a {
-            color: #fff;
-            text-decoration: none;
-            padding: 10px;
-        }
-        .main-content {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 30px;
-        }
-        .left-column {
-            flex: 0 0 250px;
-        }
-        .right-column {
-            flex: 1;
-            min-width: 300px;
-        }
-        .section {
-            margin-bottom: 20px;
-        }
-        .section h2 {
-            color: #000000;
-            margin-bottom: 15px;
-        }
-        .portfolio-section {
-            margin-bottom: 30px;
-        }
-        .portfolio-section h2 {
-            color: #000000;
-            margin-bottom: 10px;
-        }
-        .portfolio-container {
+
+        .page {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 3.5rem 1.5rem 4rem;
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 1.5rem;
+            grid-template-columns: 250px 1fr;
+            gap: 3.5rem;
+            align-items: start;
         }
-        .portfolio-item {
-            background: #f4f4f4;
-            padding: 1.5rem;
-            border-radius: 5px;
+
+        /* Sidebar */
+        .sidebar {
+            position: sticky;
+            top: 3rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.75rem;
         }
-        .portfolio-item h3 {
-            font-size: 1.25rem;
-            margin-top: 0;
-            margin-bottom: 0.75rem;
+        .wordmark {
+            font-family: var(--mono);
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin: 0 0 0.3rem;
+            line-height: 1.25;
         }
-        .portfolio-item p {
-            font-size: 0.9rem;
-            margin-bottom: 0.75rem;
+        .role, .location {
+            margin: 0;
+            color: var(--text-muted);
+            font-size: 0.88rem;
         }
-        .headshot {
-            width: 100%;
-            max-width: 250px;
-            display: block;
-            margin: 0 auto 20px;
+        .contact {
+            border-top: 1px solid var(--rule);
+            padding-top: 1.25rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.9rem;
         }
-        .email-section {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        .email-section a {
-            color: #333;
-            text-decoration: none;
+        .contact a.email {
             display: inline-flex;
             align-items: center;
-            font-size: 16px;
+            gap: 0.6rem;
+            text-decoration: none;
+            font-size: 0.85rem;
+            color: var(--text-muted);
         }
-        .email-section i {
-            margin-right: 10px;
-            font-size: 20px;
-        }
+        .contact a.email:hover { color: var(--accent); }
         .social-links {
             display: flex;
-            justify-content: center;
-            gap: 15px;
+            gap: 1.1rem;
         }
         .social-links a {
-            color: #333;
-            font-size: 24px;
-            transition: color 0.3s ease;
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            text-decoration: none;
+            transition: color 0.2s ease;
         }
-        .social-links a:hover {
-            color: #0077be;
-        }
-        footer {
-            background: #333;
-            color: #fff;
-            text-align: center;
-            padding: 10px;
-            margin-top: 20px;
-        }
-        .experience-item, .education-item {
-            margin-bottom: 20px;
-        }
-        .experience-item h3, .education-item h3 {
-            margin-bottom: 5px;
-        }
-        .experience-item p, .education-item p {
-            margin: 5px 0;
-        }
-        ul {
-            padding-left: 20px;
-        }
+        .social-links a:hover { color: var(--accent); }
 
-        @media (max-width: 768px) {
-            .portfolio-item h3 {
-                font-size: 1.1rem;
-            }
-            .portfolio-item p {
-                font-size: 0.8rem;
-            }
+        /* Music widget */
+        .music-widget {
+            border-top: 1px solid var(--rule);
+            padding-top: 1.5rem;
         }
-
-        .music-section {
-            background: #1a1a1a;
-            color: #fff;
-            border-radius: 5px;
-            padding: 1.5rem;
-            margin: 30px 0;
+        .music-label {
+            font-family: var(--mono);
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            display: block;
+            margin-bottom: 0.6rem;
         }
-        .music-section h2 {
-            color: #fff;
-            margin: 0 0 1.25rem;
+        #track-select {
+            width: 100%;
+            background: var(--bg-elevated);
+            color: var(--text);
+            border: 1px solid var(--rule);
+            padding: 0.5rem 0.6rem;
+            font-family: var(--sans);
+            font-size: 0.82rem;
+            border-radius: 3px;
         }
-        .track {
+        .waveform-3d {
+            width: 100%;
+            height: 150px;
+            margin-top: 0.85rem;
+            cursor: grab;
+            touch-action: none;
+        }
+        .waveform-3d:active { cursor: grabbing; }
+        .player-row {
             display: flex;
             align-items: center;
-            gap: 1rem;
-            padding: 0.75rem 0;
-            border-bottom: 1px solid #333;
+            gap: 0.75rem;
+            margin-top: 0.6rem;
         }
-        .track:last-child {
-            border-bottom: none;
-        }
-        .track-play {
+        #player-toggle {
+            width: 32px;
+            height: 32px;
             flex: 0 0 auto;
-            width: 36px;
-            height: 36px;
             border-radius: 50%;
-            border: none;
-            background: #0077be;
-            color: #fff;
-            font-size: 14px;
+            border: 1px solid var(--rule);
+            background: transparent;
+            color: var(--text);
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: background 0.2s ease;
+            font-size: 0.75rem;
+            transition: border-color 0.2s ease, color 0.2s ease;
         }
-        .track-play:hover {
-            background: #005c93;
+        #player-toggle:hover { border-color: var(--accent); color: var(--accent); }
+        #player-time {
+            font-family: var(--mono);
+            font-size: 0.75rem;
+            color: var(--text-muted);
         }
-        .track-info {
-            flex: 0 0 150px;
-            min-width: 0;
+        .waveform-hint {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            margin: 0.5rem 0 0;
         }
-        .track-info .title {
-            font-weight: bold;
+
+        /* Main content */
+        .content { min-width: 0; }
+        .section {
+            padding: 2.25rem 0;
+            border-top: 1px solid var(--rule);
+        }
+        .section:first-child { border-top: none; padding-top: 0; }
+        .section h2 {
+            font-family: var(--mono);
+            font-weight: 500;
+            font-size: 0.95rem;
+            color: var(--accent);
+            margin: 0 0 1.5rem;
+        }
+
+        .hero p.tagline {
+            font-size: 1.3rem;
+            line-height: 1.55;
+            max-width: 46ch;
+            margin: 0;
+        }
+
+        .experience-item, .education-item {
+            padding: 1.1rem 0;
+            border-top: 1px solid var(--rule);
+        }
+        .experience-item:first-child, .education-item:first-child {
+            border-top: none;
+            padding-top: 0;
+        }
+        .experience-item h3, .education-item h3 {
+            font-family: var(--mono);
+            font-size: 0.98rem;
+            margin: 0 0 0.3rem;
+            font-weight: 500;
+        }
+        .experience-item p, .education-item p {
+            margin: 0.25rem 0;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+        .experience-item ul, .education-item ul {
+            list-style: none;
+            padding-left: 1.1rem;
+            margin: 0.75rem 0 0;
+        }
+        .experience-item li, .education-item li {
+            margin-bottom: 0.55rem;
+            font-size: 0.92rem;
+            line-height: 1.6;
+            position: relative;
+        }
+        .experience-item li::marker, .education-item li::marker {
+            content: "\2013 \0020";
+            color: var(--text-muted);
+        }
+
+        .skills-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 1.1rem;
+            margin: 0;
+        }
+        .skill-row {
+            display: grid;
+            grid-template-columns: 200px 1fr;
+            gap: 1rem;
+        }
+        .skill-row dt {
+            font-family: var(--mono);
+            font-size: 0.82rem;
+            color: var(--text-muted);
+        }
+        .skill-row dd {
+            margin: 0;
             font-size: 0.9rem;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            line-height: 1.65;
         }
-        .track-info .artist {
+
+        .portfolio-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 2rem;
+        }
+        .portfolio-item {
+            border-top: 1px solid var(--rule);
+            padding-top: 1rem;
+        }
+        .portfolio-item h3 {
+            font-family: var(--mono);
+            font-size: 1rem;
+            font-weight: 500;
+            margin: 0 0 0.5rem;
+        }
+        .portfolio-item p {
+            font-size: 0.88rem;
+            color: var(--text-muted);
+            margin: 0 0 0.65rem;
+        }
+        .portfolio-item a {
+            font-size: 0.85rem;
+            color: var(--accent);
+            text-decoration: none;
+            border-bottom: 1px solid rgba(255, 176, 0, 0.35);
+            margin-right: 0.9rem;
+        }
+        .portfolio-item a:hover { border-bottom-color: var(--accent); }
+
+        footer {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 1.5rem 1.5rem 3rem;
+            border-top: 1px solid var(--rule);
             font-size: 0.8rem;
-            color: #aaa;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            color: var(--text-muted);
         }
-        .track-waveform {
-            flex: 1;
-            min-width: 0;
-            height: 44px;
-            cursor: pointer;
+
+        @media (max-width: 860px) {
+            .page {
+                grid-template-columns: 1fr;
+                padding-top: 2.5rem;
+            }
+            .sidebar {
+                position: static;
+            }
+            .portfolio-grid {
+                grid-template-columns: 1fr;
+            }
+            .skill-row {
+                grid-template-columns: 1fr;
+                gap: 0.3rem;
+            }
         }
-        @media (max-width: 600px) {
-            .track-info {
-                flex-basis: 90px;
+
+        @media (prefers-reduced-motion: reduce) {
+            .social-links a, #player-toggle, .portfolio-item a {
+                transition: none;
             }
         }
     </style>
 </head>
 <body>
-    <div class="container">
+    <div class="page">
+        <aside class="sidebar">
+            <div class="identity">
+                <h1 class="wordmark">Achmadi Noor Dzaky</h1>
+                <p class="role">Data Analyst</p>
+                <p class="location">Malang, Jawa Timur</p>
+            </div>
 
-        <div class="main-content">
-            <div class="left-column">
-                <img src="https://lh3.googleusercontent.com/d/1kiT6bqWqc8Wcxo4dFDV6kH3P52eNz7om" alt="Achmadi Noor Dzaky" class="headshot">
-                <div class="email-section">
-                    <a href="achmadinoord@gmail.com">
-                        <i class="fas fa-envelope"></i>
-                        achmadinoord@gmail.com
-                    </a>
-                </div>
+            <div class="contact">
+                <a class="email" href="mailto:achmadinoord@gmail.com">
+                    <i class="fas fa-envelope"></i>
+                    achmadinoord@gmail.com
+                </a>
                 <div class="social-links">
                     <a href="https://linkedin.com/in/anoordzaky" aria-label="LinkedIn"><i class="fab fa-linkedin"></i></a>
                     <a href="https://github.com/anoordzaky" aria-label="GitHub"><i class="fab fa-github"></i></a>
@@ -237,105 +317,137 @@
                 </div>
             </div>
 
-            <div class="right-column">
-                <section id="about" class="section">
-                    <h2>Achmadi Noor Dzaky</h2>
-                    <p>Malang, Jawa Timur</p>
-                    <p>Data Analyst with 3+ years of experience turning business data into decisions through SQL analysis on cloud data warehouses, dashboards and recurring reporting, forecasting, and clear communication of findings to stakeholders. Skilled in SQL, BigQuery, Python, Looker, and Tableau.</p>
-                </section>
-
-                <section id="experience" class="section">
-                    <h2>Work Experience</h2>
-                    <div class="experience-item">
-                        <h3>Data Analyst - Grivy, South Jakarta</h3>
-                        <p>January 2025 - Present</p>
-                        <ul>
-                            <li>Design automated Looker dashboards on BigQuery/GA4 to track campaign ROI and flag bot activity, surfacing anomalies that drive optimization decisions.</li>
-                            <li>Own end-to-end SQL pipelines in BigQuery for campaigns with retail, FMCG, and telco clients, improving the accuracy and reliability of campaign reporting.</li>
-                            <li>Define and document metrics for automated reporting, and present weekly data-backed recommendations to technical and non-technical stakeholders.</li>
-                            <li>Developed a linear forecasting model for customer redemption behavior, factoring in day-to-day seasonality to reach 7% MAPE.</li>
-                            <li>Built a Monte Carlo simulation for coupon allocation strategies, saving 10% in expected coupon related expenses.</li>
-                            <li>Independently defined client-specific privacy requirements for Data Clean Rooms in BigQuery Analytics Hub, enabling privacy-compliant partner data sharing.</li>
-                        </ul>
-                    </div>
-                    <div class="experience-item">
-                        <h3>Consumer Insights - NielsenIQ, South Jakarta</h3>
-                        <p>February 2023 - January 2025</p>
-                        <ul>
-                            <li>Designed and maintained dynamic Tableau dashboards to track KPIs for diverse clients, directly contributing to informed decision-making and strategic business shifts.</li>
-                            <li>Created and optimized ETL pipelines for integrating survey data into a SQL database, ensuring data accuracy and reliability for downstream analysis and reporting.</li>
-                            <li>Automated feature selection processes for market volume forecasting models using Python, enhancing explainability and achieving 95%+ accuracy.</li>
-                            <li>Implemented complex methodologies (polynomial regression and clustering) to map regional customer shares, presenting findings to cross-functional teams.</li>
-                        </ul>
-                    </div>
-                    <div class="experience-item">
-                        <h3>Apprentice - PT Citra Tubindo Tbk, Batam</h3>
-                        <p>September 2022 - February 2023</p>
-                        <ul>
-                            <li>Enhanced backend AI processes for pipe detection, resulting in a 35x reduction in inference latency and a 20% accuracy boost.</li>
-                        </ul>
-                    </div>
-                </section>
-
-                <section id="education" class="section">
-                    <h2>Education</h2>
-                    <div class="education-item">
-                        <h3>Institut Teknologi Sepuluh Nopember, Surabaya</h3>
-                        <p>August 2018 - September 2022</p>
-                        <p>Bachelor of Engineering in Industrial Engineering</p>
-                        <p>Leadership Experiences: Head of Training Subdivision at ITS MUN Club, Manager of Community Service Bureau HMTI ITS</p>
-                    </div>
-                </section>
-
-                <section id="skills" class="section">
-                    <h2>Skills & Certificates</h2>
-                    <ul>
-                        <li>Languages: English (IELTS Academic 8.0), Indonesian, Javanese</li>
-                        <li>Programming Languages & Tools: SQL, BigQuery, Python, Looker, Tableau, GCP, Vertex AI, BigQuery Analytics Hub, Google Analytics, Google Tag Manager, Google Script, JavaScript/TypeScript, HTML, CSS, Docker, Github, MongoDB</li>
-                        <li>Frameworks & Libraries: Flask, FastAPI, Pandas, TensorFlow, PyTorch, Numpy, Weights & Biases, xlwings, Openpyxl, Scikit-learn, Selenium, BeautifulSoup4</li>
-                        <li>Softwares: Minitab, Microsoft Excel, Google Sheets, Tableau, Visual Studio Code, Anaconda</li>
-                        <li>Certificates: Online Asian Machine Learning School Participant (2022), Machine Learning by Indonesia.ai (2022), AWS Academy Machine Learning Foundations Graduate (2022)</li>
-                    </ul>
-                </section>
-
-                <section id="portfolio" class="portfolio-section">
-                    <h2>Personal Projects</h2>
-                    <div class="portfolio-container">
-                        <div class="portfolio-item">
-                            <h3>Face Recognition API</h3>
-                            <p>A Facial Recognition API that extracts facial embeddings and matches it to the existing embedding in the database.</p>
-                            <a href="https://github.com/anoordzaky/face_recognition">View Project</a>
-                        </div>
-                        <div class="portfolio-item">
-                            <h3>Julia Set Animation</h3>
-                            <p>Built a script to generate a Julia Set animation, utilizing JAX for faster rendering times.</p>
-                            <a href="https://github.com/anoordzaky/julia">View Project</a>
-                            <a href="https://drive.google.com/file/d/1YcpoYkiB571VElE8nYYpfbn-dNtoBvSu/view?usp=sharing">Sample Animation</a>
-                        </div>
-                        <div class="portfolio-item">
-                            <h3>Ray Tracing using Numpy</h3>
-                            <p>A simple ray tracing script built using numpy.</p>
-                            <a href="https://github.com/anoordzaky/ball">View Project</a>
-                            <a href="https://www.linkedin.com/posts/anoordzaky_this-image-was-rendered-in-python-at-1080p-activity-7212882344653860864-pxex?utm_source=share&utm_medium=member_desktop">Linkedin Post</a>
-                        </div>
-                        <div class="portfolio-item">
-                            <h3>Drawing Contours using Discrete Fourier Transformation</h3>
-                            <p>Script to generate drawings of a contour using Discrete Fourier Transformation.</p>
-                            <a href="https://github.com/anoordzaky/drawing_with_fourier_series">View Project</a>
-                            <a href="https://drive.google.com/file/d/1aDw1u-I1uDGH-UfBwKJId0FuFuTdWGJP/view?usp=sharing">Sample Animation</a>
-                        </div>
-                    </div>
-                </section>
+            <div class="music-widget">
+                <label class="music-label" for="track-select">now playing</label>
+                <select id="track-select"></select>
+                <div class="waveform-3d" id="waveform-3d"></div>
+                <div class="player-row">
+                    <button id="player-toggle" aria-label="Play"><i class="fas fa-play"></i></button>
+                    <span id="player-time">0:00</span>
+                </div>
+                <p class="waveform-hint">drag to rotate, click a bar to seek</p>
             </div>
-        </div>
+        </aside>
 
-        <section class="music-section" id="music" aria-label="Favorite songs">
-            <h2>What I'm Listening To</h2>
-            <div id="track-list"></div>
-        </section>
+        <main class="content">
+            <section class="section hero" id="about">
+                <p class="tagline">Data Analyst with 3+ years turning business data into decisions through SQL analysis on cloud data warehouses, dashboards, forecasting, and clear communication of findings to stakeholders. Skilled in SQL, BigQuery, Python, Looker, and Tableau.</p>
+            </section>
+
+            <section class="section" id="experience">
+                <h2>// work experience</h2>
+                <div class="experience-item">
+                    <h3>Data Analyst - Grivy, South Jakarta</h3>
+                    <p>January 2025 - Present</p>
+                    <ul>
+                        <li>Design automated Looker dashboards on BigQuery/GA4 to track campaign ROI and flag bot activity, surfacing anomalies that drive optimization decisions.</li>
+                        <li>Own end-to-end SQL pipelines in BigQuery for campaigns with retail, FMCG, and telco clients, improving the accuracy and reliability of campaign reporting.</li>
+                        <li>Define and document metrics for automated reporting, and present weekly data-backed recommendations to technical and non-technical stakeholders.</li>
+                        <li>Developed a linear forecasting model for customer redemption behavior, factoring in day-to-day seasonality to reach 7% MAPE.</li>
+                        <li>Built a Monte Carlo simulation for coupon allocation strategies, saving 10% in expected coupon related expenses.</li>
+                        <li>Independently defined client-specific privacy requirements for Data Clean Rooms in BigQuery Analytics Hub, enabling privacy-compliant partner data sharing.</li>
+                    </ul>
+                </div>
+                <div class="experience-item">
+                    <h3>Consumer Insights - NielsenIQ, South Jakarta</h3>
+                    <p>February 2023 - January 2025</p>
+                    <ul>
+                        <li>Designed and maintained dynamic Tableau dashboards to track KPIs for diverse clients, directly contributing to informed decision-making and strategic business shifts.</li>
+                        <li>Created and optimized ETL pipelines for integrating survey data into a SQL database, ensuring data accuracy and reliability for downstream analysis and reporting.</li>
+                        <li>Automated feature selection processes for market volume forecasting models using Python, enhancing explainability and achieving 95%+ accuracy.</li>
+                        <li>Implemented complex methodologies (polynomial regression and clustering) to map regional customer shares, presenting findings to cross-functional teams.</li>
+                    </ul>
+                </div>
+                <div class="experience-item">
+                    <h3>Apprentice - PT Citra Tubindo Tbk, Batam</h3>
+                    <p>September 2022 - February 2023</p>
+                    <ul>
+                        <li>Enhanced backend AI processes for pipe detection, resulting in a 35x reduction in inference latency and a 20% accuracy boost.</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section class="section" id="education">
+                <h2>// education</h2>
+                <div class="education-item">
+                    <h3>Institut Teknologi Sepuluh Nopember, Surabaya</h3>
+                    <p>August 2018 - September 2022</p>
+                    <p>Bachelor of Engineering in Industrial Engineering</p>
+                    <p>Leadership Experiences: Head of Training Subdivision at ITS MUN Club, Manager of Community Service Bureau HMTI ITS</p>
+                </div>
+            </section>
+
+            <section class="section" id="skills">
+                <h2>// skills &amp; certificates</h2>
+                <dl class="skills-grid">
+                    <div class="skill-row">
+                        <dt>Languages</dt>
+                        <dd>English (IELTS Academic 8.0), Indonesian, Javanese</dd>
+                    </div>
+                    <div class="skill-row">
+                        <dt>Programming &amp; tools</dt>
+                        <dd>SQL, BigQuery, Python, Looker, Tableau, GCP, Vertex AI, BigQuery Analytics Hub, Google Analytics, Google Tag Manager, Google Script, JavaScript/TypeScript, HTML, CSS, Docker, Github, MongoDB</dd>
+                    </div>
+                    <div class="skill-row">
+                        <dt>Frameworks &amp; libraries</dt>
+                        <dd>Flask, FastAPI, Pandas, TensorFlow, PyTorch, Numpy, Weights &amp; Biases, xlwings, Openpyxl, Scikit-learn, Selenium, BeautifulSoup4</dd>
+                    </div>
+                    <div class="skill-row">
+                        <dt>Software</dt>
+                        <dd>Minitab, Microsoft Excel, Google Sheets, Tableau, Visual Studio Code, Anaconda</dd>
+                    </div>
+                    <div class="skill-row">
+                        <dt>Certificates</dt>
+                        <dd>Online Asian Machine Learning School Participant (2022), Machine Learning by Indonesia.ai (2022), AWS Academy Machine Learning Foundations Graduate (2022)</dd>
+                    </div>
+                </dl>
+            </section>
+
+            <section class="section" id="portfolio">
+                <h2>// projects</h2>
+                <div class="portfolio-grid">
+                    <div class="portfolio-item">
+                        <h3>Face Recognition API</h3>
+                        <p>A facial recognition API that extracts facial embeddings and matches them to existing embeddings in a database.</p>
+                        <a href="https://github.com/anoordzaky/face_recognition">View Project</a>
+                    </div>
+                    <div class="portfolio-item">
+                        <h3>Julia Set Animation</h3>
+                        <p>A script to generate a Julia Set animation, using JAX for faster rendering times.</p>
+                        <a href="https://github.com/anoordzaky/julia">View Project</a>
+                        <a href="https://drive.google.com/file/d/1YcpoYkiB571VElE8nYYpfbn-dNtoBvSu/view?usp=sharing">Sample Animation</a>
+                    </div>
+                    <div class="portfolio-item">
+                        <h3>Ray Tracing using Numpy</h3>
+                        <p>A simple ray tracing script built using numpy.</p>
+                        <a href="https://github.com/anoordzaky/ball">View Project</a>
+                        <a href="https://www.linkedin.com/posts/anoordzaky_this-image-was-rendered-in-python-at-1080p-activity-7212882344653860864-pxex?utm_source=share&utm_medium=member_desktop">LinkedIn Post</a>
+                    </div>
+                    <div class="portfolio-item">
+                        <h3>Drawing Contours using Discrete Fourier Transformation</h3>
+                        <p>A script to generate drawings of a contour using Discrete Fourier Transformation.</p>
+                        <a href="https://github.com/anoordzaky/drawing_with_fourier_series">View Project</a>
+                        <a href="https://drive.google.com/file/d/1aDw1u-I1uDGH-UfBwKJId0FuFuTdWGJP/view?usp=sharing">Sample Animation</a>
+                    </div>
+                </div>
+            </section>
+        </main>
     </div>
 
-    <script>
+    <footer>Built with ffmpeg, three.js, and too much coffee.</footer>
+
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+        }
+    }
+    </script>
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
         const TRACKS = [
             { title: 'b2b', artist: 'Charli XCX', src: 'assets/audio/b2b.mp3', peaks: 'assets/audio/peaks/b2b.json' },
             { title: 'Careful', artist: 'D.O.D ft. Izzy Bizu', src: 'assets/audio/careful.mp3', peaks: 'assets/audio/peaks/careful.json' },
@@ -344,80 +456,129 @@
             { title: 'soulless', artist: 'sosocamo', src: 'assets/audio/soulless.mp3', peaks: 'assets/audio/peaks/soulless.json' },
         ];
 
-        function drawWaveform(canvas, peaks, progress) {
-            const ctx = canvas.getContext('2d');
-            const dpr = window.devicePixelRatio || 1;
-            const cssWidth = canvas.clientWidth;
-            const cssHeight = canvas.clientHeight;
-            canvas.width = cssWidth * dpr;
-            canvas.height = cssHeight * dpr;
-            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-            ctx.clearRect(0, 0, cssWidth, cssHeight);
+        const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-            const barGap = 1;
-            const barWidth = cssWidth / peaks.length - barGap;
-            const playedBars = Math.floor(progress * peaks.length);
+        const container = document.getElementById('waveform-3d');
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(40, container.clientWidth / container.clientHeight, 0.1, 100);
+        camera.position.set(0, 4, 15);
 
+        const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+        renderer.setSize(container.clientWidth, container.clientHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        container.appendChild(renderer.domElement);
+
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.enablePan = false;
+        controls.minDistance = 9;
+        controls.maxDistance = 22;
+        controls.autoRotate = !reduceMotion;
+        controls.autoRotateSpeed = 1.1;
+        controls.addEventListener('start', () => { controls.autoRotate = false; });
+
+        scene.add(new THREE.AmbientLight(0xffffff, 0.65));
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.85);
+        dirLight.position.set(5, 10, 7);
+        scene.add(dirLight);
+
+        const BASE_COLOR = new THREE.Color(0x55535d);
+        const ACCENT_COLOR = new THREE.Color(0xffb000);
+        const SPACING = 0.09;
+        const BAR_W = SPACING * 0.7;
+        const HEIGHT_SCALE = 3;
+
+        let bars = [];
+
+        function buildBars(peaks) {
+            bars.forEach(b => { scene.remove(b); b.geometry.dispose(); b.material.dispose(); });
+            bars = [];
+            const totalWidth = peaks.length * SPACING;
             peaks.forEach((peak, i) => {
-                const barHeight = Math.max(2, peak * cssHeight);
-                const x = i * (barWidth + barGap);
-                const y = (cssHeight - barHeight) / 2;
-                ctx.fillStyle = i < playedBars ? '#0077be' : '#555';
-                ctx.fillRect(x, y, barWidth, barHeight);
+                const h = Math.max(0.12, peak * HEIGHT_SCALE);
+                const geo = new THREE.BoxGeometry(BAR_W, h, BAR_W);
+                const mat = new THREE.MeshStandardMaterial({ color: BASE_COLOR, roughness: 0.5, metalness: 0.1 });
+                const mesh = new THREE.Mesh(geo, mat);
+                mesh.position.x = i * SPACING - totalWidth / 2;
+                mesh.position.y = h / 2 - 1;
+                mesh.userData.index = i;
+                scene.add(mesh);
+                bars.push(mesh);
             });
         }
 
-        async function initTrack(container, track) {
-            const el = document.createElement('div');
-            el.className = 'track';
-            el.innerHTML = `
-                <button class="track-play" aria-label="Play ${track.title}"><i class="fas fa-play"></i></button>
-                <div class="track-info">
-                    <div class="title">${track.title}</div>
-                    <div class="artist">${track.artist}</div>
-                </div>
-                <canvas class="track-waveform"></canvas>
-            `;
-            container.appendChild(el);
-
-            const playBtn = el.querySelector('.track-play');
-            const icon = playBtn.querySelector('i');
-            const canvas = el.querySelector('.track-waveform');
-            const audio = new Audio(track.src);
-            audio.preload = 'none';
-
-            const peaks = await fetch(track.peaks).then(r => r.json());
-            let progress = 0;
-            const redraw = () => drawWaveform(canvas, peaks, progress);
-            redraw();
-            window.addEventListener('resize', redraw);
-
-            playBtn.addEventListener('click', () => {
-                if (audio.paused) {
-                    document.querySelectorAll('audio').forEach(a => { if (a !== audio) a.pause(); });
-                    audio.play();
-                } else {
-                    audio.pause();
-                }
-            });
-            audio.addEventListener('play', () => { icon.className = 'fas fa-pause'; });
-            audio.addEventListener('pause', () => { icon.className = 'fas fa-play'; });
-            audio.addEventListener('ended', () => { progress = 0; redraw(); });
-            audio.addEventListener('timeupdate', () => {
-                progress = audio.duration ? audio.currentTime / audio.duration : 0;
-                redraw();
-            });
-            canvas.addEventListener('click', (e) => {
-                const rect = canvas.getBoundingClientRect();
-                const fraction = (e.clientX - rect.left) / rect.width;
-                if (audio.duration) {
-                    audio.currentTime = fraction * audio.duration;
-                }
-            });
+        function updateProgress(fraction) {
+            const played = Math.floor(fraction * bars.length);
+            bars.forEach((b, i) => b.material.color.copy(i < played ? ACCENT_COLOR : BASE_COLOR));
         }
 
-        const trackList = document.getElementById('track-list');
-        TRACKS.forEach(track => initTrack(trackList, track));
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        window.addEventListener('resize', () => {
+            camera.aspect = container.clientWidth / container.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(container.clientWidth, container.clientHeight);
+        });
+
+        // Audio + track selection
+        const select = document.getElementById('track-select');
+        const playBtn = document.getElementById('player-toggle');
+        const playIcon = playBtn.querySelector('i');
+        const timeEl = document.getElementById('player-time');
+        const audio = new Audio();
+        audio.preload = 'none';
+
+        select.innerHTML = TRACKS.map((t, i) => `<option value="${i}">${t.title} by ${t.artist}</option>`).join('');
+
+        async function loadTrack(track, autoplay) {
+            audio.pause();
+            audio.src = track.src;
+            playIcon.className = 'fas fa-play';
+            timeEl.textContent = '0:00';
+            try {
+                const peaks = await fetch(track.peaks).then(r => r.json());
+                buildBars(peaks);
+                updateProgress(0);
+            } catch (err) {
+                console.error(`Waveform failed to load for "${track.title}" (served over file:// instead of http(s)?):`, err);
+            }
+            if (autoplay) audio.play();
+        }
+
+        select.addEventListener('change', () => loadTrack(TRACKS[select.value], false));
+        playBtn.addEventListener('click', () => {
+            if (audio.paused) audio.play(); else audio.pause();
+        });
+        audio.addEventListener('play', () => { playIcon.className = 'fas fa-pause'; });
+        audio.addEventListener('pause', () => { playIcon.className = 'fas fa-play'; });
+        audio.addEventListener('ended', () => updateProgress(0));
+        audio.addEventListener('timeupdate', () => {
+            const fraction = audio.duration ? audio.currentTime / audio.duration : 0;
+            updateProgress(fraction);
+            const mins = Math.floor(audio.currentTime / 60);
+            const secs = String(Math.floor(audio.currentTime % 60)).padStart(2, '0');
+            timeEl.textContent = `${mins}:${secs}`;
+        });
+
+        const raycaster = new THREE.Raycaster();
+        const pointer = new THREE.Vector2();
+        renderer.domElement.addEventListener('click', (e) => {
+            const rect = renderer.domElement.getBoundingClientRect();
+            pointer.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+            pointer.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+            raycaster.setFromCamera(pointer, camera);
+            const hits = raycaster.intersectObjects(bars);
+            if (hits.length && audio.duration) {
+                audio.currentTime = (hits[0].object.userData.index / bars.length) * audio.duration;
+            }
+        });
+
+        loadTrack(TRACKS[0], false);
     </script>
 </body>
 </html>
