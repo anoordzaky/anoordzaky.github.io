@@ -637,6 +637,19 @@
             <section class="section" id="side-projects">
                 <h2>// side projects</h2>
                 <details class="pro-project">
+                    <summary><img class="pro-logo" src="assets/images/centro-icon.png" alt="Centro Studio"><h3>Centro Studio</h3><i class="fas fa-chevron-down"></i></summary>
+                    <div class="pro-body">
+                    <p class="pro-context">A two-person product design and development studio, cofounded with my friend Dhimas &middot; <a href="https://www.centro-studio.com/">centro-studio.com</a></p>
+
+                    <div class="article">
+                        <p>Centro Studio is a small studio Dhimas and I started together. He's a senior product designer at Tabsquare (Delivery Hero) in Singapore, I'm on the data side at Grivy, and between the two day jobs we both had opinions about design and engineering that neither of us got to use fully on our own. Centro is where we use them, on client work and on the studio's own site. He leads interface and motion, I lead the software and the parts that have to survive real traffic, but neither of us stays only in our lane, that's the actual point of doing this together instead of separately.</p>
+                        <p>The studio's own homepage is the clearest example of what that looks like in practice. The opening line draws itself in as you scroll, not as a typing effect, but rendered on a canvas: each character dithers up through a pixel crest before settling solid, and the fill position tracks scroll position 1:1 instead of easing toward it, because an earlier version that eased its own progress on top of the smooth-scroll library ended up lagging the wheel and still drifting after you'd stopped. Small detail, but it's the difference between an effect that feels attached to your hand and one that feels like it's catching up to you.</p>
+                        <p>The chrome mark in the corner up there is the studio's actual logo, and the two case studies it leads to are real: CalcFlow and SADJI, the other two projects on this page.</p>
+                    </div>
+                    </div>
+                </details>
+
+                <details class="pro-project">
                     <summary><img class="pro-logo" src="assets/images/sadji-icon.png" alt="SADJI"><h3>SADJI</h3><i class="fas fa-chevron-down"></i></summary>
                     <div class="pro-body">
                     <p class="pro-context">A point-of-sale, QR ordering, and kitchen display platform for Indonesian restaurants and cafes, built with a friend &middot; <a href="https://sadji.app">sadji.app</a></p>
@@ -683,7 +696,7 @@
                 </details>
 
                 <details class="pro-project">
-                    <summary><img class="pro-logo" src="assets/images/calcflow-icon.svg" alt="CalcFlow"><h3>PMM Solver Optimization</h3><i class="fas fa-chevron-down"></i></summary>
+                    <summary><img class="pro-logo" src="assets/images/calcflow-icon.svg" alt="CalcFlow"><h3>Calcflow PMM Solver Optimization</h3><i class="fas fa-chevron-down"></i></summary>
                     <div class="pro-body">
                     <p class="pro-context">Cutting CalcFlow's biaxial column solver more than 4x per call and 3.55x on a full detailing batch, without changing the underlying math</p>
 
@@ -708,7 +721,7 @@
                     <div class="article">
                         <p>CalcFlow takes a structural analysis export from ETABS and runs the concrete column checks required by SNI 2847:2019, Indonesia's building code. One of those checks, PMM, biaxial axial-force-and-moment interaction, has to find the neutral-axis angle and depth where a column's capacity matches the demand for every load case on every column: two nested numerical searches, up to 100 trial angles each bisecting a neutral-axis depth up to around 120 times. A single ETABS export can carry thousands of these rows, so how fast the solver runs directly decides how long an engineer waits after clicking calculate.</p>
                         <p>Before optimizing anything, I checked the solver against a reference calculation workbook and found it was quietly wrong for any biaxial case: the section geometry was being rotated by the trial angle and then projected onto that same angle again, a composition that mathematically cancels itself out, so rotation was silently ignored. I fixed that, fixed how the concrete compression area accounted for the holes rebar leaves in it, corrected a hardcoded strain constant to the material-dependent value, and locked all of it down with regression tests matched to the workbook to within 0.02%. Only after that passed did I feel comfortable making it faster, since a faster wrong answer isn't worth much.</p>
-                        <p>The hot loop had two straightforward wastes: it recomputed the same rotated section geometry from scratch on every neutral-axis trial even though only the depth changes within a fixed angle, and the bisection loop was re-evaluating bounds it had already just computed one step earlier. Hoisting the geometry setup and cutting the duplicate evaluations brought a single solve down to 1.58ms, same math, same tests passing unchanged. The last piece was parallelism: splitting the one-time setup from the per-row loop and sharding a job's force rows across a pool of Web Workers instead of running everything on one thread. On a representative batch, 30 columns across 3 stations and 45 load combinations, 4050 rows, that took the job from 5.7 seconds single-threaded to 1.6 seconds across six workers, verified byte-identical to the single-threaded output.</p>
+                        <p>The hot loop had two straightforward wastes: it recomputed the same rotated section geometry from scratch on every neutral-axis trial even though only the depth changes within a fixed angle, and the bisection loop was re-evaluating bounds it had already just computed one step earlier. Hoisting the geometry setup and cutting the duplicate evaluations brought a single solve down to 1.58ms. The last piece was parallelism: splitting the one-time setup from the per-row loop and sharding a job's force rows across a pool of Web Workers instead of running everything on one thread. On a representative batch, 30 columns across 3 stations and 45 load combinations, 4050 rows, that took the job from 5.7 seconds single-threaded to 1.6 seconds across six workers, verified byte-identical to the single-threaded output.</p>
                     </div>
                     </div>
                 </details>
