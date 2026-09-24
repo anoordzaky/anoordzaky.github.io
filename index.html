@@ -241,16 +241,36 @@
             padding-top: 2rem;
             border-top: 1px solid var(--rule);
         }
-        .pro-project h3 {
+        .pro-project summary {
+            cursor: pointer;
+            list-style: none;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+        .pro-project summary::-webkit-details-marker {
+            display: none;
+        }
+        .pro-project summary h3 {
             font-family: var(--mono);
             font-size: 1.05rem;
             font-weight: 500;
-            margin: 0 0 0.4rem;
+            margin: 0;
+        }
+        .pro-project summary i {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            flex: 0 0 auto;
+            transition: transform 0.2s ease;
+        }
+        .pro-project[open] summary i {
+            transform: rotate(180deg);
         }
         .pro-project .pro-context {
             font-size: 0.85rem;
             color: var(--text-muted);
-            margin: 0 0 1.25rem;
+            margin: 0.75rem 0 1.25rem;
         }
         .flow-diagram {
             width: 100%;
@@ -367,7 +387,7 @@
         }
 
         @media (prefers-reduced-motion: reduce) {
-            .social-links a, #player-toggle, .portfolio-item a {
+            .social-links a, #player-toggle, .portfolio-item a, .pro-project summary i {
                 transition: none;
             }
         }
@@ -416,8 +436,8 @@
 
             <section class="section" id="professional-projects">
                 <h2>// professional projects</h2>
-                <div class="pro-project">
-                    <h3>Data Clean Room Pipeline</h3>
+                <details class="pro-project">
+                    <summary><h3>Data Clean Room Pipeline</h3><i class="fas fa-chevron-down"></i></summary>
                     <p class="pro-context">Grivy, privacy-preserving campaign measurement across organizational boundaries</p>
 
                     <svg class="flow-diagram" viewBox="0 0 640 380" role="img" aria-label="Diagram: audience source flows into orchestration, which pushes a hashed audience to ad platforms for exposure and a separately hashed cohort to a retail partner clean room, receiving purchase match results back, with no raw personal data crossing any boundary">
@@ -463,10 +483,10 @@
                         <p>So the pipeline pushes the same audience to two places at once. The ad platform gets a hashed version of the audience so it can serve the campaign and report exposure. The retail partner gets a separately hashed version of that same audience, hashed with a key that's unique to them, so they can join it against their own purchase data without either side ever exchanging a real phone number or email. Whatever they find, they only send back aggregate counts. Not receipts, not names.</p>
                         <p>The hashing itself isn't the hard part, it's a well-known pattern. What I actually spent effort on was making the orchestration layer boring: every step is config-driven and safe to re-run, so a failed push to one partner doesn't mean redoing the whole campaign by hand.</p>
                     </div>
-                </div>
+                </details>
 
-                <div class="pro-project">
-                    <h3>Semantic Audience Search</h3>
+                <details class="pro-project">
+                    <summary><h3>Semantic Audience Search</h3><i class="fas fa-chevron-down"></i></summary>
                     <p class="pro-context">Grivy, turning a plain-language audience description into a set of matching users at scale</p>
 
                     <svg class="flow-diagram" viewBox="0 0 910 220" role="img" aria-label="Diagram: user profiles are embedded monthly using delta detection into a vector store, which a search stored procedure queries directly">
@@ -506,7 +526,7 @@
                         <p>The approach itself (embed every profile into a vector, embed the search query the same way, find whoever's closest) isn't the interesting part. The part I'm actually proud of is the refresh. Re-embedding 100 million profiles every month for a tiny fraction of changes would be wasteful, so the pipeline hashes each profile's text and only re-embeds the ones that actually changed. Most months that's about 1% of the dataset. Everything else just gets carried over, which turns a monthly full rebuild into a monthly patch.</p>
                         <p>The search itself runs as a stored procedure sitting on top of the vector store: it embeds the incoming text, does a nearest-neighbor pass, and hands back the matching user IDs. Same "make it boring" approach as the DCR pipeline, just pointed at a different problem.</p>
                     </div>
-                </div>
+                </details>
             </section>
 
             <section class="section" id="portfolio">
