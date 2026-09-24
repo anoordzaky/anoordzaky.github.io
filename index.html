@@ -217,6 +217,12 @@
             border-top: 1px solid var(--rule);
             padding-top: 1rem;
         }
+        .portfolio-item:last-child:nth-child(odd) {
+            grid-column: 1 / -1;
+        }
+        .portfolio-item:last-child:nth-child(odd) .demo-widget {
+            max-width: 280px;
+        }
         .portfolio-item h3 {
             font-family: var(--mono);
             font-size: 1rem;
@@ -361,9 +367,17 @@
                 <h2>// projects</h2>
                 <div class="portfolio-grid">
                     <div class="portfolio-item">
-                        <h3>Face Recognition API</h3>
-                        <p>A facial recognition API that extracts facial embeddings and matches them to existing embeddings in a database.</p>
-                        <a href="https://github.com/anoordzaky/face_recognition">View Project</a>
+                        <h3>Ray Tracing using Numpy</h3>
+                        <p>A simple ray tracing script built using numpy.</p>
+                        <a href="https://github.com/anoordzaky/ball">View Project</a>
+                        <a href="https://www.linkedin.com/posts/anoordzaky_this-image-was-rendered-in-python-at-1080p-activity-7212882344653860864-pxex?utm_source=share&utm_medium=member_desktop">LinkedIn Post</a>
+                        <div class="demo-widget">
+                            <canvas id="raytrace-canvas" class="demo-canvas" aria-label="Drag to orbit a live-raytraced scene"></canvas>
+                            <div class="demo-controls">
+                                <span class="demo-hint">drag to orbit, scroll to zoom</span>
+                                <button id="raytrace-reset" type="button">reset</button>
+                            </div>
+                        </div>
                     </div>
                     <div class="portfolio-item">
                         <h3>Julia Set Animation</h3>
@@ -375,19 +389,6 @@
                             <div class="demo-controls">
                                 <span class="demo-hint">move over it to reshape, scroll to zoom</span>
                                 <button id="julia-reset" type="button">reset</button>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="portfolio-item">
-                        <h3>Ray Tracing using Numpy</h3>
-                        <p>A simple ray tracing script built using numpy.</p>
-                        <a href="https://github.com/anoordzaky/ball">View Project</a>
-                        <a href="https://www.linkedin.com/posts/anoordzaky_this-image-was-rendered-in-python-at-1080p-activity-7212882344653860864-pxex?utm_source=share&utm_medium=member_desktop">LinkedIn Post</a>
-                        <div class="demo-widget">
-                            <canvas id="raytrace-canvas" class="demo-canvas" aria-label="Drag to orbit a live-raytraced scene"></canvas>
-                            <div class="demo-controls">
-                                <span class="demo-hint">drag to orbit, scroll to zoom</span>
-                                <button id="raytrace-reset" type="button">reset</button>
                             </div>
                         </div>
                     </div>
