@@ -258,6 +258,16 @@
             font-weight: 500;
             margin: 0;
         }
+        .pro-project .pro-title {
+            display: flex;
+            align-items: center;
+            gap: 0.65rem;
+        }
+        .pro-project .pro-logo {
+            height: 0.95rem;
+            width: auto;
+            display: block;
+        }
         .pro-project summary i {
             color: var(--text-muted);
             font-size: 0.8rem;
@@ -440,7 +450,7 @@
             <section class="section" id="professional-projects">
                 <h2>// professional projects</h2>
                 <details class="pro-project">
-                    <summary><h3>Data Clean Room Pipeline</h3><i class="fas fa-chevron-down"></i></summary>
+                    <summary><span class="pro-title"><h3>Data Clean Room Pipeline</h3><img class="pro-logo" src="assets/images/grivy-logo.png" alt="Grivy"></span><i class="fas fa-chevron-down"></i></summary>
                     <div class="pro-body">
                     <p class="pro-context">Grivy, privacy-preserving campaign measurement across organizational boundaries</p>
 
@@ -491,7 +501,7 @@
                 </details>
 
                 <details class="pro-project">
-                    <summary><h3>Semantic Audience Search</h3><i class="fas fa-chevron-down"></i></summary>
+                    <summary><span class="pro-title"><h3>Semantic Audience Search</h3><img class="pro-logo" src="assets/images/grivy-logo.png" alt="Grivy"></span><i class="fas fa-chevron-down"></i></summary>
                     <div class="pro-body">
                     <p class="pro-context">Grivy, turning a plain-language audience description into a set of matching users at scale</p>
 
