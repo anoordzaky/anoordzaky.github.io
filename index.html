@@ -15,6 +15,7 @@
             --text: #efece6;
             --text-muted: #8b8983;
             --accent: #ffb000;
+            --warn: #c9584f;
             --rule: rgba(239, 236, 230, 0.1);
             --mono: 'JetBrains Mono', monospace;
             --sans: 'Inter', sans-serif;
@@ -324,6 +325,14 @@
         @media (prefers-reduced-motion: reduce) {
             .flow-diagram .flow-arrow-hash { animation: none; }
         }
+        .ga-canvas {
+            width: 100%;
+            aspect-ratio: 2 / 1;
+            display: block;
+            background: var(--bg-elevated);
+            border-radius: 2px;
+            margin-bottom: 1.5rem;
+        }
         .pro-project .article p {
             font-size: 0.92rem;
             line-height: 1.7;
@@ -537,6 +546,21 @@
                         <p>The idea behind this one is simple to say and annoying to build: someone types "young parents who like hiking" and gets back the actual users who match, out of 100 million profiles, without anyone hand-writing a SQL filter for every possible phrase.</p>
                         <p>The approach itself (embed every profile into a vector, embed the search query the same way, find whoever's closest) isn't the interesting part. The part I'm actually proud of is the refresh. Re-embedding 100 million profiles every month for a tiny fraction of changes would be wasteful, so the pipeline hashes each profile's text and only re-embeds the ones that actually changed. Most months that's about 1% of the dataset. Everything else just gets carried over, which turns a monthly full rebuild into a monthly patch.</p>
                         <p>The search itself runs as a stored procedure sitting on top of the vector store: it embeds the incoming text, does a nearest-neighbor pass, and hands back the matching user IDs. Same "make it boring" approach as the DCR pipeline, just pointed at a different problem.</p>
+                    </div>
+                    </div>
+                </details>
+
+                <details class="pro-project">
+                    <summary><img class="pro-logo" src="assets/images/niq-icon.png" alt="NielsenIQ"><h3>Explainable Demand Forecasting</h3><i class="fas fa-chevron-down"></i></summary>
+                    <div class="pro-body">
+                    <p class="pro-context">Picking model features with a genetic algorithm so the coefficients still make economic sense</p>
+
+                    <canvas id="ga-canvas" class="ga-canvas" aria-label="Animated diagram: a genetic algorithm narrows a pool of candidate features down to a subset whose coefficients stay economically consistent, which then fits a demand forecast"></canvas>
+
+                    <div class="article">
+                        <p>This one's from NielsenIQ, forecasting cigarette demand with a plain linear model. Linear regression is about as boring as forecasting gets, which is exactly why we picked it: a category like this doesn't need a fancier model, it needs one a category manager can actually reason about.</p>
+                        <p>The catch is that boring only holds if you're careful about which features go in. Throw every candidate variable at the regression and it'll happily optimize its way to a lower error, sometimes at the cost of a coefficient that makes no sense, like GDP growth coming out negative when everyone in the room knows demand should move with the economy, not against it.</p>
+                        <p>So feature selection became the actual modeling problem. A genetic algorithm searches over subsets of the candidate features, and each candidate subset is scored not just on fit but on whether its coefficients hold the sign we'd expect. A subset that nails accuracy but flips the GDP sign loses to one that's slightly worse on error and gets the story right. We're explicitly trading a bit of accuracy for a model whose explanation survives being said out loud to a stakeholder.</p>
                     </div>
                     </div>
                 </details>
@@ -1388,6 +1412,259 @@
                 requestAnimationFrame(render);
             }
             render();
+        })();
+    </script>
+
+    <script>
+        (function () {
+            const canvas = document.getElementById('ga-canvas');
+            const ctx = canvas.getContext('2d');
+            const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+            const rootStyle = getComputedStyle(document.documentElement);
+            const COLOR = {
+                bg: rootStyle.getPropertyValue('--bg-elevated').trim(),
+                text: rootStyle.getPropertyValue('--text').trim(),
+                muted: rootStyle.getPropertyValue('--text-muted').trim(),
+                accent: rootStyle.getPropertyValue('--accent').trim(),
+                warn: rootStyle.getPropertyValue('--warn').trim(),
+            };
+            const MONO = rootStyle.getPropertyValue('--mono').trim();
+
+            const FEATURES = [
+                { name: 'GDP growth', x: 0.16, y: 0.20 },
+                { name: 'price index', x: 0.36, y: 0.12 },
+                { name: 'seasonality', x: 0.11, y: 0.55 },
+                { name: 'prior-period sales', x: 0.36, y: 0.68 },
+                { name: 'promo activity', x: 0.20, y: 0.85 },
+            ];
+            const DROPPED = 4;
+            const MODEL_POS = { x: 0.68, y: 0.5 };
+
+            const ACT1 = 6000, ACT2 = 4500, ACT3 = 5000;
+            const TOTAL = ACT1 + ACT2 + ACT3;
+
+            const clamp01 = (v) => Math.max(0, Math.min(1, v));
+            const ease = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+            const lerp = (a, b, t) => a + (b - a) * t;
+
+            function seededPoints(n) {
+                let seed = 7;
+                const rand = () => {
+                    seed = (seed * 9301 + 49297) % 233280;
+                    return seed / 233280;
+                };
+                const pts = [];
+                for (let i = 0; i < n; i++) {
+                    const x = i / (n - 1);
+                    const y = 0.75 - x * 0.4 + (rand() - 0.5) * 0.18;
+                    pts.push({ x, y: clamp01(y) });
+                }
+                return pts;
+            }
+            const SCATTER = seededPoints(18);
+            let sumX = 0, sumY = 0, sumXY = 0, sumXX = 0;
+            SCATTER.forEach((p) => { sumX += p.x; sumY += p.y; sumXY += p.x * p.y; sumXX += p.x * p.x; });
+            const n = SCATTER.length;
+            const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
+            const intercept = (sumY - slope * sumX) / n;
+
+            function drawModelNode(w, h, alpha) {
+                const mx = MODEL_POS.x * w, my = MODEL_POS.y * h;
+                ctx.globalAlpha = alpha;
+                ctx.beginPath();
+                ctx.arc(mx, my, h * 0.06, 0, Math.PI * 2);
+                ctx.strokeStyle = COLOR.text;
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+                ctx.fillStyle = COLOR.muted;
+                ctx.font = `${Math.max(10, h * 0.045)}px ${MONO}`;
+                ctx.textAlign = 'center';
+                ctx.fillText('linear model', mx, my + h * 0.12);
+                ctx.globalAlpha = 1;
+            }
+
+            function drawAct1(w, h, elapsed) {
+                const p = clamp01(elapsed / ACT1);
+                const fade = clamp01(elapsed / 300);
+                const genPhase = clamp01((p - 0.15) / 0.7);
+                const gen = Math.min(2, Math.floor(genPhase * 3));
+                const droppedAlpha = 1 - Math.min(1, genPhase) * 0.75;
+                const keptGlow = Math.min(1, genPhase);
+
+                ctx.font = `${Math.max(10, h * 0.04)}px ${MONO}`;
+                ctx.textAlign = 'left';
+                ctx.fillStyle = COLOR.muted;
+                ctx.globalAlpha = fade;
+                ctx.fillText('feature pool → genetic search', w * 0.05, h * 0.1);
+                if (genPhase > 0) {
+                    ctx.textAlign = 'right';
+                    ctx.fillStyle = COLOR.accent;
+                    ctx.fillText(`generation ${gen + 1} / 3`, w * 0.95, h * 0.1);
+                }
+                ctx.globalAlpha = 1;
+
+                drawModelNode(w, h, fade);
+
+                FEATURES.forEach((f, i) => {
+                    const isDropped = i === DROPPED;
+                    const a = fade * (isDropped ? droppedAlpha : 0.55 + 0.45 * keptGlow);
+                    const fx = f.x * w, fy = f.y * h;
+                    const pulse = 1 + 0.08 * Math.sin(elapsed * 0.004 + i);
+                    ctx.globalAlpha = a;
+                    ctx.beginPath();
+                    ctx.arc(fx, fy, h * 0.022 * pulse, 0, Math.PI * 2);
+                    ctx.fillStyle = isDropped ? COLOR.muted : COLOR.accent;
+                    ctx.fill();
+                    ctx.font = `${Math.max(9, h * 0.035)}px ${MONO}`;
+                    ctx.textAlign = f.x < 0.3 ? 'right' : 'left';
+                    ctx.fillStyle = COLOR.muted;
+                    ctx.fillText(f.name, f.x < 0.3 ? fx - h * 0.04 : fx + h * 0.04, fy + h * 0.015);
+                    ctx.globalAlpha = 1;
+                });
+
+                if (p > 0.85) {
+                    const lp = clamp01((p - 0.85) / 0.15);
+                    FEATURES.forEach((f, i) => {
+                        if (i === DROPPED) return;
+                        ctx.globalAlpha = lp * 0.8;
+                        ctx.strokeStyle = COLOR.accent;
+                        ctx.lineWidth = 1.2;
+                        ctx.beginPath();
+                        ctx.moveTo(f.x * w, f.y * h);
+                        ctx.lineTo(MODEL_POS.x * w, MODEL_POS.y * h);
+                        ctx.stroke();
+                        ctx.globalAlpha = 1;
+                    });
+                }
+            }
+
+            function drawBarPanel(w, h, cx, label, sign, growth, showMark, color) {
+                const baseline = h * 0.62;
+                const barHalf = w * 0.05;
+                const barH = ease(growth) * h * 0.16;
+                ctx.fillStyle = color;
+                ctx.fillRect(cx - barHalf, sign > 0 ? baseline - barH : baseline, barHalf * 2, barH);
+                ctx.font = `${Math.max(10, h * 0.04)}px ${MONO}`;
+                ctx.textAlign = 'center';
+                ctx.fillStyle = COLOR.muted;
+                ctx.fillText(label, cx, h * 0.78);
+                if (showMark > 0) {
+                    ctx.globalAlpha = showMark;
+                    ctx.fillStyle = color;
+                    ctx.font = `${Math.max(12, h * 0.055)}px ${MONO}`;
+                    ctx.fillText(sign > 0 ? '✓' : '✕', cx, sign > 0 ? baseline - barH - h * 0.03 : baseline + barH + h * 0.06);
+                    ctx.globalAlpha = 1;
+                }
+            }
+
+            function drawAct2(w, h, elapsed) {
+                const p = clamp01(elapsed / ACT2);
+                const fade = clamp01(elapsed / 300);
+                const baseline = h * 0.62;
+
+                ctx.globalAlpha = fade;
+                ctx.font = `${Math.max(10, h * 0.04)}px ${MONO}`;
+                ctx.textAlign = 'center';
+                ctx.fillStyle = COLOR.text;
+                ctx.fillText('GDP growth coefficient', w * 0.5, h * 0.14);
+
+                ctx.strokeStyle = COLOR.muted;
+                ctx.globalAlpha = fade * 0.4;
+                ctx.setLineDash([4, 4]);
+                ctx.beginPath();
+                ctx.moveTo(w * 0.12, baseline);
+                ctx.lineTo(w * 0.88, baseline);
+                ctx.stroke();
+                ctx.setLineDash([]);
+                ctx.globalAlpha = 1;
+
+                const growth = clamp01((p - 0.1) / 0.45);
+                const markAlpha = clamp01((p - 0.6) / 0.2);
+                ctx.globalAlpha = fade;
+                drawBarPanel(w, h, w * 0.32, 'all features', -1, growth, markAlpha, COLOR.warn);
+                drawBarPanel(w, h, w * 0.62, 'GA-selected', 1, growth, markAlpha, COLOR.accent);
+                ctx.globalAlpha = 1;
+            }
+
+            function drawAct3(w, h, elapsed) {
+                const p = clamp01(elapsed / ACT3);
+                const fade = clamp01(elapsed / 300);
+                const plotX0 = w * 0.1, plotX1 = w * 0.9, plotY0 = h * 0.25, plotY1 = h * 0.85;
+
+                ctx.globalAlpha = fade;
+                ctx.font = `${Math.max(10, h * 0.04)}px ${MONO}`;
+                ctx.textAlign = 'left';
+                ctx.fillStyle = COLOR.muted;
+                ctx.fillText('selected features → forecast', w * 0.05, h * 0.1);
+
+                const count = Math.floor(clamp01(p / 0.5) * SCATTER.length);
+                for (let i = 0; i < count; i++) {
+                    const pt = SCATTER[i];
+                    const px = plotX0 + pt.x * (plotX1 - plotX0);
+                    const py = plotY1 - pt.y * (plotY1 - plotY0);
+                    ctx.beginPath();
+                    ctx.arc(px, py, h * 0.012, 0, Math.PI * 2);
+                    ctx.fillStyle = COLOR.accent;
+                    ctx.globalAlpha = fade * 0.7;
+                    ctx.fill();
+                }
+
+                const lineProgress = clamp01((p - 0.45) / 0.5);
+                if (lineProgress > 0) {
+                    ctx.globalAlpha = fade;
+                    ctx.strokeStyle = COLOR.accent;
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    const x0 = 0, x1 = lineProgress;
+                    ctx.moveTo(plotX0 + x0 * (plotX1 - plotX0), plotY1 - clamp01(intercept + slope * x0) * (plotY1 - plotY0));
+                    ctx.lineTo(plotX0 + x1 * (plotX1 - plotX0), plotY1 - clamp01(intercept + slope * x1) * (plotY1 - plotY0));
+                    ctx.stroke();
+                }
+                ctx.globalAlpha = 1;
+            }
+
+            function drawFrame(now) {
+                const w = canvas.width, h = canvas.height;
+                ctx.fillStyle = COLOR.bg;
+                ctx.fillRect(0, 0, w, h);
+                if (reduceMotion) {
+                    drawAct3(w, h, ACT3);
+                    return;
+                }
+                const cyclePos = now % TOTAL;
+                if (cyclePos < ACT1) drawAct1(w, h, cyclePos);
+                else if (cyclePos < ACT1 + ACT2) drawAct2(w, h, cyclePos - ACT1);
+                else drawAct3(w, h, cyclePos - ACT1 - ACT2);
+            }
+
+            function resizeCanvas() {
+                const rect = canvas.getBoundingClientRect();
+                if (!rect.width || !rect.height) return;
+                const dpr = Math.min(window.devicePixelRatio || 1, 2);
+                canvas.width = rect.width * dpr;
+                canvas.height = rect.height * dpr;
+                drawFrame(performance.now());
+            }
+            new ResizeObserver(resizeCanvas).observe(canvas);
+            resizeCanvas();
+
+            if (!reduceMotion) {
+                let inView = false;
+                let looping = false;
+                function loop(now) {
+                    if (!inView) { looping = false; return; }
+                    drawFrame(now);
+                    requestAnimationFrame(loop);
+                }
+                new IntersectionObserver((entries) => {
+                    inView = entries[0].isIntersecting;
+                    if (inView && !looping) {
+                        looping = true;
+                        requestAnimationFrame(loop);
+                    }
+                }, { threshold: 0.1 }).observe(canvas);
+            }
         })();
     </script>
 
