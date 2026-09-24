@@ -1433,8 +1433,8 @@
 
             const FEATURES = [
                 { name: 'GDP growth', x: 0.16, y: 0.20 },
-                { name: 'price index', x: 0.36, y: 0.12 },
-                { name: 'seasonality', x: 0.11, y: 0.55 },
+                { name: 'price index', x: 0.36, y: 0.22 },
+                { name: 'seasonality', x: 0.24, y: 0.55 },
                 { name: 'prior-period sales', x: 0.36, y: 0.68 },
                 { name: 'promo activity', x: 0.20, y: 0.85 },
             ];
@@ -1540,15 +1540,15 @@
             }
 
             function drawBarPanel(w, h, cx, label, sign, growth, showMark, color) {
-                const baseline = h * 0.62;
+                const baseline = h * 0.58;
                 const barHalf = w * 0.05;
-                const barH = ease(growth) * h * 0.16;
+                const barH = ease(growth) * h * 0.14;
                 ctx.fillStyle = color;
                 ctx.fillRect(cx - barHalf, sign > 0 ? baseline - barH : baseline, barHalf * 2, barH);
                 ctx.font = `${Math.max(10, h * 0.04)}px ${MONO}`;
                 ctx.textAlign = 'center';
                 ctx.fillStyle = COLOR.muted;
-                ctx.fillText(label, cx, h * 0.78);
+                ctx.fillText(label, cx, h * 0.9);
                 if (showMark > 0) {
                     ctx.globalAlpha = showMark;
                     ctx.fillStyle = color;
@@ -1561,7 +1561,7 @@
             function drawAct2(w, h, elapsed) {
                 const p = clamp01(elapsed / ACT2);
                 const fade = clamp01(elapsed / 300);
-                const baseline = h * 0.62;
+                const baseline = h * 0.58;
 
                 ctx.globalAlpha = fade;
                 ctx.font = `${Math.max(10, h * 0.04)}px ${MONO}`;
@@ -1582,7 +1582,7 @@
                 const growth = clamp01((p - 0.1) / 0.45);
                 const markAlpha = clamp01((p - 0.6) / 0.2);
                 ctx.globalAlpha = fade;
-                drawBarPanel(w, h, w * 0.32, 'all features', -1, growth, markAlpha, COLOR.warn);
+                drawBarPanel(w, h, w * 0.32, 'All features', -1, growth, markAlpha, COLOR.warn);
                 drawBarPanel(w, h, w * 0.62, 'GA-selected', 1, growth, markAlpha, COLOR.accent);
                 ctx.globalAlpha = 1;
             }
