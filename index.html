@@ -739,49 +739,78 @@
                 analyser.connect(audioCtx.destination);
             }
 
-            function scheduleScratch(frac) {
-                const now = audioCtx.currentTime;
+            // The scratch used to be scheduled live on the shared AudioContext,
+            // but that requires audioCtx.resume() to actually resolve, and on
+            // the auto-advance path (ended -> loadTrack) there's no fresh user
+            // gesture backing that resume, so it silently failed to play.
+            // Render the scratch once into a WAV and play it back through a
+            // plain <audio> element instead: same playback path the track
+            // itself already uses reliably on auto-advance, no AudioContext
+            // gating involved.
+            function bufferToWavBlob(buffer) {
+                const numCh = buffer.numberOfChannels;
+                const dataLen = buffer.length * numCh * 2;
+                const arrBuf = new ArrayBuffer(44 + dataLen);
+                const view = new DataView(arrBuf);
+                let offset = 0;
+                const writeString = (s) => { for (let i = 0; i < s.length; i++) view.setUint8(offset++, s.charCodeAt(i)); };
+                const writeU32 = (v) => { view.setUint32(offset, v, true); offset += 4; };
+                const writeU16 = (v) => { view.setUint16(offset, v, true); offset += 2; };
+                writeString('RIFF'); writeU32(36 + dataLen); writeString('WAVE');
+                writeString('fmt '); writeU32(16); writeU16(1); writeU16(numCh);
+                writeU32(buffer.sampleRate); writeU32(buffer.sampleRate * numCh * 2); writeU16(numCh * 2); writeU16(16);
+                writeString('data'); writeU32(dataLen);
+                const channels = Array.from({ length: numCh }, (_, c) => buffer.getChannelData(c));
+                for (let i = 0; i < buffer.length; i++) {
+                    for (let c = 0; c < numCh; c++) {
+                        const s = Math.max(-1, Math.min(1, channels[c][i]));
+                        view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7fff, true);
+                        offset += 2;
+                    }
+                }
+                return new Blob([arrBuf], { type: 'audio/wav' });
+            }
+
+            let scratchAudio = null;
+            (async () => {
                 const dur = 0.22;
-                const buffer = audioCtx.createBuffer(1, Math.floor(audioCtx.sampleRate * dur), audioCtx.sampleRate);
+                const sampleRate = 44100;
+                const offlineCtx = new (window.OfflineAudioContext || window.webkitOfflineAudioContext)(1, Math.ceil(sampleRate * dur), sampleRate);
+                const buffer = offlineCtx.createBuffer(1, Math.floor(sampleRate * dur), sampleRate);
                 const data = buffer.getChannelData(0);
                 for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
 
-                const noise = audioCtx.createBufferSource();
+                const noise = offlineCtx.createBufferSource();
                 noise.buffer = buffer;
 
-                const filter = audioCtx.createBiquadFilter();
+                const filter = offlineCtx.createBiquadFilter();
                 filter.type = 'bandpass';
                 filter.Q.value = 5;
-                filter.frequency.setValueAtTime(2200, now);
-                filter.frequency.linearRampToValueAtTime(250, now + dur * 0.35);
-                filter.frequency.linearRampToValueAtTime(1600, now + dur * 0.65);
-                filter.frequency.linearRampToValueAtTime(400, now + dur);
+                filter.frequency.setValueAtTime(2200, 0);
+                filter.frequency.linearRampToValueAtTime(250, dur * 0.35);
+                filter.frequency.linearRampToValueAtTime(1600, dur * 0.65);
+                filter.frequency.linearRampToValueAtTime(400, dur);
 
-                const scratchGain = audioCtx.createGain();
-                const peak = 0.7 * frac * frac;
-                scratchGain.gain.setValueAtTime(0, now);
-                scratchGain.gain.linearRampToValueAtTime(peak, now + 0.015);
-                scratchGain.gain.exponentialRampToValueAtTime(0.001, now + dur);
+                const envelope = offlineCtx.createGain();
+                envelope.gain.setValueAtTime(0, 0);
+                envelope.gain.linearRampToValueAtTime(1, 0.015);
+                envelope.gain.exponentialRampToValueAtTime(0.001, dur);
 
-                noise.connect(filter).connect(scratchGain).connect(audioCtx.destination);
-                noise.start(now);
-                noise.stop(now + dur);
-            }
+                noise.connect(filter).connect(envelope).connect(offlineCtx.destination);
+                noise.start(0);
+
+                const rendered = await offlineCtx.startRendering();
+                scratchAudio = new Audio(URL.createObjectURL(bufferToWavBlob(rendered)));
+                scratchAudio.preload = 'auto';
+            })();
 
             function playScratch() {
+                if (!scratchAudio) return;
                 const frac = volumeSlider.value / 100;
                 if (audio.muted || frac <= 0) return;
-                ensureAudioGraph();
-                if (audioCtx.state === 'suspended') {
-                    // Scheduling against a suspended context's stale currentTime
-                    // silently produces no sound, so wait for it to actually
-                    // resume before scheduling. This is what was skipping the
-                    // scratch on auto-advance (no fresh user gesture backing
-                    // it), most noticeably on the wrap back to track 0.
-                    audioCtx.resume().then(() => scheduleScratch(frac)).catch(() => {});
-                } else {
-                    scheduleScratch(frac);
-                }
+                scratchAudio.currentTime = 0;
+                scratchAudio.volume = Math.min(1, frac * frac);
+                scratchAudio.play().catch(() => {});
             }
 
             let trackIndex = 0;
