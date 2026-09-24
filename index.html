@@ -129,7 +129,7 @@
             gap: 0.75rem;
             margin-top: 0.6rem;
         }
-        #player-toggle, #viz-cycle, #track-prev, #track-next {
+        #player-toggle, #viz-cycle, #track-prev, #track-next, #volume-toggle {
             width: 32px;
             height: 32px;
             flex: 0 0 auto;
@@ -144,7 +144,44 @@
             font-size: 0.75rem;
             transition: border-color 0.2s ease, color 0.2s ease;
         }
-        #player-toggle:hover, #viz-cycle:hover, #track-prev:hover, #track-next:hover { border-color: var(--accent); color: var(--accent); }
+        #player-toggle:hover, #viz-cycle:hover, #track-prev:hover, #track-next:hover, #volume-toggle:hover { border-color: var(--accent); color: var(--accent); }
+        .volume-row {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            margin-top: 0.5rem;
+        }
+        #volume-slider {
+            flex: 1 1 auto;
+            -webkit-appearance: none;
+            appearance: none;
+            height: 3px;
+            background: var(--rule);
+            border-radius: 2px;
+            outline: none;
+            cursor: pointer;
+        }
+        #volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 11px;
+            height: 11px;
+            border-radius: 50%;
+            background: var(--accent);
+            cursor: pointer;
+        }
+        #volume-slider::-moz-range-thumb {
+            width: 11px;
+            height: 11px;
+            border-radius: 50%;
+            background: var(--accent);
+            border: none;
+            cursor: pointer;
+        }
+        #volume-slider::-moz-range-track {
+            height: 3px;
+            background: var(--rule);
+            border-radius: 2px;
+        }
         #player-time {
             font-family: var(--mono);
             font-size: 0.75rem;
@@ -443,6 +480,10 @@
                     <span id="player-time">0:00</span>
                     <button id="viz-cycle" aria-label="Change visualization" title="Change visualization"><i class="fas fa-shuffle"></i></button>
                 </div>
+                <div class="volume-row">
+                    <button id="volume-toggle" aria-label="Mute"><i class="fas fa-volume-high"></i></button>
+                    <input id="volume-slider" type="range" min="0" max="100" value="80" aria-label="Volume">
+                </div>
                 <p class="waveform-hint"><span id="viz-preset-name">bars &amp; waves</span>, click to seek</p>
             </div>
         </aside>
@@ -652,9 +693,32 @@
             const timeEl = document.getElementById('player-time');
             const cycleBtn = document.getElementById('viz-cycle');
             const presetNameEl = document.getElementById('viz-preset-name');
+            const volumeToggle = document.getElementById('volume-toggle');
+            const volumeIcon = volumeToggle.querySelector('i');
+            const volumeSlider = document.getElementById('volume-slider');
 
             const audio = new Audio();
             audio.preload = 'none';
+            audio.volume = volumeSlider.value / 100;
+
+            function volumeIconClass() {
+                if (audio.muted || audio.volume === 0) return 'fas fa-volume-xmark';
+                if (audio.volume < 0.5) return 'fas fa-volume-low';
+                return 'fas fa-volume-high';
+            }
+            function updateVolumeIcon() {
+                volumeIcon.className = volumeIconClass();
+            }
+            volumeSlider.addEventListener('input', () => {
+                audio.volume = volumeSlider.value / 100;
+                if (audio.volume > 0) audio.muted = false;
+                updateVolumeIcon();
+            });
+            volumeToggle.addEventListener('click', () => {
+                audio.muted = !audio.muted;
+                updateVolumeIcon();
+            });
+            updateVolumeIcon();
 
             let audioCtx, analyser, freqData, timeData;
             function ensureAudioGraph() {
