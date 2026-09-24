@@ -103,15 +103,13 @@
             display: block;
             margin-bottom: 0.6rem;
         }
-        #track-select {
-            width: 100%;
-            background: var(--bg-elevated);
+        #track-info {
             color: var(--text);
-            border: 1px solid var(--rule);
-            padding: 0.5rem 0.6rem;
-            font-family: var(--sans);
             font-size: 0.82rem;
-            border-radius: 3px;
+            margin: 0;
+        }
+        #track-info .track-artist {
+            color: var(--text-muted);
         }
         .viz-canvas {
             width: 100%;
@@ -129,7 +127,7 @@
             gap: 0.75rem;
             margin-top: 0.6rem;
         }
-        #player-toggle, #viz-cycle {
+        #player-toggle, #viz-cycle, #track-prev, #track-next {
             width: 32px;
             height: 32px;
             flex: 0 0 auto;
@@ -144,7 +142,7 @@
             font-size: 0.75rem;
             transition: border-color 0.2s ease, color 0.2s ease;
         }
-        #player-toggle:hover, #viz-cycle:hover { border-color: var(--accent); color: var(--accent); }
+        #player-toggle:hover, #viz-cycle:hover, #track-prev:hover, #track-next:hover { border-color: var(--accent); color: var(--accent); }
         #player-time {
             font-family: var(--mono);
             font-size: 0.75rem;
@@ -425,11 +423,13 @@
             </div>
 
             <div class="music-widget">
-                <label class="music-label" for="track-select">now playing</label>
-                <select id="track-select"></select>
+                <span class="music-label">now playing</span>
+                <p id="track-info"></p>
                 <canvas id="viz-canvas" class="viz-canvas" aria-label="Real-time audio visualizer"></canvas>
                 <div class="player-row">
+                    <button id="track-prev" aria-label="Previous track"><i class="fas fa-backward-step"></i></button>
                     <button id="player-toggle" aria-label="Play"><i class="fas fa-play"></i></button>
+                    <button id="track-next" aria-label="Next track"><i class="fas fa-forward-step"></i></button>
                     <span id="player-time">0:00</span>
                     <button id="viz-cycle" aria-label="Change visualization" title="Change visualization"><i class="fas fa-shuffle"></i></button>
                 </div>
@@ -448,7 +448,7 @@
                 <details class="pro-project">
                     <summary><img class="pro-logo" src="assets/images/grivy-icon.png" alt="Grivy"><h3>Data Clean Room Pipeline</h3><i class="fas fa-chevron-down"></i></summary>
                     <div class="pro-body">
-                    <p class="pro-context">Grivy, privacy-preserving campaign measurement across organizational boundaries</p>
+                    <p class="pro-context">Privacy-preserving Online-to-Offline campaign measurement across organizational boundaries</p>
 
                     <svg class="flow-diagram" viewBox="0 0 640 380" role="img" aria-label="Diagram: audience source flows into orchestration, which pushes a hashed audience to ad platforms for exposure and a separately hashed cohort to a retail partner clean room, receiving purchase match results back, with no raw personal data crossing any boundary">
                         <defs>
@@ -490,8 +490,8 @@
 
                     <div class="article">
                         <p>Here's the actual shape of the problem: Grivy runs a campaign on Meta, TikTok, or The Trade Desk, and a retail partner wants to know if the people who saw that ad went on to buy something in their stores. Three different companies, one question, and none of us are supposed to see each other's raw customer data.</p>
-                        <p>So the pipeline pushes the same audience to two places at once. The ad platform gets a hashed version of the audience so it can serve the campaign and report exposure. The retail partner gets a separately hashed version of that same audience, hashed with a key that's unique to them, so they can join it against their own purchase data without either side ever exchanging a real phone number or email. Whatever they find, they only send back aggregate counts. Not receipts, not names.</p>
-                        <p>The hashing itself isn't the hard part, it's a well-known pattern. What I actually spent effort on was making the orchestration layer boring: every step is config-driven and safe to re-run, so a failed push to one partner doesn't mean redoing the whole campaign by hand.</p>
+                        <p>So the pipeline pushes the same audience to two places at once. The ad platform gets a hashed version of the audience so it can serve the campaign and report exposure. The retail partner gets a separately hashed version of that same audience, hashed with a key that's unique to them, so they can join it against their own purchase data without either side ever exchanging a real phone number or email. Whatever they find, they only send back aggregate counts.</p>
+                        <p>The hashing itself isn't the hard part because it's a well-documented pattern. What I actually spent effort on was making the orchestration layer bend instead of break: every step is config-driven and safe to re-run, so a failed push to one partner doesn't mean redoing the whole campaign by hand.</p>
                     </div>
                     </div>
                 </details>
@@ -499,7 +499,7 @@
                 <details class="pro-project">
                     <summary><img class="pro-logo" src="assets/images/grivy-icon.png" alt="Grivy"><h3>Semantic Audience Search</h3><i class="fas fa-chevron-down"></i></summary>
                     <div class="pro-body">
-                    <p class="pro-context">Grivy, turning a plain-language audience description into a set of matching users at scale</p>
+                    <p class="pro-context">Turning a plain-language audience description into a set of matching users at scale</p>
 
                     <svg class="flow-diagram" viewBox="0 0 910 220" role="img" aria-label="Diagram: user profiles are embedded monthly using delta detection into a vector store, which a search stored procedure queries directly">
                         <defs>
@@ -604,7 +604,9 @@
 
             const canvas = document.getElementById('viz-canvas');
             const ctx = canvas.getContext('2d');
-            const select = document.getElementById('track-select');
+            const trackInfo = document.getElementById('track-info');
+            const prevBtn = document.getElementById('track-prev');
+            const nextBtn = document.getElementById('track-next');
             const playBtn = document.getElementById('player-toggle');
             const playIcon = playBtn.querySelector('i');
             const timeEl = document.getElementById('player-time');
@@ -627,16 +629,27 @@
                 analyser.connect(audioCtx.destination);
             }
 
-            select.innerHTML = TRACKS.map((t, i) => `<option value="${i}">${t.title} by ${t.artist}</option>`).join('');
+            let trackIndex = 0;
 
-            function loadTrack(track) {
+            function loadTrack(index) {
+                trackIndex = (index + TRACKS.length) % TRACKS.length;
+                const track = TRACKS[trackIndex];
+                const wasPlaying = !audio.paused;
                 audio.pause();
                 audio.src = track.src;
-                playIcon.className = 'fas fa-play';
+                trackInfo.innerHTML = `${track.title} <span class="track-artist">by ${track.artist}</span>`;
                 timeEl.textContent = '0:00';
+                if (wasPlaying) {
+                    ensureAudioGraph();
+                    audio.play().catch(err => console.error('Playback failed:', err));
+                } else {
+                    playIcon.className = 'fas fa-play';
+                }
             }
 
-            select.addEventListener('change', () => loadTrack(TRACKS[select.value]));
+            loadTrack(0);
+            prevBtn.addEventListener('click', () => loadTrack(trackIndex - 1));
+            nextBtn.addEventListener('click', () => loadTrack(trackIndex + 1));
             playBtn.addEventListener('click', () => {
                 ensureAudioGraph();
                 if (audioCtx.state === 'suspended') audioCtx.resume().catch(err => console.error('Audio context resume failed:', err));
@@ -648,6 +661,11 @@
             });
             audio.addEventListener('play', () => { playIcon.className = 'fas fa-pause'; });
             audio.addEventListener('pause', () => { playIcon.className = 'fas fa-play'; });
+            audio.addEventListener('ended', () => {
+                loadTrack(trackIndex + 1);
+                ensureAudioGraph();
+                audio.play().catch(err => console.error('Playback failed:', err));
+            });
             audio.addEventListener('timeupdate', () => {
                 const mins = Math.floor(audio.currentTime / 60);
                 const secs = String(Math.floor(audio.currentTime % 60)).padStart(2, '0');
@@ -791,8 +809,6 @@
                 else drawEqualizer(w, h);
             }
             render();
-
-            loadTrack(TRACKS[0]);
         })();
     </script>
 
