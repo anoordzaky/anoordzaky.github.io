@@ -1744,6 +1744,11 @@
                 }
             }
             const LABELED = [2, 7, 11, 14];
+            const NOISE_SPECKS = LABELED.map((_, idx) => {
+                let seed = 11 + idx * 37;
+                const rand = () => { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
+                return Array.from({ length: 9 }, () => ({ dx: (rand() - 0.5) * 1.8, dy: (rand() - 0.5) * 1.8 }));
+            });
 
             const ACT1 = 6000, ACT2 = 4500, ACT3 = 5000;
             const TOTAL = ACT1 + ACT2 + ACT3;
@@ -1756,29 +1761,30 @@
                 ctx.stroke();
             }
 
-            const AUG_KINDS = ['flip', 'shear', 'flip+shear'];
-            const AUG_DUR = 600; // ms, how long a box takes to finish shearing/flipping once labeled
+            const AUG_KINDS = ['noise', 'shear', 'noise+shear'];
+            const AUG_DUR = 600; // ms, how long a box takes to finish augmenting once labeled
 
-            function drawAugmentedBox(cx, cy, boxHalf, kind, amount, color) {
-                let sx = 1, shear = 0;
-                if (kind === 'flip') sx = lerp(1, -1, amount);
-                else if (kind === 'shear') shear = lerp(0, 0.55, amount);
-                else if (kind === 'flip+shear') { sx = lerp(1, -1, amount); shear = lerp(0, 0.55, amount); }
+            function drawAugmentedBox(cx, cy, pipeR, boxHalf, kind, amount, specks, color) {
+                const shear = (kind === 'shear' || kind === 'noise+shear') ? lerp(0, 0.55, amount) : 0;
                 ctx.save();
                 ctx.translate(cx, cy);
-                ctx.transform(sx, 0, shear, 1, 0, 0);
+                ctx.transform(1, 0, shear, 1, 0, 0);
+                drawPipe(0, 0, pipeR, color);
                 ctx.strokeStyle = color;
                 ctx.lineWidth = 1.3;
                 ctx.setLineDash([3, 3]);
                 ctx.strokeRect(-boxHalf, -boxHalf, boxHalf * 2, boxHalf * 2);
                 ctx.setLineDash([]);
-                ctx.beginPath();
-                ctx.moveTo(-boxHalf, 0);
-                ctx.lineTo(boxHalf, 0);
-                ctx.moveTo(0, -boxHalf);
-                ctx.lineTo(0, boxHalf);
-                ctx.lineWidth = 1;
-                ctx.stroke();
+                if (kind === 'noise' || kind === 'noise+shear') {
+                    ctx.fillStyle = color;
+                    specks.forEach((s) => {
+                        ctx.globalAlpha = amount * 0.8;
+                        ctx.beginPath();
+                        ctx.arc(s.dx * boxHalf, s.dy * boxHalf, boxHalf * 0.12, 0, Math.PI * 2);
+                        ctx.fill();
+                    });
+                    ctx.globalAlpha = 1;
+                }
                 ctx.restore();
             }
 
@@ -1801,15 +1807,17 @@
                     const x = pt.x * w, y = pt.y * h;
                     const labeledIdx = LABELED.indexOf(i);
                     const isLabeled = labeledIdx >= 0 && labeledIdx < numLabeled;
-                    ctx.globalAlpha = fade;
-                    drawPipe(x, y, r, isLabeled ? COLOR.accent : COLOR.muted);
-                    ctx.globalAlpha = 1;
+                    if (!isLabeled) {
+                        ctx.globalAlpha = fade;
+                        drawPipe(x, y, r, COLOR.muted);
+                        ctx.globalAlpha = 1;
+                    }
                     if (isLabeled) {
                         const revealElapsed = (0.05 + 0.5 * (labeledIdx + 1) / LABELED.length) * ACT1;
                         const amount = ease(clamp01((elapsed - revealElapsed) / AUG_DUR));
                         const kind = AUG_KINDS[labeledIdx % AUG_KINDS.length];
                         ctx.globalAlpha = fade;
-                        drawAugmentedBox(x, y, r * 2, kind, amount, COLOR.accent);
+                        drawAugmentedBox(x, y, r, r * 2, kind, amount, NOISE_SPECKS[labeledIdx], COLOR.accent);
                         if (amount > 0) {
                             ctx.globalAlpha = fade * amount;
                             ctx.textAlign = 'center';
@@ -1822,27 +1830,40 @@
                 });
             }
 
-            function drawTimingBar(w, h, cy, label, growDur, elapsed, color) {
-                const trackX0 = w * 0.32, trackX1 = w * 0.92;
-                const fillP = clamp01(elapsed / growDur);
+            function drawThroughputLane(w, h, cy, label, period, travel, elapsed, fade, color) {
+                const trackX0 = w * 0.32, trackX1 = w * 0.86;
                 ctx.strokeStyle = COLOR.muted;
-                ctx.globalAlpha = 0.4;
-                ctx.lineWidth = 6;
+                ctx.globalAlpha = fade * 0.3;
+                ctx.lineWidth = 2;
                 ctx.beginPath();
                 ctx.moveTo(trackX0, cy);
                 ctx.lineTo(trackX1, cy);
                 ctx.stroke();
-                ctx.globalAlpha = 1;
-                ctx.strokeStyle = color;
-                ctx.lineWidth = 6;
-                ctx.beginPath();
-                ctx.moveTo(trackX0, cy);
-                ctx.lineTo(trackX0 + (trackX1 - trackX0) * ease(fillP), cy);
-                ctx.stroke();
+
+                const markerR = h * 0.014;
+                const spawned = Math.floor(elapsed / period);
+                for (let k = 0; k <= spawned; k++) {
+                    const age = elapsed - k * period;
+                    if (age < 0 || age > travel) continue;
+                    const prog = age / travel;
+                    ctx.globalAlpha = fade * (1 - prog * 0.3);
+                    ctx.fillStyle = color;
+                    ctx.beginPath();
+                    ctx.arc(trackX0 + prog * (trackX1 - trackX0), cy, markerR, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                ctx.globalAlpha = fade;
                 ctx.font = `${Math.max(10, h * 0.038)}px ${MONO}`;
                 ctx.textAlign = 'right';
                 ctx.fillStyle = COLOR.muted;
                 ctx.fillText(label, trackX0 - w * 0.02, cy + h * 0.014);
+
+                if (spawned >= 1) {
+                    ctx.textAlign = 'left';
+                    ctx.fillStyle = color;
+                    ctx.fillText(`${(1000 / period).toFixed(1)}/s`, trackX1 + w * 0.02, cy + h * 0.014);
+                }
             }
 
             function drawAct2(w, h, elapsed) {
@@ -1851,18 +1872,19 @@
                 ctx.font = `${Math.max(10, h * 0.04)}px ${MONO}`;
                 ctx.textAlign = 'center';
                 ctx.fillStyle = COLOR.text;
-                ctx.fillText('inference time per frame', w * 0.5, h * 0.14);
+                ctx.fillText('pipes processed per second', w * 0.5, h * 0.14);
+                ctx.globalAlpha = 1;
 
-                const oldDur = 1800, newDur = 90;
-                drawTimingBar(w, h, h * 0.35, 'YOLOv3 · TF-CPU', oldDur, elapsed, COLOR.muted);
-                drawTimingBar(w, h, h * 0.5, 'YOLOv5s · optimized', newDur, elapsed, COLOR.accent);
+                const OLD_PERIOD = 1400, NEW_PERIOD = 40, TRAVEL = 1000;
+                drawThroughputLane(w, h, h * 0.32, 'YOLOv3 · TF-CPU', OLD_PERIOD, TRAVEL, elapsed, fade, COLOR.muted);
+                drawThroughputLane(w, h, h * 0.48, 'YOLOv5s · optimized', NEW_PERIOD, TRAVEL, elapsed, fade, COLOR.accent);
 
-                const labelAlpha = clamp01((elapsed - oldDur - 200) / 400);
+                const labelAlpha = clamp01((elapsed - 1800) / 400);
                 if (labelAlpha > 0) {
                     ctx.globalAlpha = fade * labelAlpha;
                     ctx.fillStyle = COLOR.accent;
                     ctx.font = `${Math.max(12, h * 0.05)}px ${MONO}`;
-                    ctx.fillText('~35x faster', w * 0.5, h * 0.62);
+                    ctx.fillText('~35x more throughput', w * 0.5, h * 0.62);
                 }
 
                 const accAlpha = clamp01((elapsed - 2600) / 400);
