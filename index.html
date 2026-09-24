@@ -16,6 +16,7 @@
             --text-muted: #8b8983;
             --accent: #ffb000;
             --warn: #c9584f;
+            --ok: #7bab6e;
             --rule: rgba(239, 236, 230, 0.1);
             --mono: 'JetBrains Mono', monospace;
             --sans: 'Inter', sans-serif;
@@ -1428,6 +1429,7 @@
                 muted: rootStyle.getPropertyValue('--text-muted').trim(),
                 accent: rootStyle.getPropertyValue('--accent').trim(),
                 warn: rootStyle.getPropertyValue('--warn').trim(),
+                ok: rootStyle.getPropertyValue('--ok').trim(),
             };
             const MONO = rootStyle.getPropertyValue('--mono').trim();
 
@@ -1438,7 +1440,14 @@
                 { name: 'prior-period sales', x: 0.36, y: 0.68 },
                 { name: 'promo activity', x: 0.20, y: 0.85 },
             ];
-            const DROPPED = 4;
+            // Each generation is a candidate feature subset the GA tries.
+            // `bad` marks features whose coefficient sign breaks the prior
+            // (here: GDP growth) for that particular combination.
+            const CANDIDATES = [
+                { included: [0, 1, 2, 3, 4], bad: [0] },
+                { included: [0, 1, 3, 4], bad: [0] },
+                { included: [0, 1, 2, 3], bad: [] },
+            ];
             const MODEL_POS = { x: 0.68, y: 0.5 };
 
             const ACT1 = 6000, ACT2 = 4500, ACT3 = 5000;
@@ -1485,36 +1494,47 @@
             }
 
             function drawAct1(w, h, elapsed) {
-                const p = clamp01(elapsed / ACT1);
                 const fade = clamp01(elapsed / 300);
-                const genPhase = clamp01((p - 0.15) / 0.7);
-                const gen = Math.min(2, Math.floor(genPhase * 3));
-                const droppedAlpha = 1 - Math.min(1, genPhase) * 0.75;
-                const keptGlow = Math.min(1, genPhase);
+                const genDur = ACT1 / CANDIDATES.length;
+                const gen = Math.min(CANDIDATES.length - 1, Math.floor(elapsed / genDur));
+                const genElapsed = elapsed - gen * genDur;
+                const genFade = clamp01(genElapsed / 400);
+                const candidate = CANDIDATES[gen];
 
                 ctx.font = `${Math.max(10, h * 0.04)}px ${MONO}`;
                 ctx.textAlign = 'left';
                 ctx.fillStyle = COLOR.muted;
                 ctx.globalAlpha = fade;
                 ctx.fillText('feature pool → genetic search', w * 0.05, h * 0.1);
-                if (genPhase > 0) {
-                    ctx.textAlign = 'right';
-                    ctx.fillStyle = COLOR.accent;
-                    ctx.fillText(`generation ${gen + 1} / 3`, w * 0.95, h * 0.1);
-                }
+                ctx.textAlign = 'right';
+                ctx.fillStyle = COLOR.accent;
+                ctx.fillText(`generation ${gen + 1} / ${CANDIDATES.length}`, w * 0.95, h * 0.1);
                 ctx.globalAlpha = 1;
 
                 drawModelNode(w, h, fade);
 
                 FEATURES.forEach((f, i) => {
-                    const isDropped = i === DROPPED;
-                    const a = fade * (isDropped ? droppedAlpha : 0.55 + 0.45 * keptGlow);
+                    const included = candidate.included.includes(i);
+                    const bad = candidate.bad.includes(i);
+                    const dotColor = !included ? COLOR.muted : (bad ? COLOR.warn : COLOR.ok);
+                    const a = fade * (included ? 1 : 0.35);
                     const fx = f.x * w, fy = f.y * h;
-                    const pulse = 1 + 0.08 * Math.sin(elapsed * 0.004 + i);
+                    const pulse = included ? 1 + 0.08 * Math.sin(elapsed * 0.004 + i) : 1;
+
+                    if (included) {
+                        ctx.globalAlpha = fade * genFade * (bad ? 0.7 : 0.85);
+                        ctx.strokeStyle = dotColor;
+                        ctx.lineWidth = 1.3;
+                        ctx.beginPath();
+                        ctx.moveTo(fx, fy);
+                        ctx.lineTo(MODEL_POS.x * w, MODEL_POS.y * h);
+                        ctx.stroke();
+                    }
+
                     ctx.globalAlpha = a;
                     ctx.beginPath();
                     ctx.arc(fx, fy, h * 0.022 * pulse, 0, Math.PI * 2);
-                    ctx.fillStyle = isDropped ? COLOR.muted : COLOR.accent;
+                    ctx.fillStyle = dotColor;
                     ctx.fill();
                     ctx.font = `${Math.max(9, h * 0.035)}px ${MONO}`;
                     ctx.textAlign = f.x < 0.3 ? 'right' : 'left';
@@ -1522,21 +1542,6 @@
                     ctx.fillText(f.name, f.x < 0.3 ? fx - h * 0.04 : fx + h * 0.04, fy + h * 0.015);
                     ctx.globalAlpha = 1;
                 });
-
-                if (p > 0.85) {
-                    const lp = clamp01((p - 0.85) / 0.15);
-                    FEATURES.forEach((f, i) => {
-                        if (i === DROPPED) return;
-                        ctx.globalAlpha = lp * 0.8;
-                        ctx.strokeStyle = COLOR.accent;
-                        ctx.lineWidth = 1.2;
-                        ctx.beginPath();
-                        ctx.moveTo(f.x * w, f.y * h);
-                        ctx.lineTo(MODEL_POS.x * w, MODEL_POS.y * h);
-                        ctx.stroke();
-                        ctx.globalAlpha = 1;
-                    });
-                }
             }
 
             function drawBarPanel(w, h, cx, label, sign, growth, showMark, color) {
