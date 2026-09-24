@@ -231,14 +231,14 @@
         }
         .portfolio-item a:hover { border-bottom-color: var(--accent); }
 
-        .fourier-widget {
+        .demo-widget {
             margin-top: 0.85rem;
             border: 1px solid var(--rule);
             border-radius: 3px;
             padding: 0.75rem;
             background: var(--bg-elevated);
         }
-        .fourier-canvas {
+        .demo-canvas {
             width: 100%;
             aspect-ratio: 1;
             max-width: 280px;
@@ -248,18 +248,18 @@
             cursor: crosshair;
             touch-action: none;
         }
-        .fourier-controls {
+        .demo-controls {
             display: flex;
             justify-content: space-between;
             align-items: center;
             max-width: 280px;
             margin-top: 0.5rem;
         }
-        .fourier-hint {
+        .demo-hint {
             font-size: 0.72rem;
             color: var(--text-muted);
         }
-        #fourier-clear {
+        .demo-controls button {
             background: transparent;
             border: 1px solid var(--rule);
             color: var(--text-muted);
@@ -269,7 +269,7 @@
             border-radius: 3px;
             cursor: pointer;
         }
-        #fourier-clear:hover { border-color: var(--accent); color: var(--accent); }
+        .demo-controls button:hover { border-color: var(--accent); color: var(--accent); }
 
         footer {
             max-width: 1100px;
@@ -363,6 +363,13 @@
                         <p>A script to generate a Julia Set animation, using JAX for faster rendering times.</p>
                         <a href="https://github.com/anoordzaky/julia">View Project</a>
                         <a href="https://drive.google.com/file/d/1YcpoYkiB571VElE8nYYpfbn-dNtoBvSu/view?usp=sharing">Sample Animation</a>
+                        <div class="demo-widget">
+                            <canvas id="julia-canvas" class="demo-canvas" aria-label="Move your cursor to reshape a live Julia set"></canvas>
+                            <div class="demo-controls">
+                                <span class="demo-hint">move over it to reshape, scroll to zoom</span>
+                                <button id="julia-reset" type="button">reset</button>
+                            </div>
+                        </div>
                     </div>
                     <div class="portfolio-item">
                         <h3>Ray Tracing using Numpy</h3>
@@ -375,10 +382,10 @@
                         <p>A script to generate drawings of a contour using Discrete Fourier Transformation.</p>
                         <a href="https://github.com/anoordzaky/drawing_with_fourier_series">View Project</a>
                         <a href="https://drive.google.com/file/d/1aDw1u-I1uDGH-UfBwKJId0FuFuTdWGJP/view?usp=sharing">Sample Animation</a>
-                        <div class="fourier-widget">
-                            <canvas id="fourier-canvas" class="fourier-canvas" aria-label="Draw a shape to see it reconstructed as a Fourier series"></canvas>
-                            <div class="fourier-controls">
-                                <span class="fourier-hint">draw something, watch it redraw itself</span>
+                        <div class="demo-widget">
+                            <canvas id="fourier-canvas" class="demo-canvas" aria-label="Draw a shape to see it reconstructed as a Fourier series"></canvas>
+                            <div class="demo-controls">
+                                <span class="demo-hint">draw something, watch it redraw itself</span>
                                 <button id="fourier-clear" type="button">clear</button>
                             </div>
                         </div>
@@ -696,6 +703,151 @@
 
             window.addEventListener('resize', resizeCanvas);
             resizeCanvas();
+        })();
+    </script>
+
+    <script>
+        (function () {
+            const canvas = document.getElementById('julia-canvas');
+            const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+            const hint = document.querySelector('#julia-canvas').closest('.demo-widget').querySelector('.demo-hint');
+            if (!gl) {
+                hint.textContent = 'WebGL not supported in this browser';
+                return;
+            }
+
+            const vsSource = `
+                attribute vec2 a_position;
+                void main() {
+                    gl_Position = vec4(a_position, 0.0, 1.0);
+                }
+            `;
+            const fsSource = `
+                precision highp float;
+                uniform vec2 u_resolution;
+                uniform vec2 u_c;
+                uniform float u_zoom;
+
+                void main() {
+                    vec2 uv = (gl_FragCoord.xy / u_resolution.xy) * 2.0 - 1.0;
+                    uv.x *= u_resolution.x / u_resolution.y;
+                    vec2 z = uv * u_zoom;
+                    vec2 c = u_c;
+                    float iter = 0.0;
+                    for (int i = 0; i < 150; i++) {
+                        if (dot(z, z) > 4.0) break;
+                        z = vec2(z.x * z.x - z.y * z.y, 2.0 * z.x * z.y) + c;
+                        iter += 1.0;
+                    }
+                    float t = iter / 150.0;
+                    if (iter < 149.5) {
+                        float logZn = log(dot(z, z)) / 2.0;
+                        float nu = log(logZn / log(2.0)) / log(2.0);
+                        t = (iter + 1.0 - nu) / 150.0;
+                    }
+                    vec3 bg = vec3(0.09, 0.086, 0.102);
+                    vec3 accent = vec3(1.0, 0.6902, 0.0);
+                    vec3 color = mix(bg, accent, clamp(t * 2.2, 0.0, 1.0));
+                    gl_FragColor = vec4(color, 1.0);
+                }
+            `;
+
+            function compileShader(type, source) {
+                const shader = gl.createShader(type);
+                gl.shaderSource(shader, source);
+                gl.compileShader(shader);
+                if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+                    console.error(gl.getShaderInfoLog(shader));
+                    gl.deleteShader(shader);
+                    return null;
+                }
+                return shader;
+            }
+
+            const vs = compileShader(gl.VERTEX_SHADER, vsSource);
+            const fs = compileShader(gl.FRAGMENT_SHADER, fsSource);
+            const program = gl.createProgram();
+            gl.attachShader(program, vs);
+            gl.attachShader(program, fs);
+            gl.linkProgram(program);
+            if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+                console.error(gl.getProgramInfoLog(program));
+                return;
+            }
+            gl.useProgram(program);
+
+            const posBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, posBuffer);
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, -1, 1, 1, -1, 1, 1]), gl.STATIC_DRAW);
+            const posLoc = gl.getAttribLocation(program, 'a_position');
+            gl.enableVertexAttribArray(posLoc);
+            gl.vertexAttribPointer(posLoc, 2, gl.FLOAT, false, 0, 0);
+
+            const uResolution = gl.getUniformLocation(program, 'u_resolution');
+            const uC = gl.getUniformLocation(program, 'u_c');
+            const uZoom = gl.getUniformLocation(program, 'u_zoom');
+
+            const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            const DEFAULT_ZOOM = 1.5;
+            let zoom = DEFAULT_ZOOM;
+            let targetC = null;
+            let autoT = 0;
+            let lastInteraction = -Infinity;
+
+            function resize() {
+                const rect = canvas.getBoundingClientRect();
+                const dpr = Math.min(window.devicePixelRatio || 1, 2);
+                canvas.width = rect.width * dpr;
+                canvas.height = rect.height * dpr;
+                gl.viewport(0, 0, canvas.width, canvas.height);
+            }
+            window.addEventListener('resize', resize);
+            resize();
+
+            function getC(e) {
+                const rect = canvas.getBoundingClientRect();
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                const x = (clientX - rect.left) / rect.width;
+                const y = (clientY - rect.top) / rect.height;
+                return { x: (x * 2 - 1), y: -(y * 2 - 1) };
+            }
+
+            function onMove(e) {
+                targetC = getC(e);
+                lastInteraction = performance.now();
+            }
+            canvas.addEventListener('mousemove', onMove);
+            canvas.addEventListener('touchmove', (e) => { e.preventDefault(); onMove(e); }, { passive: false });
+            canvas.addEventListener('touchstart', (e) => { e.preventDefault(); onMove(e); }, { passive: false });
+            canvas.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                zoom *= e.deltaY > 0 ? 1.1 : 0.9;
+                zoom = Math.min(Math.max(zoom, 0.3), 3);
+            }, { passive: false });
+
+            document.getElementById('julia-reset').addEventListener('click', () => {
+                zoom = DEFAULT_ZOOM;
+                targetC = null;
+                lastInteraction = -Infinity;
+            });
+
+            function render() {
+                const idleFor = performance.now() - lastInteraction;
+                let c;
+                if (targetC && idleFor < 4000) {
+                    c = targetC;
+                } else {
+                    if (!reduceMotion) autoT += 0.004;
+                    c = { x: 0.7885 * Math.cos(autoT), y: 0.7885 * Math.sin(autoT) };
+                }
+                gl.uniform2f(uResolution, canvas.width, canvas.height);
+                gl.uniform2f(uC, c.x, c.y);
+                gl.uniform1f(uZoom, zoom);
+                gl.drawArrays(gl.TRIANGLES, 0, 6);
+                requestAnimationFrame(render);
+            }
+            render();
         })();
     </script>
 </body>
