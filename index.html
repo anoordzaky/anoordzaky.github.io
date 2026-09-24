@@ -501,7 +501,7 @@
 
         <main class="content">
             <section class="section hero" id="about">
-                <p class="tagline">Data Professional with multiple years of experience turning business data into decisions.</p>
+                <p class="tagline">Data professional with multiple years of experience turning business data into decisions.</p>
                 <p class="work-line">Currently Data Analyst at Grivy. Full work history on <a href="https://linkedin.com/in/anoordzaky">LinkedIn</a>.</p>
             </section>
 
@@ -639,11 +639,10 @@
                 <details class="pro-project">
                     <summary><img class="pro-logo" src="assets/images/centro-icon.png" alt="Centro Studio"><h3>Centro Studio</h3><i class="fas fa-chevron-down"></i></summary>
                     <div class="pro-body">
-                    <p class="pro-context">A two-person product design and development studio, cofounded with my friend Dhimas &middot; <a href="https://www.centro-studio.com/">centro-studio.com</a></p>
+                    <p class="pro-context">A product design and development studio &middot; <a href="https://www.centro-studio.com/">centro-studio.com</a></p>
 
                     <div class="article">
                         <p>Centro Studio is a small studio Dhimas and I started together. He's a senior product designer at Tabsquare (Delivery Hero) in Singapore, I'm on the data side at Grivy, and between the two day jobs we both had opinions about design and engineering that neither of us got to use fully on our own. Centro is where we use them, on client work and on the studio's own site. He leads interface and motion, I lead the software and the parts that have to survive real traffic, but neither of us stays only in our lane, that's the actual point of doing this together instead of separately.</p>
-                        <p>The studio's own homepage is the clearest example of what that looks like in practice. The opening line draws itself in as you scroll, not as a typing effect, but rendered on a canvas: each character dithers up through a pixel crest before settling solid, and the fill position tracks scroll position 1:1 instead of easing toward it, because an earlier version that eased its own progress on top of the smooth-scroll library ended up lagging the wheel and still drifting after you'd stopped. Small detail, but it's the difference between an effect that feels attached to your hand and one that feels like it's catching up to you.</p>
                         <p>The chrome mark in the corner up there is the studio's actual logo, and the two case studies it leads to are real: CalcFlow and SADJI, the other two projects on this page.</p>
                     </div>
                     </div>
@@ -913,9 +912,40 @@
                 const frac = volumeSlider.value / 100;
                 if (audio.muted || frac <= 0) return;
                 scratchAudio.currentTime = 0;
-                scratchAudio.volume = Math.min(1, frac * frac);
+                // A transient percussive cue needs to cut through even when the
+                // ambient track volume is low (default is 7%); tying it to the
+                // same frac^2 curve as the music made it inaudible at low
+                // volumes even though it was technically playing. Floor it
+                // instead of squaring it, so it still scales down when the
+                // user wants things quiet but never disappears.
+                scratchAudio.volume = Math.min(1, Math.max(0.35, frac));
                 scratchAudio.play().catch(() => {});
             }
+
+            // Playing an <audio> element with no user gesture behind the call
+            // (as happens on auto-advance, from the 'ended' handler below) is
+            // only reliably allowed once the browser has seen a real gesture
+            // succeed on that specific element at least once. The main track
+            // gets that for free from the Play button click. scratchAudio
+            // never gets a direct click of its own, so prime it silently on
+            // the first real pointer/key interaction anywhere on the page,
+            // well before the first track can ever end.
+            function primeScratchAudio() {
+                if (!scratchAudio) return;
+                scratchAudio.play().then(() => {
+                    scratchAudio.pause();
+                    scratchAudio.currentTime = 0;
+                }).catch(() => {});
+                // Only unhook once it actually had a scratchAudio to prime -
+                // the offline render may not be ready on the very first
+                // gesture, so keep listening until one succeeds.
+                ['pointerdown', 'keydown'].forEach((type) => {
+                    window.removeEventListener(type, primeScratchAudio);
+                });
+            }
+            ['pointerdown', 'keydown'].forEach((type) => {
+                window.addEventListener(type, primeScratchAudio, { passive: true });
+            });
 
             let trackIndex = 0;
 
