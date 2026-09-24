@@ -233,6 +233,66 @@
         }
         .portfolio-item a:hover { border-bottom-color: var(--accent); }
 
+        .pro-project {
+            padding-top: 0.5rem;
+        }
+        .pro-project h3 {
+            font-family: var(--mono);
+            font-size: 1.05rem;
+            font-weight: 500;
+            margin: 0 0 0.4rem;
+        }
+        .pro-project .pro-context {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin: 0 0 1.25rem;
+        }
+        .flow-diagram {
+            width: 100%;
+            height: auto;
+            display: block;
+            margin-bottom: 1.5rem;
+        }
+        .flow-diagram text {
+            font-family: var(--mono);
+            fill: var(--text);
+        }
+        .flow-diagram .flow-label {
+            fill: var(--text-muted);
+            font-size: 12px;
+        }
+        .flow-diagram .flow-box {
+            fill: var(--bg-elevated);
+            stroke: var(--rule);
+        }
+        .flow-diagram .flow-boundary {
+            stroke: var(--accent);
+            stroke-dasharray: 4 4;
+            opacity: 0.5;
+        }
+        .flow-diagram .flow-arrow {
+            stroke: var(--text-muted);
+            fill: none;
+            marker-end: url(#flow-arrowhead);
+        }
+        .flow-diagram .flow-arrow-hash {
+            stroke: var(--accent);
+            stroke-dasharray: 5 4;
+            animation: flow-dash 1.2s linear infinite;
+        }
+        @keyframes flow-dash {
+            to { stroke-dashoffset: -18; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .flow-diagram .flow-arrow-hash { animation: none; }
+        }
+        .pro-project .article p {
+            font-size: 0.92rem;
+            line-height: 1.7;
+            margin: 0 0 1rem;
+            max-width: 68ch;
+        }
+
         .demo-widget {
             margin-top: 0.85rem;
             border: 1px solid var(--rule);
@@ -341,6 +401,52 @@
             <section class="section hero" id="about">
                 <p class="tagline">Data Analyst with 3+ years turning business data into decisions through SQL analysis on cloud data warehouses, dashboards, forecasting, and clear communication of findings to stakeholders. Skilled in SQL, BigQuery, Python, Looker, and Tableau.</p>
                 <p class="work-line">Currently Data Analyst at Grivy — full work history on <a href="https://linkedin.com/in/anoordzaky">LinkedIn</a>.</p>
+            </section>
+
+            <section class="section" id="professional-projects">
+                <h2>// professional projects</h2>
+                <div class="pro-project">
+                    <h3>Data Clean Room Pipeline</h3>
+                    <p class="pro-context">Grivy — privacy-preserving campaign measurement across organizational boundaries</p>
+
+                    <svg class="flow-diagram" viewBox="0 0 800 220" role="img" aria-label="Diagram: audience source flows into orchestration, which sends a hashed cohort to a partner clean room and receives aggregate results back, with no raw personal data ever crossing the boundary">
+                        <defs>
+                            <marker id="flow-arrowhead" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+                                <path d="M0,0 L6,3 L0,6 Z" fill="var(--text-muted)"></path>
+                            </marker>
+                        </defs>
+
+                        <rect class="flow-box" x="20" y="70" width="180" height="80" rx="3"></rect>
+                        <text x="110" y="105" text-anchor="middle" font-size="14">Audience</text>
+                        <text x="110" y="123" text-anchor="middle" font-size="14">Source</text>
+
+                        <rect class="flow-box" x="310" y="70" width="180" height="80" rx="3"></rect>
+                        <text x="400" y="105" text-anchor="middle" font-size="14">Orchestration</text>
+                        <text x="400" y="123" text-anchor="middle" class="flow-label">enrollment · hashing</text>
+
+                        <rect class="flow-box" x="600" y="70" width="180" height="80" rx="3"></rect>
+                        <text x="690" y="105" text-anchor="middle" font-size="14">Clean Room</text>
+                        <text x="690" y="123" text-anchor="middle" class="flow-label">partner-owned</text>
+
+                        <line class="flow-boundary" x1="555" y1="30" x2="555" y2="190"></line>
+                        <text x="555" y="20" text-anchor="middle" class="flow-label" fill="var(--accent)">no raw PII crosses</text>
+
+                        <path class="flow-arrow" d="M200,95 L310,95"></path>
+                        <text x="255" y="85" text-anchor="middle" class="flow-label">audience pool</text>
+
+                        <path class="flow-arrow flow-arrow-hash" d="M490,95 L600,95"></path>
+                        <text x="545" y="85" text-anchor="middle" class="flow-label">hashed cohort</text>
+
+                        <path class="flow-arrow" d="M600,130 L490,130"></path>
+                        <text x="545" y="150" text-anchor="middle" class="flow-label">aggregate results</text>
+                    </svg>
+
+                    <div class="article">
+                        <p>The constraint: a retail partner needs to know whether people we reached with a campaign later bought something in their stores — without either side ever seeing the other's raw customer data.</p>
+                        <p>I split the pipeline into three isolated stages. An audience pool gets enrolled into a campaign and deterministically assigned to channels, so re-running the same campaign always reproduces the same assignment. Before anything leaves our environment, every identifier is re-hashed with a key unique to that specific partner — even if two partners compared notes, their hashes for the same person wouldn't match. The partner only ever receives hashes, joins them against their own data inside a governed view, and sends back aggregate counts, never row-level records.</p>
+                        <p>The trickiest part wasn't the hashing, it was making the orchestration layer boring: every step is config-driven and safe to re-run, so a failed step doesn't mean special-casing a partial campaign — it just replays cleanly.</p>
+                    </div>
+                </div>
             </section>
 
             <section class="section" id="portfolio">
