@@ -323,6 +323,12 @@
             color: var(--text-muted);
             margin: 0.75rem 0 1.25rem;
         }
+        .pro-project .pro-context a {
+            color: var(--accent);
+            text-decoration: none;
+            border-bottom: 1px solid rgba(255, 176, 0, 0.35);
+        }
+        .pro-project .pro-context a:hover { border-bottom-color: var(--accent); }
         .flow-diagram {
             width: 100%;
             height: auto;
@@ -623,6 +629,55 @@
                         <p>PT Citra Tubindo Tbk stores pipes in a yard that's also full of heavy vehicles moving product around. Counting inventory by walking the yard is exactly as dangerous as it sounds, so the proposal was to put a drone on it instead and let a model count pipes from the footage.</p>
                         <p>The model that was already in place was the problem: YOLOv3 running on an unoptimized TensorFlow build, on CPU. It technically worked, but not at a speed anyone could call real-time, and its accuracy wasn't much to defend either since it had barely any labeled data to learn from.</p>
                         <p>So the fix started before any model training: I went and manually collected and labeled pipe footage myself, then leaned on data augmentation, flips, rotations, lighting variation, to stretch that small labeled set into something a model could actually learn from. Paired with swapping YOLOv3 for a small YOLOv5, inference went from a CPU crawl to something a drone could run against live footage, about 35x faster, and more accurate than the model it replaced.</p>
+                    </div>
+                    </div>
+                </details>
+            </section>
+
+            <section class="section" id="side-projects">
+                <h2>// side projects</h2>
+                <details class="pro-project">
+                    <summary><h3>SADJI</h3><i class="fas fa-chevron-down"></i></summary>
+                    <div class="pro-body">
+                    <p class="pro-context">A point-of-sale, QR ordering, and kitchen display platform for Indonesian restaurants and cafes, built with a friend &middot; <a href="https://sadji.app">sadji.app</a></p>
+
+                    <svg class="flow-diagram" viewBox="0 0 640 390" role="img" aria-label="Diagram: a customer's QR order and a cashier's POS both flow into a shared backend, which pushes tickets to the kitchen display and lets a staff Android app queue orders locally when offline, syncing back through an outbox">
+                        <rect class="flow-box" x="20" y="20" width="200" height="80" rx="3"></rect>
+                        <text x="120" y="55" text-anchor="middle" font-size="14">Customer</text>
+                        <text x="120" y="73" text-anchor="middle" class="flow-label">QR order · table</text>
+
+                        <rect class="flow-box" x="420" y="20" width="200" height="80" rx="3"></rect>
+                        <text x="520" y="55" text-anchor="middle" font-size="14">Cashier</text>
+                        <text x="520" y="73" text-anchor="middle" class="flow-label">POS</text>
+
+                        <rect class="flow-box" x="220" y="150" width="200" height="80" rx="3"></rect>
+                        <text x="320" y="185" text-anchor="middle" font-size="14">Backend</text>
+                        <text x="320" y="203" text-anchor="middle" class="flow-label">orders · menu · payments</text>
+
+                        <rect class="flow-box" x="20" y="290" width="220" height="80" rx="3"></rect>
+                        <text x="130" y="325" text-anchor="middle" font-size="14">Kitchen Display</text>
+                        <text x="130" y="343" text-anchor="middle" class="flow-label">live ticket queue</text>
+
+                        <rect class="flow-box" x="400" y="290" width="220" height="80" rx="3"></rect>
+                        <text x="510" y="325" text-anchor="middle" font-size="14">Staff App</text>
+                        <text x="510" y="343" text-anchor="middle" class="flow-label">offline queue · sync</text>
+
+                        <path class="flow-arrow" d="M120,100 L120,125 L270,125 L270,150"></path>
+                        <text x="195" y="119" text-anchor="middle" class="flow-label">order</text>
+
+                        <path class="flow-arrow" d="M520,100 L520,125 L370,125 L370,150"></path>
+                        <text x="445" y="119" text-anchor="middle" class="flow-label">sale</text>
+
+                        <path class="flow-arrow" d="M270,230 L270,260 L130,260 L130,290"></path>
+                        <text x="200" y="254" text-anchor="middle" class="flow-label">ticket</text>
+
+                        <path class="flow-arrow flow-arrow-hash" d="M370,230 L370,260 L510,260 L510,290"></path>
+                        <text x="440" y="254" text-anchor="middle" class="flow-label">sync · outbox</text>
+                    </svg>
+
+                    <div class="article">
+                        <p>SADJI is a side project I've been building with my friend Dhimas since the middle of this year: one platform for restaurants and cafes that replaces the pile of separate subscriptions most small F&B places end up paying for, point of sale, QR ordering, a kitchen display, and the dashboard that ties it together. It's a Next.js and Postgres backend on the web side, with a native Android app for the cashiers and kitchen staff who actually stand at the counter all day.</p>
+                        <p>The part I care most about is what happens when the wifi drops mid-rush, because it will. An order on the Android app writes to a local SQLite store first and shows up on screen immediately, the network sync happens after, through a queue that retries on its own and gives every order an ID that can't get duplicated if the same order syncs twice. Checkout was never allowed to wait on a network call, only on the cashier's own tap.</p>
                     </div>
                     </div>
                 </details>
