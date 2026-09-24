@@ -420,42 +420,48 @@
                     <h3>Data Clean Room Pipeline</h3>
                     <p class="pro-context">Grivy, privacy-preserving campaign measurement across organizational boundaries</p>
 
-                    <svg class="flow-diagram" viewBox="0 0 800 220" role="img" aria-label="Diagram: audience source flows into orchestration, which sends a hashed cohort to a partner clean room and receives aggregate results back, with no raw personal data ever crossing the boundary">
+                    <svg class="flow-diagram" viewBox="0 0 640 380" role="img" aria-label="Diagram: audience source flows into orchestration, which pushes a hashed audience to ad platforms for exposure and a separately hashed cohort to a retail partner clean room, receiving purchase match results back, with no raw personal data crossing any boundary">
                         <defs>
                             <marker id="flow-arrowhead" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
                                 <path d="M0,0 L6,3 L0,6 Z" fill="var(--text-muted)"></path>
                             </marker>
                         </defs>
 
-                        <rect class="flow-box" x="20" y="70" width="180" height="80" rx="3"></rect>
-                        <text x="110" y="105" text-anchor="middle" font-size="14">Audience</text>
-                        <text x="110" y="123" text-anchor="middle" font-size="14">Source</text>
+                        <rect class="flow-box" x="220" y="20" width="200" height="70" rx="3"></rect>
+                        <text x="320" y="60" text-anchor="middle" font-size="14">Audience Source</text>
 
-                        <rect class="flow-box" x="310" y="70" width="180" height="80" rx="3"></rect>
-                        <text x="400" y="105" text-anchor="middle" font-size="14">Orchestration</text>
-                        <text x="400" y="123" text-anchor="middle" class="flow-label">enrollment · hashing</text>
+                        <rect class="flow-box" x="220" y="130" width="200" height="80" rx="3"></rect>
+                        <text x="320" y="165" text-anchor="middle" font-size="14">Orchestration</text>
+                        <text x="320" y="184" text-anchor="middle" class="flow-label">enrollment · hashing</text>
 
-                        <rect class="flow-box" x="600" y="70" width="180" height="80" rx="3"></rect>
-                        <text x="690" y="105" text-anchor="middle" font-size="14">Clean Room</text>
-                        <text x="690" y="123" text-anchor="middle" class="flow-label">partner-owned</text>
+                        <rect class="flow-box" x="20" y="280" width="220" height="80" rx="3"></rect>
+                        <text x="130" y="315" text-anchor="middle" font-size="14">Ad Platforms</text>
+                        <text x="130" y="334" text-anchor="middle" class="flow-label">Meta · TikTok · TTD</text>
 
-                        <line class="flow-boundary" x1="555" y1="30" x2="555" y2="190"></line>
-                        <text x="555" y="20" text-anchor="middle" class="flow-label" fill="var(--accent)">no raw PII crosses</text>
+                        <rect class="flow-box" x="400" y="280" width="220" height="80" rx="3"></rect>
+                        <text x="510" y="315" text-anchor="middle" font-size="14">Retail Partner</text>
+                        <text x="510" y="334" text-anchor="middle" class="flow-label">clean room</text>
 
-                        <path class="flow-arrow" d="M200,95 L310,95"></path>
-                        <text x="255" y="85" text-anchor="middle" class="flow-label">audience pool</text>
+                        <line class="flow-boundary" x1="20" y1="225" x2="620" y2="225"></line>
+                        <text x="580" y="219" text-anchor="end" class="flow-label" fill="var(--accent)">no raw PII crosses</text>
 
-                        <path class="flow-arrow flow-arrow-hash" d="M490,95 L600,95"></path>
-                        <text x="545" y="85" text-anchor="middle" class="flow-label">hashed cohort</text>
+                        <path class="flow-arrow" d="M320,90 L320,130"></path>
+                        <text x="335" y="113" class="flow-label">audience pool</text>
 
-                        <path class="flow-arrow" d="M600,130 L490,130"></path>
-                        <text x="545" y="150" text-anchor="middle" class="flow-label">aggregate results</text>
+                        <path class="flow-arrow" d="M255,210 L255,245 L130,245 L130,280"></path>
+                        <text x="130" y="266" text-anchor="middle" class="flow-label">hashed audience</text>
+
+                        <path class="flow-arrow flow-arrow-hash" d="M385,210 L385,245 L510,245 L510,280"></path>
+                        <text x="510" y="266" text-anchor="middle" class="flow-label">hashed cohort</text>
+
+                        <path class="flow-arrow" d="M440,280 L440,260 L260,260 L260,210"></path>
+                        <text x="350" y="273" text-anchor="middle" class="flow-label">purchase match results</text>
                     </svg>
 
                     <div class="article">
-                        <p>Here's the problem I had to solve: a retail partner needs to know whether the people we reached with a campaign actually bought something in their stores. But neither side is allowed to see the other's raw customer data. So how do you measure something without looking at it?</p>
-                        <p>My answer was to split the pipeline into three isolated stages that don't trust each other by default. An audience pool gets enrolled into a campaign and assigned to channels in a way that's reproducible, so re-running the same campaign doesn't shuffle everyone around. Before anything leaves our environment, every identifier gets re-hashed with a key that's unique to that specific partner. Even if two partners compared notes, their hashes for the same person wouldn't match. The partner only ever sees hashes, joins them against their own data inside a governed view, and sends back aggregate counts. Never row-level records.</p>
-                        <p>Honestly, the hashing part was the easy bit (it's a well-known pattern, I didn't invent it). What took actual thought was making the orchestration boring: every step is config-driven and safe to re-run, so if something fails halfway through a campaign, I'm not stuck special-casing it. It just replays cleanly and picks up where it left off.</p>
+                        <p>Here's the actual shape of the problem: Grivy runs a campaign on Meta, TikTok, or The Trade Desk, and a retail partner wants to know if the people who saw that ad went on to buy something in their stores. Three different companies, one question, and none of us are supposed to see each other's raw customer data.</p>
+                        <p>So the pipeline pushes the same audience to two places at once. The ad platform gets a hashed version of the audience so it can serve the campaign and report exposure. The retail partner gets a separately hashed version of that same audience, hashed with a key that's unique to them, so they can join it against their own purchase data without either side ever exchanging a real phone number or email. Whatever they find, they only send back aggregate counts. Not receipts, not names.</p>
+                        <p>The hashing itself isn't the hard part, it's a well-known pattern. What I actually spent effort on was making the orchestration layer boring: every step is config-driven and safe to re-run, so a failed push to one partner doesn't mean redoing the whole campaign by hand.</p>
                     </div>
                 </div>
 
@@ -463,39 +469,40 @@
                     <h3>Semantic Audience Search</h3>
                     <p class="pro-context">Grivy, turning a plain-language audience description into a set of matching users at scale</p>
 
-                    <svg class="flow-diagram" viewBox="0 0 800 220" role="img" aria-label="Diagram: user profiles are embedded monthly using delta detection into a vector store, which a natural language query searches against">
+                    <svg class="flow-diagram" viewBox="0 0 420 480" role="img" aria-label="Diagram: user profiles are embedded monthly using delta detection into a vector store, which a natural language query will search against once that layer is built">
                         <defs>
                             <marker id="flow-arrowhead-2" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
                                 <path d="M0,0 L6,3 L0,6 Z" fill="var(--text-muted)"></path>
                             </marker>
                         </defs>
 
-                        <rect class="flow-box" x="20" y="70" width="200" height="80" rx="3"></rect>
-                        <text x="120" y="105" text-anchor="middle" font-size="14">User Profiles</text>
-                        <text x="120" y="123" text-anchor="middle" class="flow-label">100M+, BigQuery</text>
+                        <rect class="flow-box" x="110" y="20" width="200" height="70" rx="3"></rect>
+                        <text x="210" y="52" text-anchor="middle" font-size="14">User Profiles</text>
+                        <text x="210" y="70" text-anchor="middle" class="flow-label">100M+, BigQuery</text>
 
-                        <rect class="flow-box" x="310" y="70" width="200" height="80" rx="3"></rect>
-                        <text x="410" y="105" text-anchor="middle" font-size="14">Embedding Pipeline</text>
-                        <text x="410" y="123" text-anchor="middle" class="flow-label">delta detection · batch</text>
+                        <rect class="flow-box" x="110" y="150" width="200" height="80" rx="3"></rect>
+                        <text x="210" y="185" text-anchor="middle" font-size="14">Embedding Pipeline</text>
+                        <text x="210" y="203" text-anchor="middle" class="flow-label">delta detection · batch</text>
 
-                        <rect class="flow-box" x="600" y="70" width="180" height="80" rx="3"></rect>
-                        <text x="690" y="105" text-anchor="middle" font-size="14">Vector Store</text>
-                        <text x="690" y="123" text-anchor="middle" class="flow-label">ready to query</text>
+                        <rect class="flow-box" x="110" y="290" width="200" height="70" rx="3"></rect>
+                        <text x="210" y="322" text-anchor="middle" font-size="14">Vector Store</text>
+                        <text x="210" y="340" text-anchor="middle" class="flow-label">ready to query</text>
 
-                        <path class="flow-arrow" d="M220,95 L310,95" marker-end="url(#flow-arrowhead-2)"></path>
-                        <text x="265" y="85" text-anchor="middle" class="flow-label">monthly, changed rows only</text>
+                        <path class="flow-arrow" d="M210,90 L210,150" marker-end="url(#flow-arrowhead-2)"></path>
+                        <text x="225" y="123" class="flow-label">only changed rows,</text>
+                        <text x="225" y="136" class="flow-label">refreshed monthly</text>
 
-                        <path class="flow-arrow flow-arrow-hash" d="M510,95 L600,95"></path>
-                        <text x="555" y="85" text-anchor="middle" class="flow-label">merged embeddings</text>
+                        <path class="flow-arrow flow-arrow-hash" d="M210,230 L210,290"></path>
+                        <text x="225" y="263" class="flow-label">merged embeddings</text>
 
-                        <path class="flow-arrow-future" d="M690,40 L690,70" marker-end="url(#flow-arrowhead-2)"></path>
-                        <text x="690" y="25" text-anchor="middle" class="flow-label">query (in progress)</text>
+                        <path class="flow-arrow-future" d="M210,450 L210,360" marker-end="url(#flow-arrowhead-2)"></path>
+                        <text x="210" y="468" text-anchor="middle" class="flow-label">natural language query (in progress)</text>
                     </svg>
 
                     <div class="article">
                         <p>The idea behind this one is simple to say and annoying to build: someone types "young parents who like hiking" and gets back the actual users who match, out of 100 million profiles, without anyone hand-writing a SQL filter for every possible phrase.</p>
-                        <p>The approach is to embed every user's profile text into a vector once, then turn the search query into a vector too and find whoever's closest. The part I actually spent my time on wasn't the embedding model, it was the refresh. Re-embedding 100 million profiles every month for a tiny fraction of changes felt wasteful, so the pipeline hashes each profile's text and only re-embeds the ones that actually changed. Most months that's about 1% of the dataset. Everything else just gets carried over.</p>
-                        <p>The pipeline side of this is solid and running. The natural-language search API on top of it (the part that turns "young parents who like hiking" into an actual query) is the part I'm still building out, so I'm not going to oversell it here.</p>
+                        <p>The approach itself (embed every profile into a vector, embed the search query the same way, find whoever's closest) isn't the interesting part. The part I'm actually proud of is the refresh. Re-embedding 100 million profiles every month for a tiny fraction of changes would be wasteful, so the pipeline hashes each profile's text and only re-embeds the ones that actually changed. Most months that's about 1% of the dataset. Everything else just gets carried over, which turns a monthly full rebuild into a monthly patch.</p>
+                        <p>The pipeline side of this is done and running: it refreshes 100 million embeddings a month for roughly the cost of re-embedding 1 million of them. The natural language search API on top, the part that actually turns "young parents who like hiking" into a query, is what I'm building next.</p>
                     </div>
                 </div>
             </section>
