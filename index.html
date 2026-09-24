@@ -236,6 +236,11 @@
         .pro-project {
             padding-top: 0.5rem;
         }
+        .pro-project + .pro-project {
+            margin-top: 2.5rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--rule);
+        }
         .pro-project h3 {
             font-family: var(--mono);
             font-size: 1.05rem;
@@ -279,6 +284,12 @@
             stroke: var(--accent);
             stroke-dasharray: 5 4;
             animation: flow-dash 1.2s linear infinite;
+        }
+        .flow-diagram .flow-arrow-future {
+            stroke: var(--text-muted);
+            stroke-dasharray: 3 3;
+            fill: none;
+            opacity: 0.6;
         }
         @keyframes flow-dash {
             to { stroke-dashoffset: -18; }
@@ -445,6 +456,46 @@
                         <p>Here's the problem I had to solve: a retail partner needs to know whether the people we reached with a campaign actually bought something in their stores. But neither side is allowed to see the other's raw customer data. So how do you measure something without looking at it?</p>
                         <p>My answer was to split the pipeline into three isolated stages that don't trust each other by default. An audience pool gets enrolled into a campaign and assigned to channels in a way that's reproducible, so re-running the same campaign doesn't shuffle everyone around. Before anything leaves our environment, every identifier gets re-hashed with a key that's unique to that specific partner. Even if two partners compared notes, their hashes for the same person wouldn't match. The partner only ever sees hashes, joins them against their own data inside a governed view, and sends back aggregate counts. Never row-level records.</p>
                         <p>Honestly, the hashing part was the easy bit (it's a well-known pattern, I didn't invent it). What took actual thought was making the orchestration boring: every step is config-driven and safe to re-run, so if something fails halfway through a campaign, I'm not stuck special-casing it. It just replays cleanly and picks up where it left off.</p>
+                    </div>
+                </div>
+
+                <div class="pro-project">
+                    <h3>Semantic Audience Search</h3>
+                    <p class="pro-context">Grivy, turning a plain-language audience description into a set of matching users at scale</p>
+
+                    <svg class="flow-diagram" viewBox="0 0 800 220" role="img" aria-label="Diagram: user profiles are embedded monthly using delta detection into a vector store, which a natural language query searches against">
+                        <defs>
+                            <marker id="flow-arrowhead-2" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+                                <path d="M0,0 L6,3 L0,6 Z" fill="var(--text-muted)"></path>
+                            </marker>
+                        </defs>
+
+                        <rect class="flow-box" x="20" y="70" width="200" height="80" rx="3"></rect>
+                        <text x="120" y="105" text-anchor="middle" font-size="14">User Profiles</text>
+                        <text x="120" y="123" text-anchor="middle" class="flow-label">100M+, BigQuery</text>
+
+                        <rect class="flow-box" x="310" y="70" width="200" height="80" rx="3"></rect>
+                        <text x="410" y="105" text-anchor="middle" font-size="14">Embedding Pipeline</text>
+                        <text x="410" y="123" text-anchor="middle" class="flow-label">delta detection · batch</text>
+
+                        <rect class="flow-box" x="600" y="70" width="180" height="80" rx="3"></rect>
+                        <text x="690" y="105" text-anchor="middle" font-size="14">Vector Store</text>
+                        <text x="690" y="123" text-anchor="middle" class="flow-label">ready to query</text>
+
+                        <path class="flow-arrow" d="M220,95 L310,95" marker-end="url(#flow-arrowhead-2)"></path>
+                        <text x="265" y="85" text-anchor="middle" class="flow-label">monthly, changed rows only</text>
+
+                        <path class="flow-arrow flow-arrow-hash" d="M510,95 L600,95"></path>
+                        <text x="555" y="85" text-anchor="middle" class="flow-label">merged embeddings</text>
+
+                        <path class="flow-arrow-future" d="M690,40 L690,70" marker-end="url(#flow-arrowhead-2)"></path>
+                        <text x="690" y="25" text-anchor="middle" class="flow-label">query (in progress)</text>
+                    </svg>
+
+                    <div class="article">
+                        <p>The idea behind this one is simple to say and annoying to build: someone types "young parents who like hiking" and gets back the actual users who match, out of 100 million profiles, without anyone hand-writing a SQL filter for every possible phrase.</p>
+                        <p>The approach is to embed every user's profile text into a vector once, then turn the search query into a vector too and find whoever's closest. The part I actually spent my time on wasn't the embedding model, it was the refresh. Re-embedding 100 million profiles every month for a tiny fraction of changes felt wasteful, so the pipeline hashes each profile's text and only re-embeds the ones that actually changed. Most months that's about 1% of the dataset. Everything else just gets carried over.</p>
+                        <p>The pipeline side of this is solid and running. The natural-language search API on top of it (the part that turns "young parents who like hiking" into an actual query) is the part I'm still building out, so I'm not going to oversell it here.</p>
                     </div>
                 </div>
             </section>
