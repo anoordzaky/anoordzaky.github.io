@@ -469,40 +469,42 @@
                     <h3>Semantic Audience Search</h3>
                     <p class="pro-context">Grivy, turning a plain-language audience description into a set of matching users at scale</p>
 
-                    <svg class="flow-diagram" viewBox="0 0 420 480" role="img" aria-label="Diagram: user profiles are embedded monthly using delta detection into a vector store, which a natural language query will search against once that layer is built">
+                    <svg class="flow-diagram" viewBox="0 0 910 220" role="img" aria-label="Diagram: user profiles are embedded monthly using delta detection into a vector store, which a search stored procedure queries directly">
                         <defs>
                             <marker id="flow-arrowhead-2" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
                                 <path d="M0,0 L6,3 L0,6 Z" fill="var(--text-muted)"></path>
                             </marker>
                         </defs>
 
-                        <rect class="flow-box" x="110" y="20" width="200" height="70" rx="3"></rect>
-                        <text x="210" y="52" text-anchor="middle" font-size="14">User Profiles</text>
-                        <text x="210" y="70" text-anchor="middle" class="flow-label">100M+, BigQuery</text>
+                        <rect class="flow-box" x="20" y="70" width="180" height="80" rx="3"></rect>
+                        <text x="110" y="105" text-anchor="middle" font-size="14">User Profiles</text>
+                        <text x="110" y="123" text-anchor="middle" class="flow-label">100M+, BigQuery</text>
 
-                        <rect class="flow-box" x="110" y="150" width="200" height="80" rx="3"></rect>
-                        <text x="210" y="185" text-anchor="middle" font-size="14">Embedding Pipeline</text>
-                        <text x="210" y="203" text-anchor="middle" class="flow-label">delta detection · batch</text>
+                        <rect class="flow-box" x="270" y="70" width="200" height="80" rx="3"></rect>
+                        <text x="370" y="105" text-anchor="middle" font-size="14">Embedding Pipeline</text>
+                        <text x="370" y="123" text-anchor="middle" class="flow-label">delta detection · batch</text>
 
-                        <rect class="flow-box" x="110" y="290" width="200" height="70" rx="3"></rect>
-                        <text x="210" y="322" text-anchor="middle" font-size="14">Vector Store</text>
-                        <text x="210" y="340" text-anchor="middle" class="flow-label">ready to query</text>
+                        <rect class="flow-box" x="540" y="70" width="150" height="80" rx="3"></rect>
+                        <text x="615" y="115" text-anchor="middle" font-size="14">Vector Store</text>
 
-                        <path class="flow-arrow" d="M210,90 L210,150" marker-end="url(#flow-arrowhead-2)"></path>
-                        <text x="225" y="123" class="flow-label">only changed rows,</text>
-                        <text x="225" y="136" class="flow-label">refreshed monthly</text>
+                        <rect class="flow-box" x="750" y="70" width="140" height="80" rx="3"></rect>
+                        <text x="820" y="105" text-anchor="middle" font-size="14">Search</text>
+                        <text x="820" y="123" text-anchor="middle" class="flow-label">stored procedure</text>
 
-                        <path class="flow-arrow flow-arrow-hash" d="M210,230 L210,290"></path>
-                        <text x="225" y="263" class="flow-label">merged embeddings</text>
+                        <path class="flow-arrow" d="M200,95 L270,95" marker-end="url(#flow-arrowhead-2)"></path>
+                        <text x="235" y="85" text-anchor="middle" class="flow-label">changed rows only</text>
 
-                        <path class="flow-arrow-future" d="M210,450 L210,360" marker-end="url(#flow-arrowhead-2)"></path>
-                        <text x="210" y="468" text-anchor="middle" class="flow-label">natural language query (in progress)</text>
+                        <path class="flow-arrow flow-arrow-hash" d="M470,95 L540,95"></path>
+                        <text x="505" y="85" text-anchor="middle" class="flow-label">embeddings</text>
+
+                        <path class="flow-arrow" d="M690,95 L750,95" marker-end="url(#flow-arrowhead-2)"></path>
+                        <text x="720" y="85" text-anchor="middle" class="flow-label">query</text>
                     </svg>
 
                     <div class="article">
                         <p>The idea behind this one is simple to say and annoying to build: someone types "young parents who like hiking" and gets back the actual users who match, out of 100 million profiles, without anyone hand-writing a SQL filter for every possible phrase.</p>
                         <p>The approach itself (embed every profile into a vector, embed the search query the same way, find whoever's closest) isn't the interesting part. The part I'm actually proud of is the refresh. Re-embedding 100 million profiles every month for a tiny fraction of changes would be wasteful, so the pipeline hashes each profile's text and only re-embeds the ones that actually changed. Most months that's about 1% of the dataset. Everything else just gets carried over, which turns a monthly full rebuild into a monthly patch.</p>
-                        <p>The pipeline side of this is done and running: it refreshes 100 million embeddings a month for roughly the cost of re-embedding 1 million of them. The natural language search API on top, the part that actually turns "young parents who like hiking" into a query, is what I'm building next.</p>
+                        <p>The search itself runs as a stored procedure sitting on top of the vector store: it embeds the incoming text, does a nearest-neighbor pass, and hands back the matching user IDs. Same "make it boring" approach as the DCR pipeline, just pointed at a different problem.</p>
                     </div>
                 </div>
             </section>
