@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Achmadi Noor Dzaky - Resume & Portfolio</title>
+    <title>Achmadi Noor Dzaky - Portfolio</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -175,62 +175,31 @@
             max-width: 46ch;
             margin: 0;
         }
+        .hero p.work-line {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin: 1rem 0 0;
+        }
+        .hero p.work-line a {
+            color: var(--accent);
+            text-decoration: none;
+            border-bottom: 1px solid rgba(255, 176, 0, 0.35);
+        }
+        .hero p.work-line a:hover { border-bottom-color: var(--accent); }
 
-        .experience-item, .education-item {
+        .education-item {
             padding: 1.1rem 0;
-            border-top: 1px solid var(--rule);
         }
-        .experience-item:first-child, .education-item:first-child {
-            border-top: none;
-            padding-top: 0;
-        }
-        .experience-item h3, .education-item h3 {
+        .education-item h3 {
             font-family: var(--mono);
             font-size: 0.98rem;
             margin: 0 0 0.3rem;
             font-weight: 500;
         }
-        .experience-item p, .education-item p {
+        .education-item p {
             margin: 0.25rem 0;
             font-size: 0.85rem;
             color: var(--text-muted);
-        }
-        .experience-item ul, .education-item ul {
-            list-style: none;
-            padding-left: 1.1rem;
-            margin: 0.75rem 0 0;
-        }
-        .experience-item li, .education-item li {
-            margin-bottom: 0.55rem;
-            font-size: 0.92rem;
-            line-height: 1.6;
-            position: relative;
-        }
-        .experience-item li::marker, .education-item li::marker {
-            content: "\2013 \0020";
-            color: var(--text-muted);
-        }
-
-        .skills-grid {
-            display: flex;
-            flex-direction: column;
-            gap: 1.1rem;
-            margin: 0;
-        }
-        .skill-row {
-            display: grid;
-            grid-template-columns: 200px 1fr;
-            gap: 1rem;
-        }
-        .skill-row dt {
-            font-family: var(--mono);
-            font-size: 0.82rem;
-            color: var(--text-muted);
-        }
-        .skill-row dd {
-            margin: 0;
-            font-size: 0.9rem;
-            line-height: 1.65;
         }
 
         .portfolio-grid {
@@ -282,10 +251,6 @@
             .portfolio-grid {
                 grid-template-columns: 1fr;
             }
-            .skill-row {
-                grid-template-columns: 1fr;
-                gap: 0.3rem;
-            }
         }
 
         @media (prefers-reduced-motion: reduce) {
@@ -332,39 +297,7 @@
         <main class="content">
             <section class="section hero" id="about">
                 <p class="tagline">Data Analyst with 3+ years turning business data into decisions through SQL analysis on cloud data warehouses, dashboards, forecasting, and clear communication of findings to stakeholders. Skilled in SQL, BigQuery, Python, Looker, and Tableau.</p>
-            </section>
-
-            <section class="section" id="experience">
-                <h2>// work experience</h2>
-                <div class="experience-item">
-                    <h3>Data Analyst - Grivy, South Jakarta</h3>
-                    <p>January 2025 - Present</p>
-                    <ul>
-                        <li>Design automated Looker dashboards on BigQuery/GA4 to track campaign ROI and flag bot activity, surfacing anomalies that drive optimization decisions.</li>
-                        <li>Own end-to-end SQL pipelines in BigQuery for campaigns with retail, FMCG, and telco clients, improving the accuracy and reliability of campaign reporting.</li>
-                        <li>Define and document metrics for automated reporting, and present weekly data-backed recommendations to technical and non-technical stakeholders.</li>
-                        <li>Developed a linear forecasting model for customer redemption behavior, factoring in day-to-day seasonality to reach 7% MAPE.</li>
-                        <li>Built a Monte Carlo simulation for coupon allocation strategies, saving 10% in expected coupon related expenses.</li>
-                        <li>Independently defined client-specific privacy requirements for Data Clean Rooms in BigQuery Analytics Hub, enabling privacy-compliant partner data sharing.</li>
-                    </ul>
-                </div>
-                <div class="experience-item">
-                    <h3>Consumer Insights - NielsenIQ, South Jakarta</h3>
-                    <p>February 2023 - January 2025</p>
-                    <ul>
-                        <li>Designed and maintained dynamic Tableau dashboards to track KPIs for diverse clients, directly contributing to informed decision-making and strategic business shifts.</li>
-                        <li>Created and optimized ETL pipelines for integrating survey data into a SQL database, ensuring data accuracy and reliability for downstream analysis and reporting.</li>
-                        <li>Automated feature selection processes for market volume forecasting models using Python, enhancing explainability and achieving 95%+ accuracy.</li>
-                        <li>Implemented complex methodologies (polynomial regression and clustering) to map regional customer shares, presenting findings to cross-functional teams.</li>
-                    </ul>
-                </div>
-                <div class="experience-item">
-                    <h3>Apprentice - PT Citra Tubindo Tbk, Batam</h3>
-                    <p>September 2022 - February 2023</p>
-                    <ul>
-                        <li>Enhanced backend AI processes for pipe detection, resulting in a 35x reduction in inference latency and a 20% accuracy boost.</li>
-                    </ul>
-                </div>
+                <p class="work-line">Currently Data Analyst at Grivy — full work history on <a href="https://linkedin.com/in/anoordzaky">LinkedIn</a>.</p>
             </section>
 
             <section class="section" id="education">
@@ -375,32 +308,6 @@
                     <p>Bachelor of Engineering in Industrial Engineering</p>
                     <p>Leadership Experiences: Head of Training Subdivision at ITS MUN Club, Manager of Community Service Bureau HMTI ITS</p>
                 </div>
-            </section>
-
-            <section class="section" id="skills">
-                <h2>// skills &amp; certificates</h2>
-                <dl class="skills-grid">
-                    <div class="skill-row">
-                        <dt>Languages</dt>
-                        <dd>English (IELTS Academic 8.0), Indonesian, Javanese</dd>
-                    </div>
-                    <div class="skill-row">
-                        <dt>Programming &amp; tools</dt>
-                        <dd>SQL, BigQuery, Python, Looker, Tableau, GCP, Vertex AI, BigQuery Analytics Hub, Google Analytics, Google Tag Manager, Google Script, JavaScript/TypeScript, HTML, CSS, Docker, Github, MongoDB</dd>
-                    </div>
-                    <div class="skill-row">
-                        <dt>Frameworks &amp; libraries</dt>
-                        <dd>Flask, FastAPI, Pandas, TensorFlow, PyTorch, Numpy, Weights &amp; Biases, xlwings, Openpyxl, Scikit-learn, Selenium, BeautifulSoup4</dd>
-                    </div>
-                    <div class="skill-row">
-                        <dt>Software</dt>
-                        <dd>Minitab, Microsoft Excel, Google Sheets, Tableau, Visual Studio Code, Anaconda</dd>
-                    </div>
-                    <div class="skill-row">
-                        <dt>Certificates</dt>
-                        <dd>Online Asian Machine Learning School Participant (2022), Machine Learning by Indonesia.ai (2022), AWS Academy Machine Learning Foundations Graduate (2022)</dd>
-                    </div>
-                </dl>
             </section>
 
             <section class="section" id="portfolio">
