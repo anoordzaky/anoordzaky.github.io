@@ -681,6 +681,37 @@
                     </div>
                     </div>
                 </details>
+
+                <details class="pro-project">
+                    <summary><h3>PMM Solver Optimization</h3><i class="fas fa-chevron-down"></i></summary>
+                    <div class="pro-body">
+                    <p class="pro-context">Cutting CalcFlow's biaxial column solver more than 4x per call and 3.55x on a full detailing batch, without changing the underlying math</p>
+
+                    <svg class="flow-diagram" viewBox="0 0 640 190" role="img" aria-label="Bar chart: a single PMM solve drops from 6.78 milliseconds to 1.58 milliseconds, a 4.3x speedup, and a 4050-row detailing batch drops from 5.7 seconds to 1.6 seconds, a 3.55x speedup, after sharding it across a worker pool">
+                        <text x="20" y="20" font-size="13">single PMM solve &middot; 24 bars</text>
+                        <text x="105" y="48" text-anchor="end" class="flow-label">before</text>
+                        <rect x="110" y="36" width="470" height="16" fill="var(--text-muted)"></rect>
+                        <text x="588" y="48" class="flow-label">6.78ms</text>
+                        <text x="105" y="70" text-anchor="end" class="flow-label">after</text>
+                        <rect x="110" y="58" width="109.5" height="16" fill="var(--accent)"></rect>
+                        <text x="227" y="70" class="flow-label">1.58ms &middot; 4.3x</text>
+
+                        <text x="20" y="110" font-size="13">4050-row batch &middot; 30 cols &times; 3 stations &times; 45 combos</text>
+                        <text x="105" y="138" text-anchor="end" class="flow-label">before</text>
+                        <rect x="110" y="126" width="470" height="16" fill="var(--text-muted)"></rect>
+                        <text x="588" y="138" class="flow-label">5.7s</text>
+                        <text x="105" y="160" text-anchor="end" class="flow-label">after</text>
+                        <rect x="110" y="148" width="131.9" height="16" fill="var(--accent)"></rect>
+                        <text x="250" y="160" class="flow-label">1.6s &middot; 3.55x</text>
+                    </svg>
+
+                    <div class="article">
+                        <p>CalcFlow takes a structural analysis export from ETABS and runs the concrete column checks required by SNI 2847:2019, Indonesia's building code. One of those checks, PMM, biaxial axial-force-and-moment interaction, has to find the neutral-axis angle and depth where a column's capacity matches the demand for every load case on every column: two nested numerical searches, up to 100 trial angles each bisecting a neutral-axis depth up to around 120 times. A single ETABS export can carry thousands of these rows, so how fast the solver runs directly decides how long an engineer waits after clicking calculate.</p>
+                        <p>Before optimizing anything, I checked the solver against a reference calculation workbook and found it was quietly wrong for any biaxial case: the section geometry was being rotated by the trial angle and then projected onto that same angle again, a composition that mathematically cancels itself out, so rotation was silently ignored. I fixed that, fixed how the concrete compression area accounted for the holes rebar leaves in it, corrected a hardcoded strain constant to the material-dependent value, and locked all of it down with regression tests matched to the workbook to within 0.02%. Only after that passed did I feel comfortable making it faster, since a faster wrong answer isn't worth much.</p>
+                        <p>The hot loop had two straightforward wastes: it recomputed the same rotated section geometry from scratch on every neutral-axis trial even though only the depth changes within a fixed angle, and the bisection loop was re-evaluating bounds it had already just computed one step earlier. Hoisting the geometry setup and cutting the duplicate evaluations brought a single solve down to 1.58ms, same math, same tests passing unchanged. The last piece was parallelism: splitting the one-time setup from the per-row loop and sharding a job's force rows across a pool of Web Workers instead of running everything on one thread. On a representative batch, 30 columns across 3 stations and 45 load combinations, 4050 rows, that took the job from 5.7 seconds single-threaded to 1.6 seconds across six workers, verified byte-identical to the single-threaded output.</p>
+                    </div>
+                    </div>
+                </details>
             </section>
 
             <section class="section" id="portfolio">
