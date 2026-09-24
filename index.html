@@ -393,21 +393,21 @@
                     <span id="player-time">0:00</span>
                     <button id="viz-cycle" aria-label="Change visualization" title="Change visualization"><i class="fas fa-shuffle"></i></button>
                 </div>
-                <p class="waveform-hint"><span id="viz-preset-name">bars &amp; waves</span> — click to seek</p>
+                <p class="waveform-hint"><span id="viz-preset-name">bars &amp; waves</span>, click to seek</p>
             </div>
         </aside>
 
         <main class="content">
             <section class="section hero" id="about">
                 <p class="tagline">Data Analyst with 3+ years turning business data into decisions through SQL analysis on cloud data warehouses, dashboards, forecasting, and clear communication of findings to stakeholders. Skilled in SQL, BigQuery, Python, Looker, and Tableau.</p>
-                <p class="work-line">Currently Data Analyst at Grivy — full work history on <a href="https://linkedin.com/in/anoordzaky">LinkedIn</a>.</p>
+                <p class="work-line">Currently Data Analyst at Grivy. Full work history on <a href="https://linkedin.com/in/anoordzaky">LinkedIn</a>.</p>
             </section>
 
             <section class="section" id="professional-projects">
                 <h2>// professional projects</h2>
                 <div class="pro-project">
                     <h3>Data Clean Room Pipeline</h3>
-                    <p class="pro-context">Grivy — privacy-preserving campaign measurement across organizational boundaries</p>
+                    <p class="pro-context">Grivy, privacy-preserving campaign measurement across organizational boundaries</p>
 
                     <svg class="flow-diagram" viewBox="0 0 800 220" role="img" aria-label="Diagram: audience source flows into orchestration, which sends a hashed cohort to a partner clean room and receives aggregate results back, with no raw personal data ever crossing the boundary">
                         <defs>
@@ -442,9 +442,9 @@
                     </svg>
 
                     <div class="article">
-                        <p>The constraint: a retail partner needs to know whether people we reached with a campaign later bought something in their stores — without either side ever seeing the other's raw customer data.</p>
-                        <p>I split the pipeline into three isolated stages. An audience pool gets enrolled into a campaign and deterministically assigned to channels, so re-running the same campaign always reproduces the same assignment. Before anything leaves our environment, every identifier is re-hashed with a key unique to that specific partner — even if two partners compared notes, their hashes for the same person wouldn't match. The partner only ever receives hashes, joins them against their own data inside a governed view, and sends back aggregate counts, never row-level records.</p>
-                        <p>The trickiest part wasn't the hashing, it was making the orchestration layer boring: every step is config-driven and safe to re-run, so a failed step doesn't mean special-casing a partial campaign — it just replays cleanly.</p>
+                        <p>Here's the problem I had to solve: a retail partner needs to know whether the people we reached with a campaign actually bought something in their stores. But neither side is allowed to see the other's raw customer data. So how do you measure something without looking at it?</p>
+                        <p>My answer was to split the pipeline into three isolated stages that don't trust each other by default. An audience pool gets enrolled into a campaign and assigned to channels in a way that's reproducible, so re-running the same campaign doesn't shuffle everyone around. Before anything leaves our environment, every identifier gets re-hashed with a key that's unique to that specific partner. Even if two partners compared notes, their hashes for the same person wouldn't match. The partner only ever sees hashes, joins them against their own data inside a governed view, and sends back aggregate counts. Never row-level records.</p>
+                        <p>Honestly, the hashing part was the easy bit (it's a well-known pattern, I didn't invent it). What took actual thought was making the orchestration boring: every step is config-driven and safe to re-run, so if something fails halfway through a campaign, I'm not stuck special-casing it. It just replays cleanly and picks up where it left off.</p>
                     </div>
                 </div>
             </section>
