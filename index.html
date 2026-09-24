@@ -231,6 +231,46 @@
         }
         .portfolio-item a:hover { border-bottom-color: var(--accent); }
 
+        .fourier-widget {
+            margin-top: 0.85rem;
+            border: 1px solid var(--rule);
+            border-radius: 3px;
+            padding: 0.75rem;
+            background: var(--bg-elevated);
+        }
+        .fourier-canvas {
+            width: 100%;
+            aspect-ratio: 1;
+            max-width: 280px;
+            display: block;
+            background: var(--bg);
+            border-radius: 2px;
+            cursor: crosshair;
+            touch-action: none;
+        }
+        .fourier-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 280px;
+            margin-top: 0.5rem;
+        }
+        .fourier-hint {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+        }
+        #fourier-clear {
+            background: transparent;
+            border: 1px solid var(--rule);
+            color: var(--text-muted);
+            font-family: var(--mono);
+            font-size: 0.7rem;
+            padding: 0.3rem 0.7rem;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        #fourier-clear:hover { border-color: var(--accent); color: var(--accent); }
+
         footer {
             max-width: 1100px;
             margin: 0 auto;
@@ -335,6 +375,13 @@
                         <p>A script to generate drawings of a contour using Discrete Fourier Transformation.</p>
                         <a href="https://github.com/anoordzaky/drawing_with_fourier_series">View Project</a>
                         <a href="https://drive.google.com/file/d/1aDw1u-I1uDGH-UfBwKJId0FuFuTdWGJP/view?usp=sharing">Sample Animation</a>
+                        <div class="fourier-widget">
+                            <canvas id="fourier-canvas" class="fourier-canvas" aria-label="Draw a shape to see it reconstructed as a Fourier series"></canvas>
+                            <div class="fourier-controls">
+                                <span class="fourier-hint">draw something, watch it redraw itself</span>
+                                <button id="fourier-clear" type="button">clear</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -486,6 +533,170 @@
         });
 
         loadTrack(TRACKS[0], false);
+    </script>
+
+    <script>
+        (function () {
+            const canvas = document.getElementById('fourier-canvas');
+            const ctx = canvas.getContext('2d');
+            const N = 120;
+            const dt = (2 * Math.PI) / 240;
+
+            let rawPoints = [];
+            let drawing = false;
+            let epicycles = null;
+            let trail = [];
+            let t = 0;
+            let animId = null;
+
+            function cancelAnimation() {
+                if (animId) cancelAnimationFrame(animId);
+                animId = null;
+            }
+
+            function resizeCanvas() {
+                const rect = canvas.getBoundingClientRect();
+                canvas.width = rect.width;
+                canvas.height = rect.height;
+                cancelAnimation();
+                epicycles = null;
+                trail = [];
+                rawPoints = [];
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }
+
+            function getPos(e) {
+                const rect = canvas.getBoundingClientRect();
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                return { x: clientX - rect.left, y: clientY - rect.top };
+            }
+
+            function drawRawPreview() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.strokeStyle = 'rgba(239, 236, 230, 0.6)';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                rawPoints.forEach((p, i) => (i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y)));
+                ctx.stroke();
+            }
+
+            function resamplePath(points, n) {
+                const dists = [0];
+                for (let i = 1; i < points.length; i++) {
+                    dists.push(dists[i - 1] + Math.hypot(points[i].x - points[i - 1].x, points[i].y - points[i - 1].y));
+                }
+                const total = dists[dists.length - 1];
+                if (total === 0) return points;
+                const result = [];
+                for (let i = 0; i < n; i++) {
+                    const target = (total * i) / n;
+                    let j = 1;
+                    while (j < dists.length && dists[j] < target) j++;
+                    j = Math.min(j, dists.length - 1);
+                    const d0 = dists[j - 1], d1 = dists[j];
+                    const f = d1 > d0 ? (target - d0) / (d1 - d0) : 0;
+                    const p0 = points[j - 1], p1 = points[j];
+                    result.push({ x: p0.x + (p1.x - p0.x) * f, y: p0.y + (p1.y - p0.y) * f });
+                }
+                return result;
+            }
+
+            function computeFourier(points) {
+                const sampled = resamplePath(points, N);
+                const X = [];
+                for (let k = 0; k < N; k++) {
+                    let re = 0, im = 0;
+                    for (let n = 0; n < N; n++) {
+                        const phi = (2 * Math.PI * k * n) / N;
+                        re += sampled[n].x * Math.cos(phi) + sampled[n].y * Math.sin(phi);
+                        im += sampled[n].y * Math.cos(phi) - sampled[n].x * Math.sin(phi);
+                    }
+                    re /= N;
+                    im /= N;
+                    const freq = k <= N / 2 ? k : k - N;
+                    X.push({ freq, amp: Math.hypot(re, im), phase: Math.atan2(im, re) });
+                }
+                X.sort((a, b) => b.amp - a.amp);
+                epicycles = X;
+                trail = [];
+                t = 0;
+            }
+
+            function drawFrame() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                let x = 0, y = 0;
+                for (const c of epicycles) {
+                    const prevX = x, prevY = y;
+                    x += c.amp * Math.cos(c.freq * t + c.phase);
+                    y += c.amp * Math.sin(c.freq * t + c.phase);
+                    if (c.amp > 0.5) {
+                        ctx.strokeStyle = 'rgba(239, 236, 230, 0.12)';
+                        ctx.lineWidth = 1;
+                        ctx.beginPath();
+                        ctx.arc(prevX, prevY, c.amp, 0, Math.PI * 2);
+                        ctx.stroke();
+                    }
+                    ctx.strokeStyle = 'rgba(255, 176, 0, 0.3)';
+                    ctx.beginPath();
+                    ctx.moveTo(prevX, prevY);
+                    ctx.lineTo(x, y);
+                    ctx.stroke();
+                }
+                trail.push({ x, y });
+                if (trail.length > N) trail.shift();
+                ctx.strokeStyle = '#ffb000';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                trail.forEach((p, i) => (i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y)));
+                ctx.stroke();
+
+                t += dt;
+                if (t > Math.PI * 2) t -= Math.PI * 2;
+                animId = requestAnimationFrame(drawFrame);
+            }
+
+            function startDraw(e) {
+                e.preventDefault();
+                cancelAnimation();
+                epicycles = null;
+                rawPoints = [getPos(e)];
+                drawing = true;
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }
+            function moveDraw(e) {
+                if (!drawing) return;
+                e.preventDefault();
+                rawPoints.push(getPos(e));
+                drawRawPreview();
+            }
+            function endDraw() {
+                if (!drawing) return;
+                drawing = false;
+                if (rawPoints.length > 5) {
+                    computeFourier(rawPoints);
+                    drawFrame();
+                }
+            }
+
+            canvas.addEventListener('mousedown', startDraw);
+            canvas.addEventListener('mousemove', moveDraw);
+            window.addEventListener('mouseup', endDraw);
+            canvas.addEventListener('touchstart', startDraw, { passive: false });
+            canvas.addEventListener('touchmove', moveDraw, { passive: false });
+            canvas.addEventListener('touchend', endDraw);
+
+            document.getElementById('fourier-clear').addEventListener('click', () => {
+                cancelAnimation();
+                epicycles = null;
+                rawPoints = [];
+                trail = [];
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            });
+
+            window.addEventListener('resize', resizeCanvas);
+            resizeCanvas();
+        })();
     </script>
 </body>
 </html>
