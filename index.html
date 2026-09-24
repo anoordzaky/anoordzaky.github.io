@@ -30,12 +30,38 @@
             color: var(--text);
         }
         a { color: inherit; }
+
+        .bg-paths {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            overflow: hidden;
+        }
+        .bg-paths svg {
+            width: 100%;
+            height: 100%;
+        }
+        .bg-paths path {
+            fill: none;
+            stroke: var(--text-muted);
+            stroke-dasharray: 300 300;
+            animation: bg-paths-flow 28s linear infinite;
+        }
+        @keyframes bg-paths-flow {
+            to { stroke-dashoffset: -600; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .bg-paths path { animation: none; }
+        }
         :focus-visible {
             outline: 2px solid var(--accent);
             outline-offset: 2px;
         }
 
         .page {
+            position: relative;
+            z-index: 1;
             max-width: 1100px;
             margin: 0 auto;
             padding: 3.5rem 1.5rem 4rem;
@@ -459,6 +485,33 @@
     </style>
 </head>
 <body>
+    <div class="bg-paths" aria-hidden="true"><svg id="bg-paths-svg" viewBox="0 0 696 316" preserveAspectRatio="none" fill="none"></svg></div>
+    <script>
+        (function () {
+            const svg = document.getElementById('bg-paths-svg');
+            const position = -1;
+            const ns = 'http://www.w3.org/2000/svg';
+            for (let i = 0; i < 36; i++) {
+                const x1 = 380 - i * 5 * position;
+                const x2 = 312 - i * 5 * position;
+                const x3 = 152 - i * 5 * position;
+                const x4 = 616 - i * 5 * position;
+                const x5 = 684 - i * 5 * position;
+                const y1 = 189 + i * 6;
+                const y2 = 216 - i * 6;
+                const y3 = 343 - i * 6;
+                const y4 = 470 - i * 6;
+                const y5 = 875 - i * 6;
+                const d = `M-${x1} -${y1}C-${x1} -${y1} -${x2} ${y2} ${x3} ${y3}C${x4} ${y4} ${x5} ${y5} ${x5} ${y5}`;
+                const path = document.createElementNS(ns, 'path');
+                path.setAttribute('d', d);
+                path.setAttribute('stroke-width', (0.5 + i * 0.03).toFixed(2));
+                path.setAttribute('stroke-opacity', Math.min(0.4, 0.04 + i * 0.01).toFixed(3));
+                path.style.animationDelay = `-${(i * 0.8).toFixed(1)}s`;
+                svg.appendChild(path);
+            }
+        })();
+    </script>
     <div class="page">
         <aside class="sidebar">
             <div class="identity">
