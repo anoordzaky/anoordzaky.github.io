@@ -928,7 +928,7 @@
                 // volumes even though it was technically playing. Floor it
                 // instead of squaring it, so it still scales down when the
                 // user wants things quiet but never disappears.
-                scratchAudio.volume = Math.min(0.4, Math.max(0.35, frac));
+                scratchAudio.volume = Math.min(0.2, Math.max(0.15, frac));
                 scratchAudio.play().catch(() => {});
             }
 
