@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg: #17161a;
@@ -19,7 +19,7 @@
             --ok: #7bab6e;
             --rule: rgba(239, 236, 230, 0.1);
             --mono: 'JetBrains Mono', monospace;
-            --sans: 'Inter', sans-serif;
+            --sans: 'Space Grotesk', sans-serif;
         }
         * { box-sizing: border-box; }
         body {
@@ -343,6 +343,12 @@
             height: 1.15rem;
             width: auto;
             display: block;
+            flex: 0 0 auto;
+        }
+        .pro-project summary .pro-company {
+            font-family: var(--mono);
+            font-size: 0.75rem;
+            color: var(--text-muted);
             flex: 0 0 auto;
         }
         .pro-project summary i {
@@ -908,70 +914,8 @@
                 analyser.connect(audioCtx.destination);
             }
 
-            // The scratch used to be scheduled live on the shared AudioContext,
-            // but that requires audioCtx.resume() to actually resolve, and on
-            // the auto-advance path (ended -> loadTrack) there's no fresh user
-            // gesture backing that resume, so it silently failed to play.
-            // Render the scratch once into a WAV and play it back through a
-            // plain <audio> element instead: same playback path the track
-            // itself already uses reliably on auto-advance, no AudioContext
-            // gating involved.
-            function bufferToWavBlob(buffer) {
-                const numCh = buffer.numberOfChannels;
-                const dataLen = buffer.length * numCh * 2;
-                const arrBuf = new ArrayBuffer(44 + dataLen);
-                const view = new DataView(arrBuf);
-                let offset = 0;
-                const writeString = (s) => { for (let i = 0; i < s.length; i++) view.setUint8(offset++, s.charCodeAt(i)); };
-                const writeU32 = (v) => { view.setUint32(offset, v, true); offset += 4; };
-                const writeU16 = (v) => { view.setUint16(offset, v, true); offset += 2; };
-                writeString('RIFF'); writeU32(36 + dataLen); writeString('WAVE');
-                writeString('fmt '); writeU32(16); writeU16(1); writeU16(numCh);
-                writeU32(buffer.sampleRate); writeU32(buffer.sampleRate * numCh * 2); writeU16(numCh * 2); writeU16(16);
-                writeString('data'); writeU32(dataLen);
-                const channels = Array.from({ length: numCh }, (_, c) => buffer.getChannelData(c));
-                for (let i = 0; i < buffer.length; i++) {
-                    for (let c = 0; c < numCh; c++) {
-                        const s = Math.max(-1, Math.min(1, channels[c][i]));
-                        view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7fff, true);
-                        offset += 2;
-                    }
-                }
-                return new Blob([arrBuf], { type: 'audio/wav' });
-            }
-
-            let scratchAudio = null;
-            (async () => {
-                const dur = 0.22;
-                const sampleRate = 44100;
-                const offlineCtx = new (window.OfflineAudioContext || window.webkitOfflineAudioContext)(1, Math.ceil(sampleRate * dur), sampleRate);
-                const buffer = offlineCtx.createBuffer(1, Math.floor(sampleRate * dur), sampleRate);
-                const data = buffer.getChannelData(0);
-                for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
-
-                const noise = offlineCtx.createBufferSource();
-                noise.buffer = buffer;
-
-                const filter = offlineCtx.createBiquadFilter();
-                filter.type = 'bandpass';
-                filter.Q.value = 5;
-                filter.frequency.setValueAtTime(2200, 0);
-                filter.frequency.linearRampToValueAtTime(250, dur * 0.35);
-                filter.frequency.linearRampToValueAtTime(1600, dur * 0.65);
-                filter.frequency.linearRampToValueAtTime(400, dur);
-
-                const envelope = offlineCtx.createGain();
-                envelope.gain.setValueAtTime(0, 0);
-                envelope.gain.linearRampToValueAtTime(1, 0.015);
-                envelope.gain.exponentialRampToValueAtTime(0.001, dur);
-
-                noise.connect(filter).connect(envelope).connect(offlineCtx.destination);
-                noise.start(0);
-
-                const rendered = await offlineCtx.startRendering();
-                scratchAudio = new Audio(URL.createObjectURL(bufferToWavBlob(rendered)));
-                scratchAudio.preload = 'auto';
-            })();
+            const scratchAudio = new Audio('assets/audio/scratch.m4a');
+            scratchAudio.preload = 'auto';
 
             function playScratch() {
                 if (!scratchAudio) return;
@@ -984,7 +928,7 @@
                 // volumes even though it was technically playing. Floor it
                 // instead of squaring it, so it still scales down when the
                 // user wants things quiet but never disappears.
-                scratchAudio.volume = Math.min(1, Math.max(0.35, frac));
+                scratchAudio.volume = Math.min(0.4, Math.max(0.35, frac));
                 scratchAudio.play().catch(() => {});
             }
 
