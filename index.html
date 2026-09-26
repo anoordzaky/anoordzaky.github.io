@@ -7,19 +7,26 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,75,900;0,100,400;0,100,500;0,100,600;0,100,700&family=Geist+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
         :root {
-            --bg: #17161a;
-            --bg-elevated: #1e1d22;
-            --text: #efece6;
-            --text-muted: #8b8983;
-            --accent: #ffb000;
-            --warn: #c9584f;
-            --ok: #7bab6e;
-            --rule: rgba(239, 236, 230, 0.1);
-            --mono: 'JetBrains Mono', monospace;
-            --sans: 'Space Grotesk', sans-serif;
+            /* retro-future "90s vision of 2026" palette: deep navy/black + electric
+               cyan/magenta neon + chrome-silver text, same family as the glitch-text
+               RGB-split colors already used on the wordmark */
+            --bg: #05070d;
+            --bg-elevated: #0c1220;
+            --panel-bg: #0a1220;
+            --text: #d7e6f5;
+            --text-muted: #6b7a94;
+            --accent: #00e5ff;
+            --accent2: #ff00c8;
+            --warn: #ff3860;
+            --ok: #39ff8a;
+            --rule: rgba(120, 200, 255, 0.15);
+            --chip-grad: linear-gradient(180deg, #eafcff 0%, #6fe0ff 8%, #0891b8 45%, #045169 55%, #0891b8 92%, #eafcff 100%);
+            --mono: 'Geist Mono', monospace;
+            --sans: 'Archivo', sans-serif;
         }
         * { box-sizing: border-box; }
         body {
@@ -31,28 +38,60 @@
         }
         a { color: inherit; }
 
+        /* classic "3D Pipes" screensaver, rendered with Three.js — the definitive
+           90s vision-of-the-future backdrop (Windows/OpenGL screensaver, ~1995) */
         .bg-paths {
             position: fixed;
             inset: 0;
             z-index: 0;
             pointer-events: none;
             overflow: hidden;
+            background: #05070d;
         }
-        .bg-paths svg {
+        #pipes-bg {
+            display: block;
             width: 100%;
             height: 100%;
         }
-        .bg-paths path {
-            fill: none;
-            stroke: var(--text-muted);
-            stroke-dasharray: 300 300;
-            animation: bg-paths-flow 28s linear infinite;
+
+
+        /* Periodic RGB-split glitch burst on headings */
+        .glitch-text {
+            position: relative;
         }
-        @keyframes bg-paths-flow {
-            to { stroke-dashoffset: -600; }
+        .glitch-text::before,
+        .glitch-text::after {
+            content: attr(data-text);
+            position: absolute;
+            inset: 0;
+            overflow: hidden;
+            opacity: 0;
+            pointer-events: none;
+        }
+        .glitch-text::before {
+            color: #ff003c;
+            mix-blend-mode: screen;
+            animation: glitch-burst-1 11s infinite;
+        }
+        .glitch-text::after {
+            color: #00e5ff;
+            mix-blend-mode: screen;
+            animation: glitch-burst-2 11s infinite;
+        }
+        @keyframes glitch-burst-1 {
+            0%, 95%, 100% { opacity: 0; transform: translate(0, 0); clip-path: inset(0 0 100% 0); }
+            96% { opacity: 0.55; transform: translate(-1.5px, 0.5px); clip-path: inset(10% 0 60% 0); }
+            97% { opacity: 0.55; transform: translate(1px, -0.5px); clip-path: inset(55% 0 20% 0); }
+            98% { opacity: 0; }
+        }
+        @keyframes glitch-burst-2 {
+            0%, 94%, 100% { opacity: 0; transform: translate(0, 0); clip-path: inset(0 0 100% 0); }
+            95% { opacity: 0.55; transform: translate(1.5px, -0.5px); clip-path: inset(30% 0 40% 0); }
+            96% { opacity: 0.55; transform: translate(-1px, 0.5px); clip-path: inset(70% 0 5% 0); }
+            97% { opacity: 0; }
         }
         @media (prefers-reduced-motion: reduce) {
-            .bg-paths path { animation: none; }
+            .glitch-text::before, .glitch-text::after { animation: none; }
         }
         :focus-visible {
             outline: 2px solid var(--accent);
@@ -70,7 +109,7 @@
             gap: 3.5rem;
             align-items: start;
             border-radius: 20px;
-            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5), 0 4px 12px rgba(0, 0, 0, 0.35);
+            box-shadow: 0 16px 40px rgba(0, 2, 8, 0.6), 0 4px 12px rgba(0, 2, 8, 0.45), 0 0 70px rgba(0, 229, 255, 0.06);
         }
         .page::before {
             content: '';
@@ -78,7 +117,7 @@
             inset: 0;
             z-index: -1;
             border-radius: inherit;
-            background: rgba(23, 22, 26, 0.9);
+            background: rgba(5, 7, 13, 0.88);
             backdrop-filter: blur(4px);
             -webkit-backdrop-filter: blur(4px);
             mask-image: radial-gradient(ellipse 75% 70% at center, black 60%, transparent 100%);
@@ -93,12 +132,34 @@
             flex-direction: column;
             gap: 1.75rem;
         }
+        /* chrome-extruded logo text — the classic Video Toaster / corporate-render
+           title-card look, with a slow light sweep to sell the polished-metal read */
         .wordmark {
-            font-family: var(--mono);
-            font-size: 1.4rem;
-            font-weight: 700;
+            font-family: var(--sans);
+            font-stretch: 75%;
+            font-weight: 900;
+            font-size: 1.9rem;
+            text-transform: uppercase;
+            letter-spacing: -0.01em;
             margin: 0 0 0.3rem;
-            line-height: 1.25;
+            line-height: 0.95;
+            color: transparent;
+            background-image: linear-gradient(180deg,
+                #eaf6ff 0%, #8fd6ff 12%, #2ec2ff 22%, #0a6fb0 32%,
+                #d8f4ff 42%, #ffffff 48%, #0a6fb0 58%, #063a5c 70%,
+                #7fd8ff 82%, #eaf6ff 100%);
+            background-size: 100% 320%;
+            -webkit-background-clip: text;
+            background-clip: text;
+            filter: drop-shadow(0 2px 0 rgba(0, 0, 0, 0.7));
+            animation: chrome-sweep 5s ease-in-out infinite;
+        }
+        @keyframes chrome-sweep {
+            0%, 100% { background-position: 0 0%; }
+            50% { background-position: 0 100%; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .wordmark { animation: none; }
         }
         .role, .location {
             margin: 0;
@@ -169,22 +230,35 @@
             gap: 0.75rem;
             margin-top: 0.6rem;
         }
+        /* beveled chrome hardware button — brushed-steel gradient + inset highlight/shadow,
+           like a VCR or CD-player transport control */
         #player-toggle, #viz-cycle, #track-prev, #track-next, #volume-toggle {
             width: 32px;
             height: 32px;
             flex: 0 0 auto;
             border-radius: 50%;
-            border: 1px solid var(--rule);
-            background: transparent;
+            border: 1px solid rgba(0, 0, 0, 0.6);
+            background: linear-gradient(180deg, #4a5c70 0%, #202c3a 50%, #0d141c 100%);
+            box-shadow:
+                inset 0 1px 1px rgba(255, 255, 255, 0.25),
+                inset 0 -1px 2px rgba(0, 0, 0, 0.6),
+                0 1px 3px rgba(0, 0, 0, 0.6);
             color: var(--text);
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 0.75rem;
-            transition: border-color 0.2s ease, color 0.2s ease;
+            transition: border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
         }
-        #player-toggle:hover, #viz-cycle:hover, #track-prev:hover, #track-next:hover, #volume-toggle:hover { border-color: var(--accent); color: var(--accent); }
+        #player-toggle:hover, #viz-cycle:hover, #track-prev:hover, #track-next:hover, #volume-toggle:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            box-shadow:
+                inset 0 1px 1px rgba(255, 255, 255, 0.3),
+                inset 0 -1px 2px rgba(0, 0, 0, 0.6),
+                0 0 10px rgba(0, 229, 255, 0.5);
+        }
         .volume-row {
             display: flex;
             align-items: center;
@@ -249,12 +323,26 @@
             border-top: 1px solid var(--rule);
         }
         .section:first-child { border-top: none; padding-top: 0; }
+        /* beveled chrome/glass hardware-button label, not a flat badge */
         .section h2 {
+            display: inline-block;
             font-family: var(--mono);
-            font-weight: 500;
-            font-size: 0.95rem;
-            color: var(--accent);
+            font-weight: 700;
+            font-size: 0.78rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: #eafcff;
             margin: 0 0 1.5rem;
+            padding: 0.45em 1em;
+            border-radius: 999px;
+            background: var(--chip-grad);
+            border: 1px solid rgba(0, 0, 0, 0.5);
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7);
+            box-shadow:
+                inset 0 1px 1px rgba(255, 255, 255, 0.6),
+                inset 0 -2px 3px rgba(0, 0, 0, 0.5),
+                0 2px 6px rgba(0, 0, 0, 0.5),
+                0 0 12px rgba(0, 229, 255, 0.25);
         }
 
         .hero p.tagline {
@@ -271,7 +359,7 @@
         .hero p.work-line a {
             color: var(--accent);
             text-decoration: none;
-            border-bottom: 1px solid rgba(255, 176, 0, 0.35);
+            border-bottom: 1px solid rgba(0, 229, 255, 0.35);
         }
         .hero p.work-line a:hover { border-bottom-color: var(--accent); }
 
@@ -310,7 +398,7 @@
             font-size: 0.85rem;
             color: var(--accent);
             text-decoration: none;
-            border-bottom: 1px solid rgba(255, 176, 0, 0.35);
+            border-bottom: 1px solid rgba(0, 229, 255, 0.35);
             margin-right: 0.9rem;
         }
         .portfolio-item a:hover { border-bottom-color: var(--accent); }
@@ -372,7 +460,7 @@
         .pro-project .pro-context a {
             color: var(--accent);
             text-decoration: none;
-            border-bottom: 1px solid rgba(255, 176, 0, 0.35);
+            border-bottom: 1px solid rgba(0, 229, 255, 0.35);
         }
         .pro-project .pro-context a:hover { border-bottom-color: var(--accent); }
         .flow-diagram {
@@ -380,26 +468,55 @@
             height: auto;
             display: block;
             margin-bottom: 1.5rem;
+            background: var(--panel-bg);
+            border-radius: 2px;
+            /* same navy projector-screen wash as .ga-canvas, so the static diagrams
+               read as one family with the animated ones; url(#flow-smear) adds the
+               same dim/blurred/offset trailing-ghost smear as the canvas's drawFrame */
+            filter: brightness(1.05) contrast(1) saturate(1.25) url(#flow-smear);
+            box-shadow: 0 0 40px rgba(0, 229, 255, 0.14), 0 0 90px rgba(0, 229, 255, 0.07);
         }
         .flow-diagram text {
             font-family: var(--mono);
-            fill: var(--text);
+            font-style: italic;
+            font-weight: 700;
+            fill: #eaf9ff;
+            filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.6));
         }
         .flow-diagram .flow-label {
-            fill: var(--text-muted);
+            fill: rgba(234, 249, 255, 0.8);
             font-size: 12px;
         }
         .flow-diagram .flow-box {
-            fill: var(--bg-elevated);
-            stroke: var(--rule);
+            fill: rgba(0, 8, 20, 0.2);
+            stroke: rgba(0, 8, 20, 0.9);
+            stroke-width: 1.5;
+        }
+        .flow-diagram .flow-box-side {
+            fill: rgba(0, 8, 20, 0.55);
+            stroke: rgba(0, 8, 20, 0.9);
+            stroke-width: 1;
+        }
+        .flow-diagram .flow-box-bottom {
+            fill: rgba(0, 8, 20, 0.75);
+            stroke: rgba(0, 8, 20, 0.9);
+            stroke-width: 1;
+        }
+        .flow-diagram .flow-chip-bg {
+            fill: url(#chip-grad);
+            stroke: rgba(6, 10, 30, 0.9);
+            stroke-width: 1.2;
+        }
+        .flow-diagram .flow-chip-hl {
+            fill: rgba(255, 255, 255, 0.85);
         }
         .flow-diagram .flow-boundary {
             stroke: var(--accent);
             stroke-dasharray: 4 4;
-            opacity: 0.5;
+            opacity: 0.7;
         }
         .flow-diagram .flow-arrow {
-            stroke: var(--text-muted);
+            stroke: rgba(234, 249, 255, 0.6);
             fill: none;
             marker-end: url(#flow-arrowhead);
         }
@@ -409,7 +526,7 @@
             animation: flow-dash 1.2s linear infinite;
         }
         .flow-diagram .flow-arrow-future {
-            stroke: var(--text-muted);
+            stroke: rgba(234, 249, 255, 0.5);
             stroke-dasharray: 3 3;
             fill: none;
             opacity: 0.6;
@@ -424,9 +541,19 @@
             width: 100%;
             aspect-ratio: 2 / 1;
             display: block;
-            background: var(--bg-elevated);
+            background: var(--panel-bg);
             border-radius: 2px;
             margin-bottom: 1.5rem;
+            /* projector-screen wash; the trailing ghost is composited inside the canvas's
+               own drawFrame via drawImage — a CSS `filter: url(#svg-filter)` reference
+               does not actually render in this environment, so it isn't used here */
+            filter: brightness(1.05) contrast(1) saturate(1.25);
+            box-shadow: 0 0 40px rgba(0, 229, 255, 0.14), 0 0 90px rgba(0, 229, 255, 0.07);
+        }
+        /* a touch of gaussian blur on just these two, softening them slightly vs.
+           the rest of the project canvases */
+        #ga-canvas, #citra-canvas {
+            filter: brightness(1.05) contrast(1) saturate(1.25) blur(0.6px);
         }
         .pro-project .article p {
             font-size: 0.92rem;
@@ -464,16 +591,22 @@
             color: var(--text-muted);
         }
         .demo-controls button {
-            background: transparent;
-            border: 1px solid var(--rule);
+            background: linear-gradient(180deg, #3a4a5c 0%, #1c2733 50%, #0d141c 100%);
+            border: 1px solid rgba(0, 0, 0, 0.6);
+            box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.2), inset 0 -1px 2px rgba(0, 0, 0, 0.5);
             color: var(--text-muted);
             font-family: var(--mono);
             font-size: 0.7rem;
             padding: 0.3rem 0.7rem;
             border-radius: 3px;
             cursor: pointer;
+            transition: border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
         }
-        .demo-controls button:hover { border-color: var(--accent); color: var(--accent); }
+        .demo-controls button:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.25), inset 0 -1px 2px rgba(0, 0, 0, 0.5), 0 0 8px rgba(0, 229, 255, 0.4);
+        }
 
         footer {
             max-width: 1100px;
@@ -504,37 +637,209 @@
     </style>
 </head>
 <body>
-    <div class="bg-paths" aria-hidden="true"><svg id="bg-paths-svg" viewBox="0 0 696 316" preserveAspectRatio="none" fill="none"></svg></div>
+    <!-- Shared SVG resources (markers/gradients/filters) referenced by url(#id) from the
+         flow-diagram SVGs further down the page. These must live outside any <details>,
+         since a resource defined inside a closed <details> has no layout yet and browsers
+         can fail to resolve url() references to it until that <details> is opened —
+         which is why the chip color / arrowheads used to render late or not at all. -->
+    <svg width="0" height="0" style="position: absolute" aria-hidden="true">
+        <defs>
+            <marker id="flow-arrowhead" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+                <path d="M0,0 L6,3 L0,6 Z" fill="var(--text)"></path>
+            </marker>
+            <marker id="flow-arrowhead-2" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+                <path d="M0,0 L6,3 L0,6 Z" fill="var(--text)"></path>
+            </marker>
+            <linearGradient id="chip-grad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#8fe8ff"></stop>
+                <stop offset="0.5" stop-color="#0891b8"></stop>
+                <stop offset="1" stop-color="#042a3d"></stop>
+            </linearGradient>
+            <filter id="flow-smear" x="-15%" y="-15%" width="130%" height="130%">
+                <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="flow-smear-blur"></feGaussianBlur>
+                <feColorMatrix in="flow-smear-blur" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 0.4 0" result="flow-smear-dim"></feColorMatrix>
+                <feOffset in="flow-smear-dim" dx="6" dy="0" result="flow-smear-ghost"></feOffset>
+                <feMerge>
+                    <feMergeNode in="flow-smear-ghost"></feMergeNode>
+                    <feMergeNode in="SourceGraphic"></feMergeNode>
+                </feMerge>
+            </filter>
+        </defs>
+    </svg>
+    <div class="bg-paths" aria-hidden="true">
+        <canvas id="pipes-bg"></canvas>
+    </div>
     <script>
         (function () {
-            const svg = document.getElementById('bg-paths-svg');
-            const position = -1;
-            const ns = 'http://www.w3.org/2000/svg';
-            for (let i = 0; i < 36; i++) {
-                const x1 = 380 - i * 5 * position;
-                const x2 = 312 - i * 5 * position;
-                const x3 = 152 - i * 5 * position;
-                const x4 = 616 - i * 5 * position;
-                const x5 = 684 - i * 5 * position;
-                const y1 = 189 + i * 6;
-                const y2 = 216 - i * 6;
-                const y3 = 343 - i * 6;
-                const y4 = 470 - i * 6;
-                const y5 = 875 - i * 6;
-                const d = `M-${x1} -${y1}C-${x1} -${y1} -${x2} ${y2} ${x3} ${y3}C${x4} ${y4} ${x5} ${y5} ${x5} ${y5}`;
-                const path = document.createElementNS(ns, 'path');
-                path.setAttribute('d', d);
-                path.setAttribute('stroke-width', (0.5 + i * 0.03).toFixed(2));
-                path.setAttribute('stroke-opacity', Math.min(0.4, 0.04 + i * 0.01).toFixed(3));
-                path.style.animationDelay = `-${(i * 0.8).toFixed(1)}s`;
-                svg.appendChild(path);
+            const canvas = document.getElementById('pipes-bg');
+            if (!window.THREE || !canvas) return;
+            const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+            const BG = 0x05070d;
+            const CELL = 1.4;
+            const GRID_SIZE = 6; // grid runs -GRID_SIZE..GRID_SIZE on each axis
+            const NUM_PIPES = 5;
+            const STEP_MS = 260;
+            const TURN_CHANCE = 0.3;
+            const PIPE_R = 0.16;
+            const JOINT_R = 0.2;
+            const COLORS = [0x00e5ff, 0xff00c8, 0x39ff8a, 0xd7e6f5, 0x6fe0ff];
+            const DIRECTIONS = [
+                { x: 1, y: 0, z: 0 }, { x: -1, y: 0, z: 0 },
+                { x: 0, y: 1, z: 0 }, { x: 0, y: -1, z: 0 },
+                { x: 0, y: 0, z: 1 }, { x: 0, y: 0, z: -1 },
+            ];
+
+            const scene = new THREE.Scene();
+            scene.background = new THREE.Color(BG);
+            scene.fog = new THREE.FogExp2(BG, 0.05);
+
+            const camera = new THREE.PerspectiveCamera(55, 1, 0.1, 100);
+            const CAM_RADIUS = GRID_SIZE * CELL * 1.9;
+            const CAM_HEIGHT = GRID_SIZE * CELL * 0.35;
+
+            const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+
+            scene.add(new THREE.AmbientLight(0x334455, 0.8));
+            const lightA = new THREE.DirectionalLight(0x00e5ff, 0.6);
+            lightA.position.set(1, 1, 1);
+            scene.add(lightA);
+            const lightB = new THREE.DirectionalLight(0xff00c8, 0.4);
+            lightB.position.set(-1, -0.5, -1);
+            scene.add(lightB);
+
+            const cylGeo = new THREE.CylinderGeometry(1, 1, 1, 10);
+            const sphGeo = new THREE.SphereGeometry(1, 10, 10);
+            const UP = new THREE.Vector3(0, 1, 0);
+
+            let occupied = new Set();
+            let pipes = [];
+            let liveMeshes = [];
+
+            function key(p) { return `${p.x},${p.y},${p.z}`; }
+            function toWorld(p) { return new THREE.Vector3(p.x * CELL, p.y * CELL, p.z * CELL); }
+
+            function addSegment(pipe, from, to) {
+                const a = toWorld(from), b = toWorld(to);
+                const dir = new THREE.Vector3().subVectors(b, a);
+                const len = dir.length();
+                const mesh = new THREE.Mesh(cylGeo, pipe.material);
+                mesh.scale.set(PIPE_R, len, PIPE_R);
+                mesh.quaternion.setFromUnitVectors(UP, dir.clone().normalize());
+                mesh.position.copy(a).add(b).multiplyScalar(0.5);
+                scene.add(mesh);
+                liveMeshes.push(mesh);
             }
+
+            function addJoint(pipe, at) {
+                const mesh = new THREE.Mesh(sphGeo, pipe.material);
+                mesh.scale.setScalar(JOINT_R);
+                mesh.position.copy(toWorld(at));
+                scene.add(mesh);
+                liveMeshes.push(mesh);
+            }
+
+            function randomStart() {
+                const span = GRID_SIZE - 2;
+                return {
+                    x: Math.round((Math.random() * 2 - 1) * span),
+                    y: Math.round((Math.random() * 2 - 1) * span),
+                    z: Math.round((Math.random() * 2 - 1) * span),
+                };
+            }
+
+            function spawnPipes() {
+                occupied = new Set();
+                liveMeshes.forEach((m) => scene.remove(m));
+                liveMeshes = [];
+                pipes.forEach((p) => p.material.dispose());
+                pipes = [];
+                for (let i = 0; i < NUM_PIPES; i++) {
+                    const pos = randomStart();
+                    occupied.add(key(pos));
+                    const color = COLORS[Math.floor(Math.random() * COLORS.length)];
+                    const material = new THREE.MeshPhongMaterial({ color, shininess: 90, specular: 0xffffff });
+                    pipes.push({ pos, dir: null, material, alive: true });
+                    addJoint(pipes[i], pos);
+                }
+            }
+
+            function stepPipe(pipe) {
+                if (!pipe.alive) return;
+                const candidates = DIRECTIONS.filter((d) => {
+                    if (pipe.dir && d.x === -pipe.dir.x && d.y === -pipe.dir.y && d.z === -pipe.dir.z) return false;
+                    const n = { x: pipe.pos.x + d.x, y: pipe.pos.y + d.y, z: pipe.pos.z + d.z };
+                    if (Math.abs(n.x) > GRID_SIZE || Math.abs(n.y) > GRID_SIZE || Math.abs(n.z) > GRID_SIZE) return false;
+                    return !occupied.has(key(n));
+                });
+                if (candidates.length === 0) { pipe.alive = false; return; }
+                const canGoStraight = pipe.dir && candidates.some((d) => d.x === pipe.dir.x && d.y === pipe.dir.y && d.z === pipe.dir.z);
+                const nextDir = (canGoStraight && Math.random() > TURN_CHANCE)
+                    ? pipe.dir
+                    : candidates[Math.floor(Math.random() * candidates.length)];
+                const newPos = { x: pipe.pos.x + nextDir.x, y: pipe.pos.y + nextDir.y, z: pipe.pos.z + nextDir.z };
+                occupied.add(key(newPos));
+                if (pipe.dir && (nextDir.x !== pipe.dir.x || nextDir.y !== pipe.dir.y || nextDir.z !== pipe.dir.z)) {
+                    addJoint(pipe, pipe.pos);
+                }
+                addSegment(pipe, pipe.pos, newPos);
+                pipe.pos = newPos;
+                pipe.dir = nextDir;
+            }
+
+            function tick() {
+                pipes.forEach(stepPipe);
+                if (pipes.every((p) => !p.alive)) spawnPipes();
+            }
+
+            function resize() {
+                const w = canvas.clientWidth || window.innerWidth;
+                const h = canvas.clientHeight || window.innerHeight;
+                camera.aspect = w / h;
+                camera.updateProjectionMatrix();
+                renderer.setSize(w, h, false);
+            }
+            window.addEventListener('resize', resize);
+            resize();
+
+            spawnPipes();
+
+            if (reduceMotion) {
+                // run the whole growth simulation instantly, then render one static frame
+                for (let guard = 0; guard < 5000 && !pipes.every((p) => !p.alive); guard++) tick();
+                camera.position.set(CAM_RADIUS, CAM_HEIGHT, 0);
+                camera.lookAt(0, 0, 0);
+                renderer.render(scene, camera);
+                return;
+            }
+
+            let camAngle = 0;
+            let lastStep = 0;
+            let running = true;
+            function loop(now) {
+                if (!running) return;
+                if (now - lastStep > STEP_MS) { tick(); lastStep = now; }
+                camAngle += 0.0015;
+                camera.position.x = Math.cos(camAngle) * CAM_RADIUS;
+                camera.position.z = Math.sin(camAngle) * CAM_RADIUS;
+                camera.position.y = CAM_HEIGHT;
+                camera.lookAt(0, 0, 0);
+                renderer.render(scene, camera);
+                requestAnimationFrame(loop);
+            }
+            requestAnimationFrame(loop);
+
+            document.addEventListener('visibilitychange', () => {
+                running = !document.hidden;
+                if (running) requestAnimationFrame(loop);
+            });
         })();
     </script>
     <div class="page">
         <aside class="sidebar">
             <div class="identity">
-                <h1 class="wordmark">Achmadi Noor Dzaky</h1>
+                <h1 class="wordmark glitch-text" data-text="Achmadi Noor Dzaky">Achmadi Noor Dzaky</h1>
                 <p class="role">Data Analyst</p>
                 <p class="location">Malang, Jawa Timur</p>
             </div>
@@ -578,31 +883,49 @@
             </section>
 
             <section class="section" id="professional-projects">
-                <h2>// professional projects</h2>
+                <h2>Professional Projects</h2>
                 <details class="pro-project">
                     <summary><img class="pro-logo" src="assets/images/grivy-icon.png" alt="Grivy"><h3>Data Clean Room Pipeline</h3><i class="fas fa-chevron-down"></i></summary>
                     <div class="pro-body">
                     <p class="pro-context">Privacy-preserving Online-to-Offline campaign measurement across organizational boundaries</p>
 
-                    <svg class="flow-diagram" viewBox="0 0 640 380" role="img" aria-label="Diagram: audience source flows into orchestration, which pushes a hashed audience to ad platforms for exposure and a separately hashed cohort to a retail partner clean room, receiving purchase match results back, with no raw personal data crossing any boundary">
-                        <defs>
-                            <marker id="flow-arrowhead" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
-                                <path d="M0,0 L6,3 L0,6 Z" fill="var(--text-muted)"></path>
-                            </marker>
-                        </defs>
+                    <svg class="flow-diagram" viewBox="0 0 640 410" role="img" aria-label="Diagram: audience source flows into orchestration, which pushes a hashed audience to ad platforms for exposure and a separately hashed cohort to a retail partner clean room, receiving purchase match results back, with no raw personal data crossing any boundary">
 
-                        <rect class="flow-box" x="220" y="20" width="200" height="70" rx="3"></rect>
+                        <g>
+                            <rect class="flow-chip-bg" x="14" y="10" width="150" height="26" rx="6"></rect>
+                            <!-- <rect class="flow-chip-hl" x="18" y="13" width="138" height="3"></rect> -->
+                            <text x="22" y="26" font-size="13">Data Clean Room</text>
+                        </g>
+
+                        <g transform="translate(0, 30)">
+                        <g>
+                            <polygon class="flow-box-bottom" points="220,90 228,93 428,93 420,90"></polygon>
+                            <polygon class="flow-box-side" points="420,20 428,23 428,93 420,90"></polygon>
+                            <rect class="flow-box" x="220" y="20" width="200" height="70"></rect>
+                        </g>
                         <text x="320" y="60" text-anchor="middle" font-size="14">Audience Source</text>
 
-                        <rect class="flow-box" x="220" y="130" width="200" height="80" rx="3"></rect>
+                        <g>
+                            <polygon class="flow-box-bottom" points="220,210 228,213 428,213 420,210"></polygon>
+                            <polygon class="flow-box-side" points="420,130 428,133 428,213 420,210"></polygon>
+                            <rect class="flow-box" x="220" y="130" width="200" height="80"></rect>
+                        </g>
                         <text x="320" y="165" text-anchor="middle" font-size="14">Orchestration</text>
                         <text x="320" y="184" text-anchor="middle" class="flow-label">enrollment · hashing</text>
 
-                        <rect class="flow-box" x="20" y="280" width="220" height="80" rx="3"></rect>
+                        <g>
+                            <polygon class="flow-box-bottom" points="20,360 28,363 248,363 240,360"></polygon>
+                            <polygon class="flow-box-side" points="240,280 248,283 248,363 240,360"></polygon>
+                            <rect class="flow-box" x="20" y="280" width="220" height="80"></rect>
+                        </g>
                         <text x="130" y="315" text-anchor="middle" font-size="14">Ad Platforms</text>
                         <text x="130" y="334" text-anchor="middle" class="flow-label">Meta · TikTok · TTD</text>
 
-                        <rect class="flow-box" x="400" y="280" width="220" height="80" rx="3"></rect>
+                        <g>
+                            <polygon class="flow-box-bottom" points="400,360 408,363 628,363 620,360"></polygon>
+                            <polygon class="flow-box-side" points="620,280 628,283 628,363 620,360"></polygon>
+                            <rect class="flow-box" x="400" y="280" width="220" height="80"></rect>
+                        </g>
                         <text x="510" y="315" text-anchor="middle" font-size="14">Retail Partner</text>
                         <text x="510" y="334" text-anchor="middle" class="flow-label">clean room</text>
 
@@ -620,6 +943,7 @@
 
                         <path class="flow-arrow" d="M490,280 L490,270 L320,270 L320,210"></path>
                         <text x="407" y="264" text-anchor="middle" class="flow-label">purchase match results</text>
+                        </g>
                     </svg>
 
                     <div class="article">
@@ -636,24 +960,41 @@
                     <p class="pro-context">Turning a plain-language audience description into a set of matching users at scale</p>
 
                     <svg class="flow-diagram" viewBox="0 0 910 220" role="img" aria-label="Diagram: user profiles are embedded monthly using delta detection into a vector store, which a search stored procedure queries directly">
-                        <defs>
-                            <marker id="flow-arrowhead-2" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
-                                <path d="M0,0 L6,3 L0,6 Z" fill="var(--text-muted)"></path>
-                            </marker>
-                        </defs>
 
-                        <rect class="flow-box" x="20" y="70" width="180" height="80" rx="3"></rect>
+                        <g>
+                            <rect class="flow-chip-bg" x="14" y="10" width="140" height="26" rx="6"></rect>
+                            <!-- <rect class="flow-chip-hl" x="18" y="13" width="172" height="3"></rect> -->
+                            <text x="22" y="28" font-size="13">Semantic Search</text>
+                        </g>
+
+                        <g>
+                            <polygon class="flow-box-bottom" points="20,150 28,153 208,153 200,150"></polygon>
+                            <polygon class="flow-box-side" points="200,70 208,73 208,153 200,150"></polygon>
+                            <rect class="flow-box" x="20" y="70" width="180" height="80"></rect>
+                        </g>
                         <text x="110" y="105" text-anchor="middle" font-size="14">User Profiles</text>
                         <text x="110" y="123" text-anchor="middle" class="flow-label">100M+, BigQuery</text>
 
-                        <rect class="flow-box" x="270" y="70" width="200" height="80" rx="3"></rect>
+                        <g>
+                            <polygon class="flow-box-bottom" points="270,150 278,153 478,153 470,150"></polygon>
+                            <polygon class="flow-box-side" points="470,70 478,73 478,153 470,150"></polygon>
+                            <rect class="flow-box" x="270" y="70" width="200" height="80"></rect>
+                        </g>
                         <text x="370" y="105" text-anchor="middle" font-size="14">Embedding Pipeline</text>
                         <text x="370" y="123" text-anchor="middle" class="flow-label">delta detection · batch</text>
 
-                        <rect class="flow-box" x="540" y="70" width="150" height="80" rx="3"></rect>
+                        <g>
+                            <polygon class="flow-box-bottom" points="540,150 548,153 698,153 690,150"></polygon>
+                            <polygon class="flow-box-side" points="690,70 698,73 698,153 690,150"></polygon>
+                            <rect class="flow-box" x="540" y="70" width="150" height="80"></rect>
+                        </g>
                         <text x="615" y="115" text-anchor="middle" font-size="14">Vector Store</text>
 
-                        <rect class="flow-box" x="750" y="70" width="140" height="80" rx="3"></rect>
+                        <g>
+                            <polygon class="flow-box-bottom" points="750,150 758,153 898,153 890,150"></polygon>
+                            <polygon class="flow-box-side" points="890,70 898,73 898,153 890,150"></polygon>
+                            <rect class="flow-box" x="750" y="70" width="140" height="80"></rect>
+                        </g>
                         <text x="820" y="105" text-anchor="middle" font-size="14">Search</text>
                         <text x="820" y="123" text-anchor="middle" class="flow-label">stored procedure</text>
 
@@ -707,7 +1048,7 @@
             </section>
 
             <section class="section" id="side-projects">
-                <h2>// side projects</h2>
+                <h2>Side Projects</h2>
                 <details class="pro-project">
                     <summary><img class="pro-logo" src="assets/images/centro-icon.png" alt="Centro Studio"><h3>Centro Studio</h3><i class="fas fa-chevron-down"></i></summary>
                     <div class="pro-body">
@@ -725,24 +1066,51 @@
                     <div class="pro-body">
                     <p class="pro-context">A point-of-sale, QR ordering, and kitchen display platform for Indonesian restaurants and cafes, built with a friend &middot; <a href="https://sadji.app">sadji.app</a></p>
 
-                    <svg class="flow-diagram" viewBox="0 0 640 390" role="img" aria-label="Diagram: a customer's QR order and a cashier's POS both flow into a shared backend, which pushes tickets to the kitchen display and lets a staff Android app queue orders locally when offline, syncing back through an outbox">
-                        <rect class="flow-box" x="20" y="20" width="200" height="80" rx="3"></rect>
+                    <svg class="flow-diagram" viewBox="0 0 640 402" role="img" aria-label="Diagram: a customer's QR order and a cashier's POS both flow into a shared backend, which pushes tickets to the kitchen display and lets a staff Android app queue orders locally when offline, syncing back through an outbox">
+                        <g>
+                            <rect class="flow-chip-bg" x="10" y="2" width="150" height="16" rx="4"></rect>
+                            <!-- <rect class="flow-chip-hl" x="13" y="3.5" width="144" height="2"></rect> -->
+                            <text x="16" y="13" font-size="10">SADJI Architecture</text>
+                        </g>
+
+                        <g transform="translate(0, 12)">
+                        <g>
+                            <polygon class="flow-box-bottom" points="20,100 28,103 228,103 220,100"></polygon>
+                            <polygon class="flow-box-side" points="220,20 228,23 228,103 220,100"></polygon>
+                            <rect class="flow-box" x="20" y="20" width="200" height="80"></rect>
+                        </g>
                         <text x="120" y="55" text-anchor="middle" font-size="14">Customer</text>
                         <text x="120" y="73" text-anchor="middle" class="flow-label">QR order · table</text>
 
-                        <rect class="flow-box" x="420" y="20" width="200" height="80" rx="3"></rect>
+                        <g>
+                            <polygon class="flow-box-bottom" points="420,100 428,103 628,103 620,100"></polygon>
+                            <polygon class="flow-box-side" points="620,20 628,23 628,103 620,100"></polygon>
+                            <rect class="flow-box" x="420" y="20" width="200" height="80"></rect>
+                        </g>
                         <text x="520" y="55" text-anchor="middle" font-size="14">Cashier</text>
                         <text x="520" y="73" text-anchor="middle" class="flow-label">POS</text>
 
-                        <rect class="flow-box" x="220" y="150" width="200" height="80" rx="3"></rect>
+                        <g>
+                            <polygon class="flow-box-bottom" points="220,230 228,233 428,233 420,230"></polygon>
+                            <polygon class="flow-box-side" points="420,150 428,153 428,233 420,230"></polygon>
+                            <rect class="flow-box" x="220" y="150" width="200" height="80"></rect>
+                        </g>
                         <text x="320" y="185" text-anchor="middle" font-size="14">Backend</text>
                         <text x="320" y="203" text-anchor="middle" class="flow-label">orders · menu · payments</text>
 
-                        <rect class="flow-box" x="20" y="290" width="220" height="80" rx="3"></rect>
+                        <g>
+                            <polygon class="flow-box-bottom" points="20,370 28,373 248,373 240,370"></polygon>
+                            <polygon class="flow-box-side" points="240,290 248,293 248,373 240,370"></polygon>
+                            <rect class="flow-box" x="20" y="290" width="220" height="80"></rect>
+                        </g>
                         <text x="130" y="325" text-anchor="middle" font-size="14">Kitchen Display</text>
                         <text x="130" y="343" text-anchor="middle" class="flow-label">live ticket queue</text>
 
-                        <rect class="flow-box" x="400" y="290" width="220" height="80" rx="3"></rect>
+                        <g>
+                            <polygon class="flow-box-bottom" points="400,370 408,373 628,373 620,370"></polygon>
+                            <polygon class="flow-box-side" points="620,290 628,293 628,373 620,370"></polygon>
+                            <rect class="flow-box" x="400" y="290" width="220" height="80"></rect>
+                        </g>
                         <text x="510" y="325" text-anchor="middle" font-size="14">Staff App</text>
                         <text x="510" y="343" text-anchor="middle" class="flow-label">offline queue · sync</text>
 
@@ -757,6 +1125,7 @@
 
                         <path class="flow-arrow flow-arrow-hash" d="M370,230 L370,260 L510,260 L510,290"></path>
                         <text x="440" y="254" text-anchor="middle" class="flow-label">sync · outbox</text>
+                        </g>
                     </svg>
 
                     <div class="article">
@@ -771,23 +1140,7 @@
                     <div class="pro-body">
                     <p class="pro-context">Cutting CalcFlow's biaxial column solver more than 4x per call and 3.55x on a full detailing batch, without changing the underlying math</p>
 
-                    <svg class="flow-diagram" viewBox="0 0 640 190" role="img" aria-label="Bar chart: a single PMM solve drops from 6.78 milliseconds to 1.58 milliseconds, a 4.3x speedup, and a 4050-row detailing batch drops from 5.7 seconds to 1.6 seconds, a 3.55x speedup, after sharding it across a worker pool">
-                        <text x="20" y="20" font-size="13">single PMM solve &middot; 24 bars</text>
-                        <text x="105" y="48" text-anchor="end" class="flow-label">before</text>
-                        <rect x="110" y="36" width="470" height="16" fill="var(--text-muted)"></rect>
-                        <text x="588" y="48" class="flow-label">6.78ms</text>
-                        <text x="105" y="70" text-anchor="end" class="flow-label">after</text>
-                        <rect x="110" y="58" width="109.5" height="16" fill="var(--accent)"></rect>
-                        <text x="227" y="70" class="flow-label">1.58ms &middot; 4.3x</text>
-
-                        <text x="20" y="110" font-size="13">4050-row batch &middot; 30 cols &times; 3 stations &times; 45 combos</text>
-                        <text x="105" y="138" text-anchor="end" class="flow-label">before</text>
-                        <rect x="110" y="126" width="470" height="16" fill="var(--text-muted)"></rect>
-                        <text x="588" y="138" class="flow-label">5.7s</text>
-                        <text x="105" y="160" text-anchor="end" class="flow-label">after</text>
-                        <rect x="110" y="148" width="131.9" height="16" fill="var(--accent)"></rect>
-                        <text x="250" y="160" class="flow-label">1.6s &middot; 3.55x</text>
-                    </svg>
+                    <canvas id="calcflow-canvas" class="ga-canvas" aria-label="Animated diagram: two isometric bars grow to show a 4050-row detailing batch dropping from 5.7 seconds to 1.6 seconds, a 3.55x speedup, after sharding the work across a worker pool"></canvas>
 
                     <div class="article">
                         <p>CalcFlow takes a structural analysis export from ETABS and runs the concrete column checks required by SNI 2847:2019, Indonesia's building code. One of those checks, PMM, biaxial axial-force-and-moment interaction, has to find the neutral-axis angle and depth where a column's capacity matches the demand for every load case on every column: two nested numerical searches, up to 100 trial angles each bisecting a neutral-axis depth up to around 120 times. A single ETABS export can carry thousands of these rows, so how fast the solver runs directly decides how long an engineer waits after clicking calculate.</p>
@@ -799,7 +1152,7 @@
             </section>
 
             <section class="section" id="portfolio">
-                <h2>// toy projects</h2>
+                <h2>Toy Projects</h2>
                 <div class="portfolio-grid">
                     <div class="portfolio-item">
                         <h3>Ray Tracing using Numpy</h3>
@@ -1032,7 +1385,7 @@
             let plasmaT = 0;
 
             function drawBarsAndWaves(w, h) {
-                ctx.fillStyle = 'rgba(23, 22, 26, 0.35)';
+                ctx.fillStyle = 'rgba(5, 7, 13, 0.35)';
                 ctx.fillRect(0, 0, w, h);
                 hueShift = (hueShift + 0.4) % 360;
 
@@ -1059,7 +1412,7 @@
             }
 
             function drawPlasma(w, h) {
-                ctx.fillStyle = 'rgba(23, 22, 26, 0.25)';
+                ctx.fillStyle = 'rgba(5, 7, 13, 0.25)';
                 ctx.fillRect(0, 0, w, h);
                 plasmaT += 0.012;
 
@@ -1088,7 +1441,7 @@
             let eqPeaks = [];
 
             function drawEqualizer(w, h) {
-                ctx.fillStyle = '#17161a';
+                ctx.fillStyle = '#05070d';
                 ctx.fillRect(0, 0, w, h);
 
                 const barCount = 28;
@@ -1118,7 +1471,7 @@
                     }
 
                     const peakY = h - eqPeaks[i] - 2;
-                    ctx.fillStyle = '#f4f2ec';
+                    ctx.fillStyle = '#d7e6f5';
                     ctx.fillRect(x, peakY, barWidth, Math.max(2, h * 0.012));
                 }
             }
@@ -1180,7 +1533,7 @@
 
             function drawRawPreview() {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
-                ctx.strokeStyle = 'rgba(239, 236, 230, 0.6)';
+                ctx.strokeStyle = 'rgba(215, 230, 245, 0.6)';
                 ctx.lineWidth = 2;
                 ctx.beginPath();
                 rawPoints.forEach((p, i) => (i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y)));
@@ -1237,13 +1590,13 @@
                     x += c.amp * Math.cos(c.freq * t + c.phase);
                     y += c.amp * Math.sin(c.freq * t + c.phase);
                     if (c.amp > 0.5) {
-                        ctx.strokeStyle = 'rgba(239, 236, 230, 0.12)';
+                        ctx.strokeStyle = 'rgba(215, 230, 245, 0.12)';
                         ctx.lineWidth = 1;
                         ctx.beginPath();
                         ctx.arc(prevX, prevY, c.amp, 0, Math.PI * 2);
                         ctx.stroke();
                     }
-                    ctx.strokeStyle = 'rgba(255, 176, 0, 0.3)';
+                    ctx.strokeStyle = 'rgba(0, 229, 255, 0.3)';
                     ctx.beginPath();
                     ctx.moveTo(prevX, prevY);
                     ctx.lineTo(x, y);
@@ -1251,7 +1604,7 @@
                 }
                 trail.push({ x, y });
                 if (trail.length > N) trail.shift();
-                ctx.strokeStyle = '#ffb000';
+                ctx.strokeStyle = '#00e5ff';
                 ctx.lineWidth = 2;
                 ctx.beginPath();
                 trail.forEach((p, i) => (i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y)));
@@ -1723,12 +2076,16 @@
     <script>
         (function () {
             const canvas = document.getElementById('ga-canvas');
-            const ctx = canvas.getContext('2d');
+            let ctx = canvas.getContext('2d');
+            const realCtx = ctx;
+            // content is drawn here first (transparent bg), then composited into realCtx
+            // twice — once shifted/dim/blurred as a trailing ghost, once sharp on top
+            const ghostCanvas = document.createElement('canvas');
+            const ghostCtx = ghostCanvas.getContext('2d');
             const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
             const rootStyle = getComputedStyle(document.documentElement);
             const COLOR = {
-                bg: rootStyle.getPropertyValue('--bg-elevated').trim(),
                 text: rootStyle.getPropertyValue('--text').trim(),
                 muted: rootStyle.getPropertyValue('--text-muted').trim(),
                 accent: rootStyle.getPropertyValue('--accent').trim(),
@@ -1737,11 +2094,121 @@
             };
             const MONO = rootStyle.getPropertyValue('--mono').trim();
 
+            // --- isometric, flat-shaded rendering helpers (90s corporate-video look) ---
+            const _cparse = document.createElement('canvas');
+            _cparse.width = 1; _cparse.height = 1;
+            const _cctx = _cparse.getContext('2d');
+            const _colorCache = new Map();
+            function toRGB(cssColor) {
+                if (_colorCache.has(cssColor)) return _colorCache.get(cssColor);
+                _cctx.clearRect(0, 0, 1, 1);
+                _cctx.fillStyle = cssColor;
+                _cctx.fillRect(0, 0, 1, 1);
+                const d = _cctx.getImageData(0, 0, 1, 1).data;
+                const rgb = [d[0], d[1], d[2]];
+                _colorCache.set(cssColor, rgb);
+                return rgb;
+            }
+            function shade(rgb, amt) {
+                const [r, g, b] = rgb;
+                if (amt >= 0) return `rgb(${(r + (255 - r) * amt) | 0}, ${(g + (255 - g) * amt) | 0}, ${(b + (255 - b) * amt) | 0})`;
+                return `rgb(${(r * (1 + amt)) | 0}, ${(g * (1 + amt)) | 0}, ${(b * (1 + amt)) | 0})`;
+            }
+            const ISO_R = [Math.cos(Math.PI / 6), Math.sin(Math.PI / 6) * 0.62];
+            const ISO_L = [-Math.cos(Math.PI / 6), Math.sin(Math.PI / 6) * 0.62];
+            function isoPt(ox, oy, x, y, z, s) {
+                return [ox + (x * ISO_R[0] + y * ISO_L[0]) * s, oy + (x * ISO_R[1] + y * ISO_L[1]) * s - z * s];
+            }
+            function drawIsoBox(ox, oy, w, d, hgt, s, baseColor, outline) {
+                const rgb = toRGB(baseColor);
+                const p100 = isoPt(ox, oy, w, 0, 0, s), p010 = isoPt(ox, oy, 0, d, 0, s);
+                const p001 = isoPt(ox, oy, 0, 0, hgt, s), p101 = isoPt(ox, oy, w, 0, hgt, s);
+                const p011 = isoPt(ox, oy, 0, d, hgt, s), p110 = isoPt(ox, oy, w, d, 0, s);
+                const p111 = isoPt(ox, oy, w, d, hgt, s);
+                ctx.lineJoin = 'round';
+                ctx.lineWidth = outline;
+                ctx.strokeStyle = 'rgba(0, 8, 20, 0.85)';
+                const face = (pts, tint) => {
+                    ctx.beginPath();
+                    ctx.moveTo(pts[0][0], pts[0][1]);
+                    for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1]);
+                    ctx.closePath();
+                    ctx.fillStyle = shade(rgb, tint);
+                    ctx.fill();
+                    ctx.stroke();
+                };
+                face([p100, p110, p111, p101], -0.22);
+                face([p010, p110, p111, p011], -0.42);
+                face([p001, p101, p111, p011], 0.32);
+            }
+            function drawCaption(x, y, text, fontSize, align) {
+                ctx.save();
+                ctx.font = `italic 700 ${fontSize}px ${MONO}`;
+                const padX = fontSize * 0.6, padY = fontSize * 0.42;
+                const tw = ctx.measureText(text).width;
+                const bw = tw + padX * 2, bh = fontSize + padY * 2;
+                let bx = x;
+                if (align === 'center') bx = x - bw / 2;
+                else if (align === 'right') bx = x - bw;
+                const by = y - bh * 0.72;
+                const grad = ctx.createLinearGradient(bx, by, bx, by + bh);
+                grad.addColorStop(0, '#8fe8ff');
+                grad.addColorStop(0.5, '#0891b8');
+                grad.addColorStop(1, '#042a3d');
+                const r = fontSize * 0.22;
+                ctx.beginPath();
+                ctx.moveTo(bx + r, by);
+                ctx.arcTo(bx + bw, by, bx + bw, by + bh, r);
+                ctx.arcTo(bx + bw, by + bh, bx, by + bh, r);
+                ctx.arcTo(bx, by + bh, bx, by, r);
+                ctx.arcTo(bx, by, bx + bw, by, r);
+                ctx.closePath();
+                ctx.fillStyle = grad;
+                ctx.fill();
+                ctx.strokeStyle = 'rgba(6, 10, 30, 0.9)';
+                ctx.lineWidth = Math.max(1, fontSize * 0.08);
+                ctx.stroke();
+                ctx.fillStyle = '#f4f7ff';
+                ctx.textAlign = 'left';
+                ctx.textBaseline = 'alphabetic';
+                ctx.shadowColor = 'rgba(0, 0, 0, 0.55)';
+                ctx.shadowBlur = fontSize * 0.12;
+                ctx.shadowOffsetX = fontSize * 0.05;
+                ctx.shadowOffsetY = fontSize * 0.08;
+                ctx.fillText(text, bx + padX, by + bh - padY * 1.15);
+                ctx.restore();
+            }
+            // Bold italic text with a soft drop shadow, matching the 90s corporate-video
+            // title-card look — used for the prominent, non-banner labels in each scene.
+            function drawText(text, x, y, fontSize, weight, color, align) {
+                ctx.save();
+                ctx.font = `italic ${weight} ${fontSize}px ${MONO}`;
+                ctx.textAlign = align;
+                ctx.fillStyle = color;
+                ctx.shadowColor = 'rgba(0, 0, 0, 0.55)';
+                ctx.shadowBlur = fontSize * 0.12;
+                ctx.shadowOffsetX = fontSize * 0.05;
+                ctx.shadowOffsetY = fontSize * 0.08;
+                ctx.fillText(text, x, y);
+                ctx.restore();
+            }
+            // "Part N" marker, top-right of the canvas, above whatever else sits there
+            function drawPartLabel(n, w, h, fade, y = h * 0.1) {
+                ctx.globalAlpha = fade;
+                drawCaption(w * 0.95, y, `Part ${n} / 3`, Math.max(9, h * 0.036), 'right');
+                ctx.globalAlpha = 1;
+            }
+            function warmBackground(w, h) {
+                // plain, slightly dark khaki/olive — no gradient
+                ctx.fillStyle = '#0a1220';
+                ctx.fillRect(0, 0, w, h);
+            }
+
             const FEATURES = [
                 { name: 'GDP growth', x: 0.16, y: 0.20 },
                 { name: 'price index', x: 0.46, y: 0.22 },
                 { name: 'seasonality', x: 0.24, y: 0.55 },
-                { name: 'prior-period sales', x: 0.48, y: 0.68 },
+                { name: 'prior-period sales', x: 0.48, y: 0.72 },
                 { name: 'promo activity', x: 0.20, y: 0.85 },
             ];
             // Each generation is a candidate feature subset the GA tries.
@@ -1778,7 +2245,7 @@
 
             const RACE_DUR = (GEN_COUNT - 1) * GEN_DUR;
             const FINAL_HOLD = 1800; // let the winning combination sit before act 2
-            const ACT1 = RACE_DUR + FINAL_HOLD, ACT2 = 4500, ACT3 = 5000;
+            const ACT1 = RACE_DUR + FINAL_HOLD, ACT2 = 8000, ACT3 = 5000;
             const TOTAL = ACT1 + ACT2 + ACT3;
 
             const clamp01 = (v) => Math.max(0, Math.min(1, v));
@@ -1809,34 +2276,23 @@
             function drawModelNode(w, h, alpha) {
                 const mx = MODEL_POS.x * w, my = MODEL_POS.y * h;
                 ctx.globalAlpha = alpha;
-                ctx.beginPath();
-                ctx.arc(mx, my, h * 0.06, 0, Math.PI * 2);
-                ctx.strokeStyle = COLOR.text;
-                ctx.lineWidth = 1.5;
-                ctx.stroke();
-                ctx.fillStyle = COLOR.muted;
-                ctx.font = `${Math.max(10, h * 0.045)}px ${MONO}`;
-                ctx.textAlign = 'center';
-                ctx.fillText('linear model', mx, my + h * 0.12);
+                drawIsoBox(mx, my + h * 0.05, 1.1, 1.1, 1.4, h * 0.05, COLOR.accent, Math.max(1.5, h * 0.006));
+                drawText('linear model', mx, my + h * 0.14, Math.max(10, h * 0.045), 400, COLOR.muted, 'center');
                 ctx.globalAlpha = 1;
             }
 
             function drawAct1(w, h, elapsed) {
                 const fade = clamp01(elapsed / 300);
+                drawPartLabel(1, w, h, fade);
                 const isFinal = elapsed >= RACE_DUR;
                 const gen = isFinal ? CANDIDATES.length - 1 : Math.min(CANDIDATES.length - 2, Math.floor(elapsed / GEN_DUR));
                 const genElapsed = isFinal ? elapsed - RACE_DUR : elapsed - gen * GEN_DUR;
                 const genFade = clamp01(genElapsed / (GEN_DUR * 0.6));
                 const candidate = CANDIDATES[gen];
 
-                ctx.font = `${Math.max(10, h * 0.04)}px ${MONO}`;
-                ctx.textAlign = 'left';
-                ctx.fillStyle = COLOR.muted;
                 ctx.globalAlpha = fade;
-                ctx.fillText('feature pool → genetic search', w * 0.05, h * 0.1);
-                ctx.textAlign = 'right';
-                ctx.fillStyle = COLOR.accent;
-                ctx.fillText(`generation ${gen + 1} / ${CANDIDATES.length}`, w * 0.95, h * 0.1);
+                drawCaption(w * 0.05, h * 0.1, 'feature pool → genetic search', Math.max(10, h * 0.045), 'left');
+                drawText(`generation ${gen + 1} / ${CANDIDATES.length}`, w * 0.95, h * 0.18, Math.max(10, h * 0.04), 700, COLOR.accent, 'right');
                 ctx.globalAlpha = 1;
 
                 drawModelNode(w, h, fade);
@@ -1851,8 +2307,16 @@
 
                     if (included) {
                         ctx.globalAlpha = fade * genFade * (bad ? 0.7 : 0.85);
+                        ctx.lineJoin = 'round';
+                        ctx.lineCap = 'round';
+                        ctx.strokeStyle = 'rgba(0, 8, 20, 0.85)';
+                        ctx.lineWidth = h * 0.012;
+                        ctx.beginPath();
+                        ctx.moveTo(fx, fy);
+                        ctx.lineTo(MODEL_POS.x * w, MODEL_POS.y * h);
+                        ctx.stroke();
                         ctx.strokeStyle = dotColor;
-                        ctx.lineWidth = 1.3;
+                        ctx.lineWidth = h * 0.006;
                         ctx.beginPath();
                         ctx.moveTo(fx, fy);
                         ctx.lineTo(MODEL_POS.x * w, MODEL_POS.y * h);
@@ -1860,98 +2324,214 @@
                     }
 
                     ctx.globalAlpha = a;
-                    ctx.beginPath();
-                    ctx.arc(fx, fy, h * 0.022 * pulse, 0, Math.PI * 2);
-                    ctx.fillStyle = dotColor;
-                    ctx.fill();
-                    ctx.font = `${Math.max(9, h * 0.035)}px ${MONO}`;
-                    ctx.textAlign = f.x < 0.3 ? 'right' : 'left';
-                    ctx.fillStyle = COLOR.muted;
-                    ctx.fillText(f.name, f.x < 0.3 ? fx - h * 0.04 : fx + h * 0.04, fy + h * 0.015);
+                    drawIsoBox(fx, fy + h * 0.018 * pulse, 0.85 * pulse, 0.85 * pulse, 1 * pulse, h * 0.026, dotColor, Math.max(1, h * 0.004));
+                    drawText(f.name, f.x < 0.3 ? fx - h * 0.05 : fx + h * 0.05, fy + h * 0.015, Math.max(9, h * 0.035), 500, COLOR.text, f.x < 0.3 ? 'right' : 'left');
                     ctx.globalAlpha = 1;
                 });
             }
 
-            function drawBarPanel(w, h, cx, label, sign, growth, showMark, color) {
-                const baseline = h * 0.58;
-                const barHalf = w * 0.05;
-                const barH = ease(growth) * h * 0.14;
+            // A plain flat vector: a line from the pivot to the tip plus a triangular
+            // arrowhead, colored per sign. No 3D/iso treatment — just left or right.
+            // Thin shaft + small fixed-size head + a dark outline stroke, to match the
+            // thin outlined look used elsewhere in this diagram rather than reading as a
+            // bold, disconnected marker-pen stroke.
+            function drawArrow(x0, y0, x1, lineWidth, headSize, color) {
+                const dir = x1 >= x0 ? 1 : -1;
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+                ctx.strokeStyle = 'rgba(0, 8, 20, 0.85)';
+                ctx.lineWidth = lineWidth + Math.max(1, lineWidth * 0.6);
+                ctx.beginPath();
+                ctx.moveTo(x0, y0);
+                ctx.lineTo(x1, y0);
+                ctx.stroke();
+                ctx.strokeStyle = color;
+                ctx.lineWidth = lineWidth;
+                ctx.beginPath();
+                ctx.moveTo(x0, y0);
+                ctx.lineTo(x1, y0);
+                ctx.stroke();
+
+                const tipX = x1 + dir * headSize * 0.5, backX = x1 - dir * headSize * 0.5;
+                ctx.beginPath();
+                ctx.moveTo(tipX, y0);
+                ctx.lineTo(backX, y0 - headSize * 0.55);
+                ctx.lineTo(backX, y0 + headSize * 0.55);
+                ctx.closePath();
                 ctx.fillStyle = color;
-                ctx.fillRect(cx - barHalf, sign > 0 ? baseline - barH : baseline, barHalf * 2, barH);
-                ctx.font = `${Math.max(10, h * 0.04)}px ${MONO}`;
-                ctx.textAlign = 'center';
-                ctx.fillStyle = COLOR.muted;
-                ctx.fillText(label, cx, h * 0.9);
-                if (showMark > 0) {
-                    ctx.globalAlpha = showMark;
-                    ctx.fillStyle = color;
-                    ctx.font = `${Math.max(12, h * 0.055)}px ${MONO}`;
-                    ctx.fillText(sign > 0 ? '✓' : '✕', cx, sign > 0 ? baseline - barH - h * 0.03 : baseline + barH + h * 0.06);
-                    ctx.globalAlpha = 1;
-                }
+                ctx.fill();
+                ctx.strokeStyle = 'rgba(0, 8, 20, 0.85)';
+                ctx.lineWidth = Math.max(1, lineWidth * 0.5);
+                ctx.stroke();
             }
+
+            const GDP_COEF_ALL = -0.34; // wrong sign: fails the "must move with the economy" check
+            const GDP_COEF_GA = 0.42;   // correct sign: passes
 
             function drawAct2(w, h, elapsed) {
                 const p = clamp01(elapsed / ACT2);
                 const fade = clamp01(elapsed / 300);
-                const baseline = h * 0.58;
+                drawPartLabel(2, w, h, fade);
+                const pivotX = w * 0.5;
+                // two lanes sharing one zero-x, both sitting above the actual x-axis line
+                // (not drawn flush through it), GA-selected elevated further still
+                const axisLineY = h * 0.62;
+                const allY = axisLineY - h * 0.07, gaY = h * 0.42;
+                const axisX0 = w * 0.14, axisX1 = w * 0.86;
 
                 ctx.globalAlpha = fade;
-                ctx.font = `${Math.max(10, h * 0.04)}px ${MONO}`;
-                ctx.textAlign = 'center';
-                ctx.fillStyle = COLOR.text;
-                ctx.fillText('GDP growth coefficient', w * 0.5, h * 0.14);
+                drawCaption(w * 0.05, h * 0.1, 'coefficient sign → economic rationale', Math.max(10, h * 0.045), 'left');
 
+                drawText('expected:' + ' Beta' + ' (GDP) > 0', w * 0.5, h * 0.24, Math.max(11, h * 0.048), 700, COLOR.accent, 'center');
+
+                // shared coordinate axes: plain flat lines, no 3D treatment. The baseline
+                // is All-features' own lane; the vertical tick just ties both lanes'
+                // zero-points together.
+                // COLOR.muted, not a dark stroke: a near-black line at this height blends
+                // into the background gradient's own dark region and disappears entirely
                 ctx.strokeStyle = COLOR.muted;
-                ctx.globalAlpha = fade * 0.4;
-                ctx.setLineDash([4, 4]);
+                ctx.globalAlpha = fade * 0.45;
+                ctx.lineWidth = Math.max(1, h * 0.0035);
                 ctx.beginPath();
-                ctx.moveTo(w * 0.12, baseline);
-                ctx.lineTo(w * 0.88, baseline);
+                ctx.moveTo(axisX0, axisLineY);
+                ctx.lineTo(axisX1, axisLineY);
+                ctx.moveTo(pivotX, gaY);
+                ctx.lineTo(pivotX, axisLineY);
                 ctx.stroke();
-                ctx.setLineDash([]);
+                ctx.globalAlpha = fade;
+                drawText('0', pivotX, axisLineY + h * 0.055, Math.max(9, h * 0.03), 400, COLOR.muted, 'center');
                 ctx.globalAlpha = 1;
 
                 const growth = clamp01((p - 0.1) / 0.45);
                 const markAlpha = clamp01((p - 0.6) / 0.2);
+                // sqrt (not the cubic ease-in used elsewhere) so the arrow shoots out quickly
+                // instead of crawling for the first chunk of the animation
+                const length = Math.sqrt(growth) * w * 0.26;
+                const shaftW = Math.max(2, h * 0.008);
+                const headSize = Math.max(8, h * 0.045);
+                const coefAll = GDP_COEF_ALL * ease(growth);
+                const coefGA = GDP_COEF_GA * ease(growth);
+                const fmt = (v) => 'Beta = ' + (v >= 0 ? '' : '−') + Math.abs(v).toFixed(2);
+
                 ctx.globalAlpha = fade;
-                drawBarPanel(w, h, w * 0.32, 'All features', -1, growth, markAlpha, COLOR.warn);
-                drawBarPanel(w, h, w * 0.62, 'GA-selected', 1, growth, markAlpha, COLOR.accent);
+                drawArrow(pivotX, allY, pivotX - length, shaftW, headSize, COLOR.warn);
+                drawArrow(pivotX, gaY, pivotX + length, shaftW, headSize, COLOR.accent);
+                const leftTip = [pivotX - length, allY], rightTip = [pivotX + length, gaY];
+
+                // fixed anchor points, well clear of the pivot, so the readouts never
+                // crowd each other or the "0"/axis labels regardless of bar length
+                const leftX = pivotX - w * 0.27, rightX = pivotX + w * 0.27;
+
+                // the running coefficient value, only fading in once the bar has actually
+                // started extruding so it doesn't clash with the "0"/axis labels at the pivot
+                const numberAlpha = clamp01(growth / 0.2);
+                if (numberAlpha > 0) {
+                    ctx.globalAlpha = fade * numberAlpha;
+                    const numSize = Math.max(13, h * 0.055);
+                    drawText(fmt(coefAll), leftX + w * 0.135, gaY - h * 0.09, numSize, 700, COLOR.warn, 'center');
+                    drawText(fmt(coefGA), rightX - w * 0.135, gaY - h * 0.09, numSize, 700, COLOR.accent, 'center');
+                    ctx.globalAlpha = fade;
+                }
+
+                const labelSize = Math.max(10, h * 0.038);
+                drawText('All features', pivotX - w * 0.22, allY + h * 0.14, labelSize, 500, COLOR.text, 'center');
+                drawText('GA-selected', pivotX + w * 0.22, allY + h * 0.14, labelSize, 500, COLOR.text, 'center');
+
+                if (markAlpha > 0) {
+                    ctx.globalAlpha = fade * markAlpha;
+                    const markSize = Math.max(10, h * 0.04);
+                    drawText('fails check (Beta < 0)', leftX + w * 0.12, gaY + h * 0.088, markSize, 500, COLOR.warn, 'center');
+                    drawText('passes check (Beta ≥ 0)', rightX - w * 0.12, gaY + h * 0.088, markSize, 500, COLOR.accent, 'center');
+                    ctx.globalAlpha = 1;
+                }
                 ctx.globalAlpha = 1;
             }
 
             function drawAct3(w, h, elapsed) {
                 const p = clamp01(elapsed / ACT3);
                 const fade = clamp01(elapsed / 300);
+                drawPartLabel(3, w, h, fade);
                 const plotX0 = w * 0.1, plotX1 = w * 0.9, plotY0 = h * 0.25, plotY1 = h * 0.85;
 
                 ctx.globalAlpha = fade;
-                ctx.font = `${Math.max(10, h * 0.04)}px ${MONO}`;
-                ctx.textAlign = 'left';
-                ctx.fillStyle = COLOR.muted;
-                ctx.fillText('selected features → forecast', w * 0.05, h * 0.1);
+                drawCaption(w * 0.05, h * 0.1, 'selected features → forecast', Math.max(10, h * 0.045), 'left');
+
+                // quarterly x-axis + a plain y-axis, drawn as reference before the data
+                // quarterly timeline, Q1 '22 through Q1 '26 (17 quarters); only a yearly
+                // tick gets a label, full range would be too cramped
+                const Q_START_YEAR = 22, Q_END_YEAR = 26;
+                const totalQ = (Q_END_YEAR - Q_START_YEAR) * 4 + 1;
+                const qLabel = (idx) => `Q${(idx % 4) + 1} '${Q_START_YEAR + Math.floor(idx / 4)}`;
+                const qTickIdx = [];
+                for (let y = Q_START_YEAR; y <= Q_END_YEAR; y++) qTickIdx.push((y - Q_START_YEAR) * 4);
+
+                ctx.globalAlpha = fade * 0.85;
+                ctx.strokeStyle = COLOR.text;
+                ctx.lineWidth = Math.max(1.5, h * 0.005);
+                ctx.beginPath();
+                ctx.moveTo(plotX0, plotY1);
+                ctx.lineTo(plotX1, plotY1);
+                ctx.moveTo(plotX0, plotY0);
+                ctx.lineTo(plotX0, plotY1);
+                ctx.stroke();
+                const tickSize = Math.max(11, h * 0.04);
+                qTickIdx.forEach((idx) => {
+                    const fx = plotX0 + (idx / (totalQ - 1)) * (plotX1 - plotX0);
+                    ctx.strokeStyle = COLOR.text;
+                    ctx.beginPath();
+                    ctx.moveTo(fx, plotY1);
+                    ctx.lineTo(fx, plotY1 + h * 0.016);
+                    ctx.stroke();
+                    drawText(qLabel(idx), fx, plotY1 + h * 0.05, tickSize, 700, COLOR.text, 'center');
+                });
+                [0, 0.5, 1].forEach((t) => {
+                    const fy = plotY1 - t * (plotY1 - plotY0);
+                    ctx.strokeStyle = COLOR.text;
+                    ctx.beginPath();
+                    ctx.moveTo(plotX0 - h * 0.016, fy);
+                    ctx.lineTo(plotX0, fy);
+                    ctx.stroke();
+                    drawText(`${Math.round(t * 100)}%`, plotX0 - h * 0.024, fy + h * 0.014, tickSize, 700, COLOR.text, 'right');
+                });
+                ctx.globalAlpha = fade;
 
                 const count = Math.floor(clamp01(p / 0.5) * SCATTER.length);
                 for (let i = 0; i < count; i++) {
                     const pt = SCATTER[i];
                     const px = plotX0 + pt.x * (plotX1 - plotX0);
                     const py = plotY1 - pt.y * (plotY1 - plotY0);
+                    ctx.globalAlpha = fade * 0.9;
+                    ctx.save();
+                    ctx.shadowColor = 'rgba(0, 0, 0, 0.55)';
+                    ctx.shadowBlur = h * 0.012;
+                    ctx.shadowOffsetX = h * 0.006;
+                    ctx.shadowOffsetY = h * 0.01;
                     ctx.beginPath();
                     ctx.arc(px, py, h * 0.012, 0, Math.PI * 2);
                     ctx.fillStyle = COLOR.accent;
-                    ctx.globalAlpha = fade * 0.7;
                     ctx.fill();
+                    ctx.restore();
                 }
 
                 const lineProgress = clamp01((p - 0.45) / 0.5);
                 if (lineProgress > 0) {
                     ctx.globalAlpha = fade;
-                    ctx.strokeStyle = COLOR.accent;
-                    ctx.lineWidth = 2;
-                    ctx.beginPath();
+                    ctx.lineJoin = 'round';
+                    ctx.lineCap = 'round';
                     const x0 = 0, x1 = lineProgress;
-                    ctx.moveTo(plotX0 + x0 * (plotX1 - plotX0), plotY1 - clamp01(intercept + slope * x0) * (plotY1 - plotY0));
-                    ctx.lineTo(plotX0 + x1 * (plotX1 - plotX0), plotY1 - clamp01(intercept + slope * x1) * (plotY1 - plotY0));
+                    const lx0 = plotX0 + x0 * (plotX1 - plotX0), ly0 = plotY1 - clamp01(intercept + slope * x0) * (plotY1 - plotY0);
+                    const lx1 = plotX0 + x1 * (plotX1 - plotX0), ly1 = plotY1 - clamp01(intercept + slope * x1) * (plotY1 - plotY0);
+                    ctx.strokeStyle = 'rgba(0, 8, 20, 0.85)';
+                    ctx.lineWidth = h * 0.014;
+                    ctx.beginPath();
+                    ctx.moveTo(lx0, ly0);
+                    ctx.lineTo(lx1, ly1);
+                    ctx.stroke();
+                    ctx.strokeStyle = COLOR.accent;
+                    ctx.lineWidth = h * 0.007;
+                    ctx.beginPath();
+                    ctx.moveTo(lx0, ly0);
+                    ctx.lineTo(lx1, ly1);
                     ctx.stroke();
                 }
                 ctx.globalAlpha = 1;
@@ -1959,16 +2539,31 @@
 
             function drawFrame(now) {
                 const w = canvas.width, h = canvas.height;
-                ctx.fillStyle = COLOR.bg;
-                ctx.fillRect(0, 0, w, h);
+                if (ghostCanvas.width !== w || ghostCanvas.height !== h) {
+                    ghostCanvas.width = w;
+                    ghostCanvas.height = h;
+                }
+                ctx = ghostCtx;
+                ctx.clearRect(0, 0, w, h);
                 if (reduceMotion) {
                     drawAct3(w, h, ACT3);
-                    return;
+                } else {
+                    const cyclePos = now % TOTAL;
+                    if (cyclePos < ACT1) drawAct1(w, h, cyclePos);
+                    else if (cyclePos < ACT1 + ACT2) drawAct2(w, h, cyclePos - ACT1);
+                    else drawAct3(w, h, cyclePos - ACT1 - ACT2);
                 }
-                const cyclePos = now % TOTAL;
-                if (cyclePos < ACT1) drawAct1(w, h, cyclePos);
-                else if (cyclePos < ACT1 + ACT2) drawAct2(w, h, cyclePos - ACT1);
-                else drawAct3(w, h, cyclePos - ACT1 - ACT2);
+                ctx = realCtx;
+                warmBackground(w, h);
+                // trailing ghost: a dim, blurred duplicate of the content shifted sideways,
+                // composited behind the sharp copy — real canvas compositing, since a CSS
+                // `filter: url(#svg-filter)` reference doesn't reliably render here
+                ctx.save();
+                ctx.globalAlpha = 0.4;
+                ctx.filter = 'blur(3px)';
+                ctx.drawImage(ghostCanvas, h * 0.01, 0);
+                ctx.restore();
+                ctx.drawImage(ghostCanvas, 0, 0);
             }
 
             function resizeCanvas() {
@@ -2004,12 +2599,16 @@
     <script>
         (function () {
             const canvas = document.getElementById('citra-canvas');
-            const ctx = canvas.getContext('2d');
+            let ctx = canvas.getContext('2d');
+            const realCtx = ctx;
+            // content is drawn here first (transparent bg), then composited into realCtx
+            // twice — once shifted/dim/blurred as a trailing ghost, once sharp on top
+            const ghostCanvas = document.createElement('canvas');
+            const ghostCtx = ghostCanvas.getContext('2d');
             const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
             const rootStyle = getComputedStyle(document.documentElement);
             const COLOR = {
-                bg: rootStyle.getPropertyValue('--bg-elevated').trim(),
                 text: rootStyle.getPropertyValue('--text').trim(),
                 muted: rootStyle.getPropertyValue('--text-muted').trim(),
                 accent: rootStyle.getPropertyValue('--accent').trim(),
@@ -2021,8 +2620,118 @@
             const ease = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
             const lerp = (a, b, t) => a + (b - a) * t;
 
+            // --- isometric, flat-shaded rendering helpers (90s corporate-video look) ---
+            const _cparse = document.createElement('canvas');
+            _cparse.width = 1; _cparse.height = 1;
+            const _cctx = _cparse.getContext('2d');
+            const _colorCache = new Map();
+            function toRGB(cssColor) {
+                if (_colorCache.has(cssColor)) return _colorCache.get(cssColor);
+                _cctx.clearRect(0, 0, 1, 1);
+                _cctx.fillStyle = cssColor;
+                _cctx.fillRect(0, 0, 1, 1);
+                const d = _cctx.getImageData(0, 0, 1, 1).data;
+                const rgb = [d[0], d[1], d[2]];
+                _colorCache.set(cssColor, rgb);
+                return rgb;
+            }
+            function shade(rgb, amt) {
+                const [r, g, b] = rgb;
+                if (amt >= 0) return `rgb(${(r + (255 - r) * amt) | 0}, ${(g + (255 - g) * amt) | 0}, ${(b + (255 - b) * amt) | 0})`;
+                return `rgb(${(r * (1 + amt)) | 0}, ${(g * (1 + amt)) | 0}, ${(b * (1 + amt)) | 0})`;
+            }
+            const ISO_R = [Math.cos(Math.PI / 6), Math.sin(Math.PI / 6) * 0.62];
+            const ISO_L = [-Math.cos(Math.PI / 6), Math.sin(Math.PI / 6) * 0.62];
+            function isoPt(ox, oy, x, y, z, s) {
+                return [ox + (x * ISO_R[0] + y * ISO_L[0]) * s, oy + (x * ISO_R[1] + y * ISO_L[1]) * s - z * s];
+            }
+            function drawIsoBox(ox, oy, w, d, hgt, s, baseColor, outline) {
+                const rgb = toRGB(baseColor);
+                const p100 = isoPt(ox, oy, w, 0, 0, s), p010 = isoPt(ox, oy, 0, d, 0, s);
+                const p001 = isoPt(ox, oy, 0, 0, hgt, s), p101 = isoPt(ox, oy, w, 0, hgt, s);
+                const p011 = isoPt(ox, oy, 0, d, hgt, s), p110 = isoPt(ox, oy, w, d, 0, s);
+                const p111 = isoPt(ox, oy, w, d, hgt, s);
+                ctx.lineJoin = 'round';
+                ctx.lineWidth = outline;
+                ctx.strokeStyle = 'rgba(0, 8, 20, 0.85)';
+                const face = (pts, tint) => {
+                    ctx.beginPath();
+                    ctx.moveTo(pts[0][0], pts[0][1]);
+                    for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1]);
+                    ctx.closePath();
+                    ctx.fillStyle = shade(rgb, tint);
+                    ctx.fill();
+                    ctx.stroke();
+                };
+                face([p100, p110, p111, p101], -0.22);
+                face([p010, p110, p111, p011], -0.42);
+                face([p001, p101, p111, p011], 0.32);
+            }
+            function drawCaption(x, y, text, fontSize, align) {
+                ctx.save();
+                ctx.font = `italic 700 ${fontSize}px ${MONO}`;
+                const padX = fontSize * 0.6, padY = fontSize * 0.42;
+                const tw = ctx.measureText(text).width;
+                const bw = tw + padX * 2, bh = fontSize + padY * 2;
+                let bx = x;
+                if (align === 'center') bx = x - bw / 2;
+                else if (align === 'right') bx = x - bw;
+                const by = y - bh * 0.72;
+                const grad = ctx.createLinearGradient(bx, by, bx, by + bh);
+                grad.addColorStop(0, '#8fe8ff');
+                grad.addColorStop(0.5, '#0891b8');
+                grad.addColorStop(1, '#042a3d');
+                const r = fontSize * 0.22;
+                ctx.beginPath();
+                ctx.moveTo(bx + r, by);
+                ctx.arcTo(bx + bw, by, bx + bw, by + bh, r);
+                ctx.arcTo(bx + bw, by + bh, bx, by + bh, r);
+                ctx.arcTo(bx, by + bh, bx, by, r);
+                ctx.arcTo(bx, by, bx + bw, by, r);
+                ctx.closePath();
+                ctx.fillStyle = grad;
+                ctx.fill();
+                ctx.strokeStyle = 'rgba(6, 10, 30, 0.9)';
+                ctx.lineWidth = Math.max(1, fontSize * 0.08);
+                ctx.stroke();
+                ctx.fillStyle = '#f4f7ff';
+                ctx.textAlign = 'left';
+                ctx.textBaseline = 'alphabetic';
+                ctx.shadowColor = 'rgba(0, 0, 0, 0.55)';
+                ctx.shadowBlur = fontSize * 0.12;
+                ctx.shadowOffsetX = fontSize * 0.05;
+                ctx.shadowOffsetY = fontSize * 0.08;
+                ctx.fillText(text, bx + padX, by + bh - padY * 1.15);
+                ctx.restore();
+            }
+            // Bold italic text with a soft drop shadow, matching the 90s corporate-video
+            // title-card look — used for the prominent, non-banner labels in each scene.
+            function drawText(text, x, y, fontSize, weight, color, align) {
+                ctx.save();
+                ctx.font = `italic ${weight} ${fontSize}px ${MONO}`;
+                ctx.textAlign = align;
+                ctx.fillStyle = color;
+                ctx.shadowColor = 'rgba(0, 0, 0, 0.55)';
+                ctx.shadowBlur = fontSize * 0.12;
+                ctx.shadowOffsetX = fontSize * 0.05;
+                ctx.shadowOffsetY = fontSize * 0.08;
+                ctx.fillText(text, x, y);
+                ctx.restore();
+            }
+            // "Part N" marker, top-right of the canvas, above whatever else sits there
+            function drawPartLabel(n, w, h, fade, y = h * 0.1) {
+                ctx.globalAlpha = fade;
+                drawCaption(w * 0.95, y, `Part ${n} / 3`, Math.max(9, h * 0.036), 'right');
+                ctx.globalAlpha = 1;
+            }
+            function warmBackground(w, h) {
+                // plain, slightly dark khaki/olive — no gradient
+                ctx.fillStyle = '#0a1220';
+                ctx.fillRect(0, 0, w, h);
+            }
+
             const ROWS = 3, COLS = 6;
-            const GRID = { x0: 0.1, x1: 0.9, y0: 0.3, y1: 0.86 };
+            const GRID = { x0: 0.18, x1: 0.82, y0: 0.34, y1: 0.78 };
             const PIPES = [];
             for (let r = 0; r < ROWS; r++) {
                 for (let c = 0; c < COLS; c++) {
@@ -2042,12 +2751,56 @@
             const ACT1 = 6000, ACT2 = 4500, ACT3 = 5000;
             const TOTAL = ACT1 + ACT2 + ACT3;
 
-            function drawPipe(x, y, r, stroke) {
+            // A pipe cross-section: a filled ring (donut), not a cube — optionally sheared
+            // around its own center, same transform trick used for the augmented boxes.
+            function drawPipe(x, y, r, color, shear = 0) {
+                const inner = r * 0.55;
+                ctx.save();
+                ctx.translate(x, y);
+                if (shear) ctx.transform(1, 0, shear, 1, 0, 0);
                 ctx.beginPath();
-                ctx.arc(x, y, r, 0, Math.PI * 2);
-                ctx.strokeStyle = stroke;
-                ctx.lineWidth = 1.3;
+                ctx.arc(0, 0, r, 0, Math.PI * 2);
+                ctx.moveTo(inner, 0);
+                ctx.arc(0, 0, inner, 0, Math.PI * 2, true);
+                ctx.fillStyle = color;
+                ctx.fill('evenodd');
+                ctx.strokeStyle = 'rgba(18, 12, 4, 0.8)';
+                ctx.lineWidth = Math.max(1, r * 0.12);
                 ctx.stroke();
+                ctx.restore();
+            }
+
+            // A small drone built from the same flat-shaded iso boxes as everything else in
+            // this diagram (not an imported render), so it matches the rest of the scene:
+            // a center body, four arms along the ISO_R/ISO_L ground axes, four rotor caps.
+            function drawDrone(cx, cy, s, color, outline) {
+                const armLen = 1.6;
+                const rotors = [
+                    isoPt(cx, cy, armLen, 0, 0, s),
+                    isoPt(cx, cy, 0, armLen, 0, s),
+                    isoPt(cx, cy, -armLen, 0, 0, s),
+                    isoPt(cx, cy, 0, -armLen, 0, s),
+                ];
+                ctx.lineJoin = 'round';
+                ctx.lineCap = 'round';
+                rotors.forEach((p) => {
+                    ctx.strokeStyle = 'rgba(0, 8, 20, 0.85)';
+                    ctx.lineWidth = s * 0.22;
+                    ctx.beginPath();
+                    ctx.moveTo(cx, cy);
+                    ctx.lineTo(p[0], p[1]);
+                    ctx.stroke();
+                    ctx.strokeStyle = shade(toRGB(color), 0.25);
+                    ctx.lineWidth = s * 0.1;
+                    ctx.beginPath();
+                    ctx.moveTo(cx, cy);
+                    ctx.lineTo(p[0], p[1]);
+                    ctx.stroke();
+                });
+                rotors.forEach((p) => {
+                    drawIsoBox(p[0], p[1], 0.5, 0.5, 0.35, s, COLOR.muted, outline);
+                });
+                drawIsoBox(cx, cy, 1, 1, 0.7, s, color, outline);
             }
 
             const AUG_KINDS = ['noise', 'shear', 'noise+shear'];
@@ -2055,22 +2808,19 @@
 
             function drawAugmentedBox(cx, cy, pipeR, boxHalf, kind, amount, specks, color) {
                 const shear = (kind === 'shear' || kind === 'noise+shear') ? lerp(0, 0.55, amount) : 0;
+                drawPipe(cx, cy, pipeR, color, shear);
                 ctx.save();
                 ctx.translate(cx, cy);
                 ctx.transform(1, 0, shear, 1, 0, 0);
-                drawPipe(0, 0, pipeR, color);
-                ctx.strokeStyle = color;
-                ctx.lineWidth = 1.3;
-                ctx.setLineDash([3, 3]);
+                ctx.strokeStyle = 'rgba(18, 12, 4, 0.75)';
+                ctx.lineWidth = Math.max(1.5, boxHalf * 0.1);
+                ctx.setLineDash([boxHalf * 0.3, boxHalf * 0.3]);
                 ctx.strokeRect(-boxHalf, -boxHalf, boxHalf * 2, boxHalf * 2);
                 ctx.setLineDash([]);
                 if (kind === 'noise' || kind === 'noise+shear') {
-                    ctx.fillStyle = color;
                     specks.forEach((s) => {
                         ctx.globalAlpha = amount * 0.8;
-                        ctx.beginPath();
-                        ctx.arc(s.dx * boxHalf, s.dy * boxHalf, boxHalf * 0.12, 0, Math.PI * 2);
-                        ctx.fill();
+                        drawIsoBox(s.dx * boxHalf, s.dy * boxHalf, 0.3, 0.3, 0.3, boxHalf * 0.35, color, 1);
                     });
                     ctx.globalAlpha = 1;
                 }
@@ -2080,13 +2830,11 @@
             function drawAct1(w, h, elapsed) {
                 const p = clamp01(elapsed / ACT1);
                 const fade = clamp01(elapsed / 300);
-                const r = h * 0.024;
+                const r = h * 0.034;
+                drawPartLabel(1, w, h, fade, h * 0.14);
 
-                ctx.font = `${Math.max(10, h * 0.04)}px ${MONO}`;
-                ctx.textAlign = 'left';
-                ctx.fillStyle = COLOR.muted;
                 ctx.globalAlpha = fade;
-                ctx.fillText('manual labeling → augmentation', w * 0.05, h * 0.14);
+                drawCaption(w * 0.05, h * 0.14, 'manual labeling → augmentation', Math.max(10, h * 0.045), 'left');
                 ctx.globalAlpha = 1;
 
                 const labelProgress = clamp01((p - 0.05) / 0.5);
@@ -2109,10 +2857,7 @@
                         drawAugmentedBox(x, y, r, r * 2, kind, amount, NOISE_SPECKS[labeledIdx], COLOR.accent);
                         if (amount > 0) {
                             ctx.globalAlpha = fade * amount;
-                            ctx.textAlign = 'center';
-                            ctx.fillStyle = COLOR.muted;
-                            ctx.font = `${Math.max(8, h * 0.028)}px ${MONO}`;
-                            ctx.fillText(kind, x, y + r * 3.2);
+                            drawText(kind, x, y + r * 3.2, Math.max(8, h * 0.028), 500, COLOR.text, 'center');
                         }
                         ctx.globalAlpha = 1;
                     }
@@ -2121,47 +2866,37 @@
 
             function drawThroughputLane(w, h, cy, label, period, travel, elapsed, fade, color) {
                 const trackX0 = w * 0.32, trackX1 = w * 0.86;
-                ctx.strokeStyle = COLOR.muted;
-                ctx.globalAlpha = fade * 0.3;
-                ctx.lineWidth = 2;
+                ctx.strokeStyle = 'rgba(18, 12, 4, 0.6)';
+                ctx.globalAlpha = fade * 0.6;
+                ctx.lineWidth = Math.max(2, h * 0.008);
                 ctx.beginPath();
                 ctx.moveTo(trackX0, cy);
                 ctx.lineTo(trackX1, cy);
                 ctx.stroke();
 
-                const markerR = h * 0.014;
+                const markerS = h * 0.016;
                 const spawned = Math.floor(elapsed / period);
                 for (let k = 0; k <= spawned; k++) {
                     const age = elapsed - k * period;
                     if (age < 0 || age > travel) continue;
                     const prog = age / travel;
                     ctx.globalAlpha = fade * (1 - prog * 0.3);
-                    ctx.fillStyle = color;
-                    ctx.beginPath();
-                    ctx.arc(trackX0 + prog * (trackX1 - trackX0), cy, markerR, 0, Math.PI * 2);
-                    ctx.fill();
+                    drawIsoBox(trackX0 + prog * (trackX1 - trackX0), cy, 0.7, 0.7, 0.8, markerS, color, 1);
                 }
 
                 ctx.globalAlpha = fade;
-                ctx.font = `${Math.max(10, h * 0.038)}px ${MONO}`;
-                ctx.textAlign = 'right';
-                ctx.fillStyle = COLOR.muted;
-                ctx.fillText(label, trackX0 - w * 0.02, cy + h * 0.014);
+                drawText(label, trackX0 - w * 0.02, cy + h * 0.014, Math.max(10, h * 0.038), 500, COLOR.text, 'right');
 
                 if (spawned >= 1) {
-                    ctx.textAlign = 'left';
-                    ctx.fillStyle = color;
-                    ctx.fillText(`${(1000 / period).toFixed(1)}/s`, trackX1 + w * 0.02, cy + h * 0.014);
+                    drawText(`${(1000 / period).toFixed(1)}/s`, trackX1 + w * 0.02, cy + h * 0.014, Math.max(10, h * 0.038), 700, color, 'left');
                 }
             }
 
             function drawAct2(w, h, elapsed) {
                 const fade = clamp01(elapsed / 300);
+                drawPartLabel(2, w, h, fade, h * 0.14);
                 ctx.globalAlpha = fade;
-                ctx.font = `${Math.max(10, h * 0.04)}px ${MONO}`;
-                ctx.textAlign = 'center';
-                ctx.fillStyle = COLOR.text;
-                ctx.fillText('pipes processed per second', w * 0.5, h * 0.14);
+                drawCaption(w * 0.05, h * 0.14, 'pipes processed per second', Math.max(10, h * 0.045), 'left');
                 ctx.globalAlpha = 1;
 
                 const OLD_PERIOD = 1400, NEW_PERIOD = 40, TRAVEL = 1000;
@@ -2171,31 +2906,24 @@
                 const labelAlpha = clamp01((elapsed - 1800) / 400);
                 if (labelAlpha > 0) {
                     ctx.globalAlpha = fade * labelAlpha;
-                    ctx.fillStyle = COLOR.accent;
-                    ctx.font = `${Math.max(12, h * 0.05)}px ${MONO}`;
-                    ctx.fillText('~35x more throughput', w * 0.5, h * 0.62);
+                    drawText('~35x more throughput', w * 0.5, h * 0.62, Math.max(12, h * 0.05), 700, COLOR.accent, 'center');
                 }
 
                 const accAlpha = clamp01((elapsed - 2600) / 400);
                 if (accAlpha > 0) {
                     const baseline = h * 0.82;
-                    const barHalf = w * 0.045;
                     const grow = clamp01((elapsed - 2600) / 500);
+                    const s = h * 0.045;
                     ctx.globalAlpha = fade * accAlpha;
-                    ctx.font = `${Math.max(9, h * 0.032)}px ${MONO}`;
-                    ctx.textAlign = 'center';
-                    ctx.fillStyle = COLOR.muted;
-                    ctx.fillText('accuracy', w * 0.5, h * 0.74);
+                    drawText('accuracy', w * 0.5, h * 0.74, Math.max(9, h * 0.032), 500, COLOR.text, 'center');
 
-                    const oldH = ease(grow) * h * 0.08;
-                    ctx.fillStyle = COLOR.muted;
-                    ctx.fillRect(w * 0.38 - barHalf, baseline - oldH, barHalf * 2, oldH);
-                    ctx.fillText('before', w * 0.38, baseline + h * 0.05);
+                    const oldH = Math.max(0.05, ease(grow)) * h * 0.09;
+                    drawIsoBox(w * 0.38, baseline, 1.2, 1.2, oldH / s, s, COLOR.muted, Math.max(1.5, h * 0.006));
+                    drawText('before', w * 0.38, baseline + h * 0.08, Math.max(9, h * 0.032), 500, COLOR.text, 'center');
 
-                    const newH = ease(grow) * h * 0.13;
-                    ctx.fillStyle = COLOR.ok;
-                    ctx.fillRect(w * 0.62 - barHalf, baseline - newH, barHalf * 2, newH);
-                    ctx.fillText('after', w * 0.62, baseline + h * 0.05);
+                    const newH = Math.max(0.05, ease(grow)) * h * 0.15;
+                    drawIsoBox(w * 0.62, baseline, 1.2, 1.2, newH / s, s, COLOR.ok, Math.max(1.5, h * 0.006));
+                    drawText('after', w * 0.62, baseline + h * 0.08, Math.max(9, h * 0.032), 500, COLOR.text, 'center');
                 }
                 ctx.globalAlpha = 1;
             }
@@ -2203,13 +2931,11 @@
             function drawAct3(w, h, elapsed) {
                 const p = clamp01(elapsed / ACT3);
                 const fade = clamp01(elapsed / 300);
-                const r = h * 0.024;
+                const r = h * 0.034;
+                drawPartLabel(3, w, h, fade, h * 0.14);
 
-                ctx.font = `${Math.max(10, h * 0.04)}px ${MONO}`;
-                ctx.textAlign = 'left';
-                ctx.fillStyle = COLOR.muted;
                 ctx.globalAlpha = fade;
-                ctx.fillText('drone sweep → automatic count', w * 0.05, h * 0.14);
+                drawCaption(w * 0.05, h * 0.14, 'drone sweep → automatic count', Math.max(10, h * 0.045), 'left');
                 ctx.globalAlpha = 1;
 
                 const sweepP = clamp01((p - 0.05) / 0.85);
@@ -2222,7 +2948,8 @@
                     drawPipe(x, y, r, counted ? COLOR.ok : COLOR.muted);
                     if (counted) {
                         ctx.strokeStyle = COLOR.ok;
-                        ctx.strokeRect(x - r * 1.6, y - r * 1.6, r * 3.2, r * 3.2);
+                        ctx.lineWidth = Math.max(1.5, h * 0.005);
+                        ctx.strokeRect(x - r * 1.7, y - r * 1.7, r * 3.4, r * 3.4);
                     }
                     ctx.globalAlpha = 1;
                 });
@@ -2230,39 +2957,273 @@
                 const droneIdx = Math.min(PIPES.length - 1, passedCount);
                 const dp = PIPES[droneIdx];
                 if (sweepP > 0 && sweepP < 1) {
-                    const dx = dp.x * w, dy = dp.y * h - h * 0.08;
+                    const dx = dp.x * w, dy = dp.y * h - h * 0.14;
                     ctx.globalAlpha = fade;
-                    ctx.fillStyle = COLOR.accent;
-                    ctx.beginPath();
-                    ctx.moveTo(dx, dy - r * 1.2);
-                    ctx.lineTo(dx + r * 1.2, dy);
-                    ctx.lineTo(dx, dy + r * 1.2);
-                    ctx.lineTo(dx - r * 1.2, dy);
-                    ctx.closePath();
-                    ctx.fill();
+                    drawDrone(dx, dy, h * 0.024, '#3f66c9', Math.max(1.5, h * 0.006));
                     ctx.globalAlpha = 1;
                 }
 
-                ctx.textAlign = 'right';
-                ctx.fillStyle = COLOR.accent;
-                ctx.font = `${Math.max(12, h * 0.05)}px ${MONO}`;
                 ctx.globalAlpha = fade;
-                ctx.fillText(`${passedCount} / ${PIPES.length} counted`, w * 0.95, h * 0.14);
+                drawText(`${passedCount} / ${PIPES.length} counted`, w * 0.95, h * 0.22, Math.max(12, h * 0.05), 700, COLOR.accent, 'right');
                 ctx.globalAlpha = 1;
             }
 
             function drawFrame(now) {
                 const w = canvas.width, h = canvas.height;
-                ctx.fillStyle = COLOR.bg;
-                ctx.fillRect(0, 0, w, h);
+                if (ghostCanvas.width !== w || ghostCanvas.height !== h) {
+                    ghostCanvas.width = w;
+                    ghostCanvas.height = h;
+                }
+                ctx = ghostCtx;
+                ctx.clearRect(0, 0, w, h);
                 if (reduceMotion) {
                     drawAct3(w, h, ACT3);
-                    return;
+                } else {
+                    const cyclePos = now % TOTAL;
+                    if (cyclePos < ACT1) drawAct1(w, h, cyclePos);
+                    else if (cyclePos < ACT1 + ACT2) drawAct2(w, h, cyclePos - ACT1);
+                    else drawAct3(w, h, cyclePos - ACT1 - ACT2);
                 }
-                const cyclePos = now % TOTAL;
-                if (cyclePos < ACT1) drawAct1(w, h, cyclePos);
-                else if (cyclePos < ACT1 + ACT2) drawAct2(w, h, cyclePos - ACT1);
-                else drawAct3(w, h, cyclePos - ACT1 - ACT2);
+                ctx = realCtx;
+                warmBackground(w, h);
+                // trailing ghost: a dim, blurred duplicate of the content shifted sideways,
+                // composited behind the sharp copy — real canvas compositing, since a CSS
+                // `filter: url(#svg-filter)` reference doesn't reliably render here
+                ctx.save();
+                ctx.globalAlpha = 0.4;
+                ctx.filter = 'blur(3px)';
+                ctx.drawImage(ghostCanvas, h * 0.024, 0);
+                ctx.restore();
+                ctx.drawImage(ghostCanvas, 0, 0);
+            }
+
+            function resizeCanvas() {
+                const rect = canvas.getBoundingClientRect();
+                if (!rect.width || !rect.height) return;
+                const dpr = Math.min(window.devicePixelRatio || 1, 2);
+                canvas.width = rect.width * dpr;
+                canvas.height = rect.height * dpr;
+                drawFrame(performance.now());
+            }
+            new ResizeObserver(resizeCanvas).observe(canvas);
+            resizeCanvas();
+
+            if (!reduceMotion) {
+                let inView = false;
+                let looping = false;
+                function loop(now) {
+                    if (!inView) { looping = false; return; }
+                    drawFrame(now);
+                    requestAnimationFrame(loop);
+                }
+                new IntersectionObserver((entries) => {
+                    inView = entries[0].isIntersecting;
+                    if (inView && !looping) {
+                        looping = true;
+                        requestAnimationFrame(loop);
+                    }
+                }, { threshold: 0.1 }).observe(canvas);
+            }
+        })();
+    </script>
+
+    <script>
+        (function () {
+            const canvas = document.getElementById('calcflow-canvas');
+            let ctx = canvas.getContext('2d');
+            const realCtx = ctx;
+            // content is drawn here first (transparent bg), then composited into realCtx
+            // twice — once shifted/dim/blurred as a trailing ghost, once sharp on top
+            const ghostCanvas = document.createElement('canvas');
+            const ghostCtx = ghostCanvas.getContext('2d');
+            const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+            const rootStyle = getComputedStyle(document.documentElement);
+            const COLOR = {
+                text: rootStyle.getPropertyValue('--text').trim(),
+                muted: rootStyle.getPropertyValue('--text-muted').trim(),
+                accent: rootStyle.getPropertyValue('--accent').trim(),
+            };
+            const MONO = rootStyle.getPropertyValue('--mono').trim();
+
+            const clamp01 = (v) => Math.max(0, Math.min(1, v));
+            const ease = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+
+            // --- isometric, flat-shaded rendering helpers (90s corporate-video look) ---
+            const _cparse = document.createElement('canvas');
+            _cparse.width = 1; _cparse.height = 1;
+            const _cctx = _cparse.getContext('2d');
+            const _colorCache = new Map();
+            function toRGB(cssColor) {
+                if (_colorCache.has(cssColor)) return _colorCache.get(cssColor);
+                _cctx.clearRect(0, 0, 1, 1);
+                _cctx.fillStyle = cssColor;
+                _cctx.fillRect(0, 0, 1, 1);
+                const d = _cctx.getImageData(0, 0, 1, 1).data;
+                const rgb = [d[0], d[1], d[2]];
+                _colorCache.set(cssColor, rgb);
+                return rgb;
+            }
+            function shade(rgb, amt) {
+                const [r, g, b] = rgb;
+                if (amt >= 0) return `rgb(${(r + (255 - r) * amt) | 0}, ${(g + (255 - g) * amt) | 0}, ${(b + (255 - b) * amt) | 0})`;
+                return `rgb(${(r * (1 + amt)) | 0}, ${(g * (1 + amt)) | 0}, ${(b * (1 + amt)) | 0})`;
+            }
+            const ISO_R = [Math.cos(Math.PI / 6), Math.sin(Math.PI / 6) * 0.62];
+            const ISO_L = [-Math.cos(Math.PI / 6), Math.sin(Math.PI / 6) * 0.62];
+            function isoPt(ox, oy, x, y, z, s) {
+                return [ox + (x * ISO_R[0] + y * ISO_L[0]) * s, oy + (x * ISO_R[1] + y * ISO_L[1]) * s - z * s];
+            }
+            function drawIsoBox(ox, oy, w, d, hgt, s, baseColor, outline) {
+                const rgb = toRGB(baseColor);
+                const p100 = isoPt(ox, oy, w, 0, 0, s), p010 = isoPt(ox, oy, 0, d, 0, s);
+                const p001 = isoPt(ox, oy, 0, 0, hgt, s), p101 = isoPt(ox, oy, w, 0, hgt, s);
+                const p011 = isoPt(ox, oy, 0, d, hgt, s), p110 = isoPt(ox, oy, w, d, 0, s);
+                const p111 = isoPt(ox, oy, w, d, hgt, s);
+                ctx.lineJoin = 'round';
+                ctx.lineWidth = outline;
+                ctx.strokeStyle = 'rgba(0, 8, 20, 0.85)';
+                const face = (pts, tint) => {
+                    ctx.beginPath();
+                    ctx.moveTo(pts[0][0], pts[0][1]);
+                    for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1]);
+                    ctx.closePath();
+                    ctx.fillStyle = shade(rgb, tint);
+                    ctx.fill();
+                    ctx.stroke();
+                };
+                face([p100, p110, p111, p101], -0.22);
+                face([p010, p110, p111, p011], -0.42);
+                face([p001, p101, p111, p011], 0.32);
+            }
+            function drawCaption(x, y, text, fontSize, align) {
+                ctx.save();
+                ctx.font = `italic 700 ${fontSize}px ${MONO}`;
+                const padX = fontSize * 0.6, padY = fontSize * 0.42;
+                const tw = ctx.measureText(text).width;
+                const bw = tw + padX * 2, bh = fontSize + padY * 2;
+                let bx = x;
+                if (align === 'center') bx = x - bw / 2;
+                else if (align === 'right') bx = x - bw;
+                const by = y - bh * 0.72;
+                const grad = ctx.createLinearGradient(bx, by, bx, by + bh);
+                grad.addColorStop(0, '#8fe8ff');
+                grad.addColorStop(0.5, '#0891b8');
+                grad.addColorStop(1, '#042a3d');
+                const r = fontSize * 0.22;
+                ctx.beginPath();
+                ctx.moveTo(bx + r, by);
+                ctx.arcTo(bx + bw, by, bx + bw, by + bh, r);
+                ctx.arcTo(bx + bw, by + bh, bx, by + bh, r);
+                ctx.arcTo(bx, by + bh, bx, by, r);
+                ctx.arcTo(bx, by, bx + bw, by, r);
+                ctx.closePath();
+                ctx.fillStyle = grad;
+                ctx.fill();
+                ctx.strokeStyle = 'rgba(6, 10, 30, 0.9)';
+                ctx.lineWidth = Math.max(1, fontSize * 0.08);
+                ctx.stroke();
+                ctx.fillStyle = '#f4f7ff';
+                ctx.textAlign = 'left';
+                ctx.textBaseline = 'alphabetic';
+                ctx.shadowColor = 'rgba(0, 0, 0, 0.55)';
+                ctx.shadowBlur = fontSize * 0.12;
+                ctx.shadowOffsetX = fontSize * 0.05;
+                ctx.shadowOffsetY = fontSize * 0.08;
+                ctx.fillText(text, bx + padX, by + bh - padY * 1.15);
+                ctx.restore();
+            }
+            function drawText(text, x, y, fontSize, weight, color, align) {
+                ctx.save();
+                ctx.font = `italic ${weight} ${fontSize}px ${MONO}`;
+                ctx.textAlign = align;
+                ctx.fillStyle = color;
+                ctx.shadowColor = 'rgba(0, 0, 0, 0.55)';
+                ctx.shadowBlur = fontSize * 0.12;
+                ctx.shadowOffsetX = fontSize * 0.05;
+                ctx.shadowOffsetY = fontSize * 0.08;
+                ctx.fillText(text, x, y);
+                ctx.restore();
+            }
+            function warmBackground(w, h) {
+                ctx.fillStyle = '#0a1220';
+                ctx.fillRect(0, 0, w, h);
+            }
+
+            // Each row is a before/after pair; `after` grows to the real proportion of
+            // `before` so the bar heights themselves carry the speedup, not just the label.
+            const ROWS = [
+                {
+                    title: '4050-row batch speed, before vs. after', before: 5.7, after: 1.6, speedup: '3.55x speedup',
+                    beforeLabel: '5.7s', afterLabel: '1.6s',
+                    titleY: 0.22, baseline: 0.82, maxBarH: 0.50,
+                },
+            ];
+            const BEFORE_X = 0.35, AFTER_X = 0.62;
+
+            const ACT_GROW = 1400, ACT_REVEAL = 500, ACT_HOLD = 2600;
+            const TOTAL = ACT_GROW + ACT_REVEAL + ACT_HOLD;
+
+            function drawRow(w, h, row, elapsed) {
+                const grow = ease(clamp01(elapsed / ACT_GROW));
+                const revealAlpha = clamp01((elapsed - ACT_GROW) / ACT_REVEAL);
+                const s = h * 0.09;
+                const baseline = h * row.baseline;
+                const beforeHpx = grow * h * row.maxBarH;
+                const afterHpx = grow * h * row.maxBarH * (row.after / row.before);
+
+                drawText(row.title, w * 0.05, h * row.titleY, Math.max(10, h * 0.04), 700, COLOR.text, 'left');
+
+                drawIsoBox(w * BEFORE_X, baseline, 1.2, 1.2, beforeHpx / s, s, COLOR.muted, Math.max(1.5, h * 0.006));
+                drawIsoBox(w * AFTER_X, baseline, 1.2, 1.2, afterHpx / s, s, COLOR.accent, Math.max(1.5, h * 0.006));
+
+                // the iso box's base footprint dips below its (ox, oy) anchor by this much
+                // (both far corners slope down via ISO_R/ISO_L's positive y component) —
+                // the "before"/"after" caption needs to clear it, not just the anchor point
+                const footDrop = 1.2 * (ISO_R[1] + ISO_L[1]) * s;
+                const underY = baseline + footDrop + h * 0.03;
+
+                ctx.globalAlpha = grow;
+                drawText('before', w * BEFORE_X, underY, Math.max(9, h * 0.032), 500, COLOR.text, 'center');
+                drawText('after', w * AFTER_X, underY, Math.max(9, h * 0.032), 500, COLOR.text, 'center');
+                drawText(row.beforeLabel, w * BEFORE_X, baseline - beforeHpx - h * 0.03, Math.max(9, h * 0.034), 700, COLOR.text, 'center');
+                drawText(row.afterLabel, w * AFTER_X, baseline - afterHpx - h * 0.03, Math.max(9, h * 0.034), 700, COLOR.text, 'center');
+
+                // speedup reveal fades in as its own line above the value label, instead of
+                // snapping the label text/width the instant reveal starts
+                const speedupAlpha = ease(revealAlpha);
+                if (speedupAlpha > 0) {
+                    ctx.globalAlpha = grow * speedupAlpha;
+                    drawText(row.speedup, w * AFTER_X, baseline - afterHpx - h * 0.075, Math.max(10, h * 0.044), 700, COLOR.accent, 'center');
+                }
+                ctx.globalAlpha = 1;
+            }
+
+            function drawScene(w, h, elapsed) {
+                warmBackground(w, h);
+                drawCaption(w * 0.04, h * 0.11, 'Performance Improvement', Math.max(10, h * 0.05), 'left');
+                ROWS.forEach((row) => drawRow(w, h, row, elapsed));
+            }
+
+            function drawFrame(now) {
+                const w = canvas.width, h = canvas.height;
+                if (ghostCanvas.width !== w || ghostCanvas.height !== h) {
+                    ghostCanvas.width = w;
+                    ghostCanvas.height = h;
+                }
+                ctx = ghostCtx;
+                ctx.clearRect(0, 0, w, h);
+                drawScene(w, h, reduceMotion ? TOTAL : now % TOTAL);
+                ctx = realCtx;
+                warmBackground(w, h);
+                // trailing ghost: a dim, blurred duplicate of the content shifted sideways,
+                // composited behind the sharp copy — same technique as the other project canvases
+                ctx.save();
+                ctx.globalAlpha = 0.4;
+                ctx.filter = 'blur(3px)';
+                ctx.drawImage(ghostCanvas, h * 0.01, 0);
+                ctx.restore();
+                ctx.drawImage(ghostCanvas, 0, 0);
             }
 
             function resizeCanvas() {
