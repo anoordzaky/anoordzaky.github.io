@@ -2578,81 +2578,29 @@
                 ctx.restore();
             }
 
-            // A small quadcopter icon: gradient body + tapered arms + translucent
-            // rotor-blur discs oriented along each arm, instead of a cluster of flat
-            // iso boxes that read as abstract cubes rather than an actual drone.
-            function drawDrone(cx, cy, s, color, outline) {
-                const armLen = 1.6;
-                const rotors = [
-                    isoPt(cx, cy, armLen, 0, 0, s),
-                    isoPt(cx, cy, 0, armLen, 0, s),
-                    isoPt(cx, cy, -armLen, 0, 0, s),
-                    isoPt(cx, cy, 0, -armLen, 0, s),
-                ];
-                const rgb = toRGB(color);
+            // Drone icon: the supplied artwork, tinted toward the site's accent cyan.
+            // hue-rotate mostly grabs the saturated blue iris and leaves the
+            // near-neutral grey shell/black rings alone, so only the "eye" recolors.
+            let droneIcon = null; // offscreen canvas, pre-tinted and ready to drawImage
+            const droneImg = new Image();
+            droneImg.src = 'assets/images/drone-icon.png';
+            droneImg.onload = () => {
+                const size = 400;
+                const off = document.createElement('canvas');
+                off.width = size;
+                off.height = size;
+                const octx = off.getContext('2d');
+                octx.filter = 'hue-rotate(-30deg) saturate(1.6) brightness(1.1)';
+                octx.drawImage(droneImg, 0, 0, size, size);
+                droneIcon = off;
+            };
+            function drawDrone(cx, cy, s, color) {
+                if (!droneIcon) return;
+                const diameter = s * 4;
                 ctx.save();
-                ctx.lineJoin = 'round';
-                ctx.lineCap = 'round';
-
-                // arms: tapered gradient struts from body center to each rotor hub
                 ctx.shadowColor = color;
-                ctx.shadowBlur = s * 0.6;
-                rotors.forEach((p) => {
-                    const grad = ctx.createLinearGradient(cx, cy, p[0], p[1]);
-                    grad.addColorStop(0, shade(rgb, 0.2));
-                    grad.addColorStop(1, shade(rgb, -0.4));
-                    ctx.strokeStyle = grad;
-                    ctx.lineWidth = s * 0.14;
-                    ctx.beginPath();
-                    ctx.moveTo(cx, cy);
-                    ctx.lineTo(p[0], p[1]);
-                    ctx.stroke();
-                });
-
-                // rotor discs: soft translucent motion-blur ellipse, angled along the
-                // arm, plus a small dark hub on top — reads as a spinning propeller
-                rotors.forEach((p) => {
-                    ctx.save();
-                    ctx.translate(p[0], p[1]);
-                    ctx.rotate(Math.atan2(p[1] - cy, p[0] - cx));
-                    ctx.fillStyle = 'rgba(210, 235, 255, 0.3)';
-                    ctx.beginPath();
-                    ctx.ellipse(0, 0, s * 1.05, s * 0.3, 0, 0, Math.PI * 2);
-                    ctx.fill();
-                    ctx.restore();
-                    ctx.fillStyle = shade(rgb, -0.15);
-                    ctx.strokeStyle = 'rgba(0, 8, 20, 0.85)';
-                    ctx.lineWidth = Math.max(1, outline * 0.6);
-                    ctx.beginPath();
-                    ctx.arc(p[0], p[1], s * 0.22, 0, Math.PI * 2);
-                    ctx.fill();
-                    ctx.stroke();
-                });
-
-                // body: gradient-filled capsule with a glow, matching the accent chrome
-                // look used across the rest of the diagram's chips/labels
-                ctx.shadowBlur = s * 0.9;
-                const bodyGrad = ctx.createLinearGradient(cx, cy - s * 0.6, cx, cy + s * 0.6);
-                bodyGrad.addColorStop(0, shade(rgb, 0.35));
-                bodyGrad.addColorStop(1, shade(rgb, -0.3));
-                ctx.fillStyle = bodyGrad;
-                ctx.strokeStyle = 'rgba(0, 8, 20, 0.85)';
-                ctx.lineWidth = outline;
-                ctx.beginPath();
-                ctx.ellipse(cx, cy, s * 0.62, s * 0.42, 0, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.stroke();
-
-                // camera gimbal underneath: small dark lens with a thin accent ring
-                ctx.shadowBlur = 0;
-                ctx.fillStyle = 'rgba(4, 8, 16, 0.9)';
-                ctx.strokeStyle = shade(rgb, 0.2);
-                ctx.lineWidth = Math.max(1, outline * 0.5);
-                ctx.beginPath();
-                ctx.arc(cx, cy + s * 0.18, s * 0.14, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.stroke();
-
+                ctx.shadowBlur = s * 1.1;
+                ctx.drawImage(droneIcon, cx - diameter / 2, cy - diameter / 2, diameter, diameter);
                 ctx.restore();
             }
 
@@ -2815,7 +2763,7 @@
                 if (sweepP > 0 && sweepP < 1) {
                     const dx = dp.x * w, dy = dp.y * h - h * 0.14;
                     ctx.globalAlpha = fade;
-                    drawDrone(dx, dy, h * 0.024, '#3f66c9', Math.max(1.5, h * 0.006));
+                    drawDrone(dx, dy, h * 0.024, '#3f66c9');
                     ctx.globalAlpha = 1;
                 }
 
