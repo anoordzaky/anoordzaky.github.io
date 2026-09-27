@@ -2770,7 +2770,7 @@
                 const droneIdx = Math.min(PIPES.length - 1, passedCount);
                 const dp = PIPES[droneIdx];
                 if (sweepP > 0 && sweepP < 1) {
-                    const dx = dp.x * w, dy = dp.y * h - h * 0.14;
+                    const dx = dp.x * w, dy = dp.y * h - h * 0.08;
                     ctx.globalAlpha = fade;
                     drawDrone(dx, dy, h * 0.024, '#3f66c9');
                     ctx.globalAlpha = 1;
