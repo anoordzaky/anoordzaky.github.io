@@ -595,6 +595,35 @@
             color: var(--text-muted);
         }
 
+        .screensaver-toggle {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            z-index: 2;
+            background: linear-gradient(180deg, #3a4a5c 0%, #1c2733 50%, #0d141c 100%);
+            border: 1px solid rgba(0, 0, 0, 0.6);
+            box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.2), inset 0 -1px 2px rgba(0, 0, 0, 0.5);
+            color: var(--text-muted);
+            font-family: var(--mono);
+            font-size: 0.72rem;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            padding: 0.5rem 0.9rem;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+        }
+        .screensaver-toggle:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.25), inset 0 -1px 2px rgba(0, 0, 0, 0.5), 0 0 8px rgba(0, 229, 255, 0.4);
+        }
+        /* only .bg-paths (z-index 0) and the toggle itself stay visible */
+        body.screensaver-mode .page,
+        body.screensaver-mode footer {
+            display: none;
+        }
+
         @media (max-width: 980px) {
             .page {
                 grid-template-columns: 1fr;
@@ -612,6 +641,11 @@
             }
             .portfolio-grid {
                 grid-template-columns: 1fr;
+            }
+            /* pipes WebGL is disabled on mobile (perf/battery) — nothing for this
+               button to show */
+            .screensaver-toggle {
+                display: none;
             }
         }
 
@@ -655,6 +689,29 @@
     <div class="bg-paths" aria-hidden="true">
         <canvas id="pipes-bg"></canvas>
     </div>
+    <button id="screensaver-toggle" class="screensaver-toggle" type="button">Screensaver</button>
+    <script>
+        (function () {
+            const btn = document.getElementById('screensaver-toggle');
+            if (!btn) return;
+            function setMode(on) {
+                document.body.classList.toggle('screensaver-mode', on);
+                btn.textContent = on ? 'Exit Screensaver' : 'Screensaver';
+            }
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                setMode(!document.body.classList.contains('screensaver-mode'));
+            });
+            // click anywhere, or Escape, exits — nothing else is visible/clickable
+            // in this mode so there's no other action a click could mean
+            document.addEventListener('click', () => {
+                if (document.body.classList.contains('screensaver-mode')) setMode(false);
+            });
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') setMode(false);
+            });
+        })();
+    </script>
     <script>
         (function () {
             const canvas = document.getElementById('pipes-bg');
