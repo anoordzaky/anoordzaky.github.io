@@ -218,11 +218,9 @@
         }
 
         /* Projector: sidebar screen that shows whichever project's diagram/canvas
-           is currently open, "no signal" trapezoid when nothing is */
-        .projector {
-            border-top: 1px solid var(--rule);
-            padding-top: 1.5rem;
-        }
+           is currently open, "no signal" trapezoid when nothing is. It's the
+           sidebar's only child now (identity/contact moved into .content), so no
+           top rule/padding is needed to separate it from a sibling above. */
         .projector-bezel {
             position: relative;
             background: #030308;
@@ -296,11 +294,15 @@
 
         /* Main content */
         .content { min-width: 0; max-width: 700px; }
+        .content > .identity { margin-bottom: 1.75rem; }
+        .content > .contact { margin-bottom: 2.25rem; }
         .section {
             padding: 2.25rem 0;
             border-top: 1px solid var(--rule);
         }
-        .section:first-child { border-top: none; padding-top: 0; }
+        /* :first-of-type, not :first-child — identity/contact now precede the hero
+           section in .content, so it's no longer literally the first child */
+        .section:first-of-type { border-top: none; padding-top: 0; }
         /* beveled chrome/glass hardware-button label, not a flat badge */
         .section h2 {
             display: inline-block;
@@ -909,6 +911,21 @@
     </script>
     <div class="page">
         <aside class="sidebar">
+            <div class="projector">
+                <div class="projector-bezel">
+                    <div class="projector-screen" id="projector-screen">
+                        <div class="projector-idle" id="projector-idle">
+                            <p class="projector-idle-line"><span class="projector-idle-label">Source:</span> HDMI</p>
+                            <p class="projector-idle-line projector-idle-signal">No Signal</p>
+                            <p class="projector-idle-line projector-idle-help">Please click any of the projects on the right</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </aside>
+
+        <main class="content">
             <div class="identity">
                 <h1 class="wordmark glitch-text" data-text="Achmadi Noor Dzaky">Achmadi Noor Dzaky</h1>
                 <p class="role">Data Analyst</p>
@@ -928,21 +945,6 @@
                 </div>
             </div>
 
-            <div class="projector">
-                <div class="projector-bezel">
-                    <div class="projector-screen" id="projector-screen">
-                        <div class="projector-idle" id="projector-idle">
-                            <p class="projector-idle-line"><span class="projector-idle-label">Source:</span> HDMI</p>
-                            <p class="projector-idle-line projector-idle-signal">No Signal</p>
-                            <p class="projector-idle-line projector-idle-help">Please click any of the projects on the right</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-        </aside>
-
-        <main class="content">
             <section class="section hero" id="about">
                 <p class="tagline">Data professional with multiple years of experience turning business data into decisions.</p>
                 <p class="work-line">Currently Data Analyst at Grivy. Full work history on <a href="https://linkedin.com/in/anoordzaky">LinkedIn</a>.</p>
