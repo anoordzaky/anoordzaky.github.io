@@ -110,8 +110,11 @@
             margin: 0 auto;
             padding: 3.5rem 1.5rem 4rem;
             display: grid;
-            grid-template-columns: minmax(480px, 620px) 1fr;
-            gap: 3rem;
+            /* left column used to reserve up to 620px, but the sidebar's actual
+               content (name, contact) is much narrower than that — most of the gap
+               to the right column was dead reserved space, not the grid gutter */
+            grid-template-columns: minmax(400px, 460px) 1fr;
+            gap: 2rem;
             align-items: start;
             border-radius: 20px;
             box-shadow: 0 16px 40px rgba(0, 2, 8, 0.6), 0 4px 12px rgba(0, 2, 8, 0.45), 0 0 70px rgba(0, 229, 255, 0.06);
