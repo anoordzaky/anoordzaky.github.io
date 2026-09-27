@@ -144,6 +144,12 @@
             align-self: flex-end;
             text-align: right;
         }
+        /* pull identity/contact together now that the divider rule between them is
+           gone — the sidebar's 1.75rem gap was sized for when that rule existed;
+           contact->projector spacing (also 1.75rem) is untouched */
+        .sidebar > .contact {
+            margin-top: -1rem;
+        }
         /* chrome-extruded logo text — the classic Video Toaster / corporate-render
            title-card look, with a slow light sweep to sell the polished-metal read */
         .wordmark {
@@ -179,8 +185,6 @@
             font-size: 0.88rem;
         }
         .contact {
-            border-top: 1px solid var(--rule);
-            padding-top: 1.25rem;
             display: flex;
             flex-direction: column;
             gap: 0.9rem;
@@ -621,10 +625,8 @@
         }
 
         .screensaver-toggle {
-            position: fixed;
-            bottom: 1.5rem;
-            right: 1.5rem;
-            z-index: 2;
+            display: block;
+            margin: 1rem 0 0 auto;
             background: linear-gradient(180deg, #3a4a5c 0%, #1c2733 50%, #0d141c 100%);
             border: 1px solid rgba(0, 0, 0, 0.6);
             box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.2), inset 0 -1px 2px rgba(0, 0, 0, 0.5);
@@ -643,7 +645,15 @@
             color: var(--accent);
             box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.25), inset 0 -1px 2px rgba(0, 0, 0, 0.5), 0 0 8px rgba(0, 229, 255, 0.4);
         }
-        /* only .bg-paths (z-index 0) and the toggle itself stay visible */
+        .screensaver-hint {
+            margin: 0.15rem 0 0;
+            text-align: right;
+            font-size: 1rem;
+            color: var(--text-muted);
+            opacity: 0.7;
+        }
+        /* only .bg-paths (z-index 0) stays visible in screensaver mode — exit
+           is click-anywhere/Escape only, no on-screen button */
         body.screensaver-mode .page,
         body.screensaver-mode footer {
             display: none;
@@ -669,7 +679,8 @@
             }
             /* pipes WebGL is disabled on mobile (perf/battery) — nothing for this
                button to show */
-            .screensaver-toggle {
+            .screensaver-toggle,
+            .screensaver-hint {
                 display: none;
             }
         }
@@ -714,14 +725,12 @@
     <div class="bg-paths" aria-hidden="true">
         <canvas id="pipes-bg"></canvas>
     </div>
-    <button id="screensaver-toggle" class="screensaver-toggle" type="button">Screensaver</button>
     <script>
-        (function () {
+        document.addEventListener('DOMContentLoaded', function () {
             const btn = document.getElementById('screensaver-toggle');
             if (!btn) return;
             function setMode(on) {
                 document.body.classList.toggle('screensaver-mode', on);
-                btn.textContent = on ? 'Exit Screensaver' : 'Screensaver';
             }
             btn.addEventListener('click', (e) => {
                 e.stopPropagation();
@@ -735,7 +744,7 @@
             document.addEventListener('keydown', (e) => {
                 if (e.key === 'Escape') setMode(false);
             });
-        })();
+        });
     </script>
     <script>
         (function () {
@@ -947,6 +956,8 @@
                 </div>
             </div>
 
+            <button id="screensaver-toggle" class="screensaver-toggle" type="button" title="Click anywhere on the screen to exit the screensaver">Screensaver Mode</button>
+            <p class="screensaver-hint">Click anywhere on the screen to exit the screensaver</p>
         </aside>
 
         <main class="content">
