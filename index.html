@@ -2417,6 +2417,7 @@
                 text: rootStyle.getPropertyValue('--text').trim(),
                 muted: rootStyle.getPropertyValue('--text-muted').trim(),
                 accent: rootStyle.getPropertyValue('--accent').trim(),
+                accent2: rootStyle.getPropertyValue('--accent2').trim(),
                 ok: rootStyle.getPropertyValue('--ok').trim(),
             };
             const MONO = rootStyle.getPropertyValue('--mono').trim();
@@ -2578,29 +2579,37 @@
                 ctx.restore();
             }
 
-            // Drone icon: the supplied artwork, tinted toward the site's accent cyan.
-            // hue-rotate mostly grabs the saturated blue iris and leaves the
-            // near-neutral grey shell/black rings alone, so only the "eye" recolors.
+            // Drone icon: the supplied artwork is a flat black silhouette (no color of
+            // its own to hue-shift), so it's tinted by masking a cyan->magenta accent
+            // gradient onto its alpha shape instead — same "source-atop" trick used
+            // for the Centro Studio logo elsewhere on this page.
             let droneIcon = null; // offscreen canvas, pre-tinted and ready to drawImage
+            let droneAspect = 1; // width / height, so the flat logo isn't squashed to a square
             const droneImg = new Image();
             droneImg.src = 'assets/images/drone-icon.png';
             droneImg.onload = () => {
-                const size = 400;
+                droneAspect = droneImg.naturalWidth / droneImg.naturalHeight;
+                const w = 400, h = Math.round(w / droneAspect);
                 const off = document.createElement('canvas');
-                off.width = size;
-                off.height = size;
+                off.width = w;
+                off.height = h;
                 const octx = off.getContext('2d');
-                octx.filter = 'hue-rotate(-30deg) saturate(1.6) brightness(1.1)';
-                octx.drawImage(droneImg, 0, 0, size, size);
+                octx.drawImage(droneImg, 0, 0, w, h);
+                octx.globalCompositeOperation = 'source-atop';
+                const grad = octx.createLinearGradient(0, 0, w, h);
+                grad.addColorStop(0, COLOR.accent);
+                grad.addColorStop(1, COLOR.accent2);
+                octx.fillStyle = grad;
+                octx.fillRect(0, 0, w, h);
                 droneIcon = off;
             };
             function drawDrone(cx, cy, s, color) {
                 if (!droneIcon) return;
-                const diameter = s * 4;
+                const w = s * 6, h = w / droneAspect;
                 ctx.save();
                 ctx.shadowColor = color;
                 ctx.shadowBlur = s * 1.1;
-                ctx.drawImage(droneIcon, cx - diameter / 2, cy - diameter / 2, diameter, diameter);
+                ctx.drawImage(droneIcon, cx - w / 2, cy - h / 2, w, h);
                 ctx.restore();
             }
 
