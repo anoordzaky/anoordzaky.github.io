@@ -35,6 +35,11 @@
             margin: 0;
             background: var(--bg);
             color: var(--text);
+            /* browser scroll anchoring can pick any element near viewport top as its
+               anchor and nudge scroll to keep it fixed when layout shifts (project
+               open/close animations) — that fight is exactly what scrollToProject()
+               fixes explicitly, so opt the whole page out rather than one element */
+            overflow-anchor: none;
         }
         a { color: inherit; }
 
@@ -101,12 +106,12 @@
         .page {
             position: relative;
             z-index: 1;
-            max-width: 1100px;
+            max-width: 1700px;
             margin: 0 auto;
             padding: 3.5rem 1.5rem 4rem;
             display: grid;
-            grid-template-columns: 250px 1fr;
-            gap: 3.5rem;
+            grid-template-columns: minmax(480px, 620px) 1fr;
+            gap: 3rem;
             align-items: start;
             border-radius: 20px;
             box-shadow: 0 16px 40px rgba(0, 2, 8, 0.6), 0 4px 12px rgba(0, 2, 8, 0.45), 0 0 70px rgba(0, 229, 255, 0.06);
@@ -194,130 +199,85 @@
         }
         .social-links a:hover { color: var(--accent); }
 
-        /* Music widget */
-        .music-widget {
+        /* Projector: sidebar screen that shows whichever project's diagram/canvas
+           is currently open, "no signal" trapezoid when nothing is */
+        .projector {
             border-top: 1px solid var(--rule);
             padding-top: 1.5rem;
         }
-        .music-label {
-            font-family: var(--mono);
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            display: block;
-            margin-bottom: 0.6rem;
+        .projector-bezel {
+            position: relative;
+            background: #030308;
+            border-radius: 4px;
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05), 0 10px 30px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
         }
-        #track-info {
-            color: var(--text);
-            font-size: 0.82rem;
-            margin: 0;
+        .projector-bezel::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse at 50% 40%, rgba(40, 70, 255, 0.28), transparent 68%);
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            pointer-events: none;
         }
-        #track-info .track-artist {
-            color: var(--text-muted);
-        }
-        .viz-canvas {
+        .projector-bezel.is-live::before { opacity: 0.55; }
+        .projector-screen {
+            position: relative;
             width: 100%;
-            height: 150px;
-            margin-top: 0.85rem;
-            display: block;
-            background: var(--bg);
+            aspect-ratio: 4 / 3;
+            background: #050b18;
             border-radius: 2px;
-            cursor: pointer;
-            touch-action: none;
-        }
-        .player-row {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            margin-top: 0.6rem;
-        }
-        /* beveled chrome hardware button — brushed-steel gradient + inset highlight/shadow,
-           like a VCR or CD-player transport control */
-        #player-toggle, #viz-cycle, #track-prev, #track-next, #volume-toggle {
-            width: 32px;
-            height: 32px;
-            flex: 0 0 auto;
-            border-radius: 50%;
-            border: 1px solid rgba(0, 0, 0, 0.6);
-            background: linear-gradient(180deg, #4a5c70 0%, #202c3a 50%, #0d141c 100%);
-            box-shadow:
-                inset 0 1px 1px rgba(255, 255, 255, 0.25),
-                inset 0 -1px 2px rgba(0, 0, 0, 0.6),
-                0 1px 3px rgba(0, 0, 0, 0.6);
-            color: var(--text);
-            cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 0.75rem;
-            transition: border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+            overflow: hidden;
+            transition: background 0.3s ease;
         }
-        #player-toggle:hover, #viz-cycle:hover, #track-prev:hover, #track-next:hover, #volume-toggle:hover {
-            border-color: var(--accent);
-            color: var(--accent);
-            box-shadow:
-                inset 0 1px 1px rgba(255, 255, 255, 0.3),
-                inset 0 -1px 2px rgba(0, 0, 0, 0.6),
-                0 0 10px rgba(0, 229, 255, 0.5);
+        .projector-screen.has-visual {
+            background: var(--bg);
         }
-        .volume-row {
-            display: flex;
-            align-items: center;
-            gap: 0.6rem;
-            margin-top: 0.5rem;
+        .projector-screen canvas.ga-canvas {
+            width: 100%;
+            height: 100%;
+            aspect-ratio: auto;
+            margin-bottom: 0;
+            box-shadow: none;
+            background: transparent;
         }
-        #volume-slider {
-            flex: 1 1 auto;
-            -webkit-appearance: none;
-            appearance: none;
-            height: 3px;
-            background: var(--rule);
-            border-radius: 2px;
-            outline: none;
-            cursor: pointer;
-        }
-        #volume-slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: 11px;
-            height: 11px;
-            border-radius: 50%;
-            background: var(--accent);
-            cursor: pointer;
-        }
-        #volume-slider::-moz-range-thumb {
-            width: 11px;
-            height: 11px;
-            border-radius: 50%;
-            background: var(--accent);
-            border: none;
-            cursor: pointer;
-        }
-        #volume-slider::-moz-range-track {
-            height: 3px;
-            background: var(--rule);
-            border-radius: 2px;
-        }
-        #player-time {
-            font-family: var(--mono);
-            font-size: 0.75rem;
-            color: var(--text-muted);
-        }
-        #viz-cycle { margin-left: auto; }
-        .viz-cycle-icon {
-            width: 22px;
+        .projector-screen svg.flow-diagram {
+            /* contain-fit — never crop a diagram to fill the frame, letterbox instead */
+            width: auto;
             height: auto;
-            display: block;
+            max-width: 100%;
+            max-height: 100%;
+            margin-bottom: 0;
+            box-shadow: none;
+            background: transparent;
         }
-        .waveform-hint {
-            font-size: 0.72rem;
-            color: var(--text-muted);
-            margin: 0.5rem 0 0;
+        .projector-idle {
+            width: 100%;
+            height: 100%;
+            background: #1c2bf2;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding: 0 9% 11%;
+            font-family: var(--mono);
+            color: #b9e0ff;
+            text-shadow: 0 0 6px rgba(160, 210, 255, 0.6);
         }
-        .waveform-hint #viz-preset-name {
-            color: var(--text);
+        .projector-idle-line {
+            margin: 0;
+            font-size: 0.82rem;
+            letter-spacing: 0.02em;
+            line-height: 1.7;
         }
+        .projector-idle-signal { font-weight: 700; }
+        .projector-idle-help { margin-top: 0.5rem; opacity: 0.85; }
 
         /* Main content */
-        .content { min-width: 0; }
+        .content { min-width: 0; max-width: 700px; }
         .section {
             padding: 2.25rem 0;
             border-top: 1px solid var(--rule);
@@ -411,43 +371,63 @@
             padding-top: 2rem;
             border-top: 1px solid var(--rule);
         }
+        /* project trigger — same chip/pill model as .section h2, scaled up into a
+           full-width button so it reads clearly instead of a small chip */
         .pro-project summary {
             cursor: pointer;
             list-style: none;
             display: flex;
+            width: 100%;
             align-items: center;
-            gap: 0.65rem;
+            gap: 0.85rem;
+            font-family: var(--mono);
+            font-size: 1rem;
+            font-weight: 800;
+            letter-spacing: 0.01em;
+            color: #eafcff;
+            padding: 1rem 1.4rem;
+            border-radius: 14px;
+            background: var(--chip-grad);
+            border: 1px solid rgba(0, 0, 0, 0.5);
+            box-shadow:
+                inset 0 1px 1px rgba(255, 255, 255, 0.7),
+                inset 0 -2px 3px rgba(0, 0, 0, 0.3),
+                0 2px 6px rgba(0, 0, 0, 0.5);
+            transition: box-shadow 0.2s ease;
+        }
+        .pro-project summary:hover {
+            box-shadow:
+                inset 0 1px 1px rgba(255, 255, 255, 0.7),
+                inset 0 -2px 3px rgba(0, 0, 0, 0.3),
+                0 2px 6px rgba(0, 0, 0, 0.5),
+                0 0 14px rgba(0, 229, 255, 0.45);
+        }
+        .pro-project[open] summary {
+            box-shadow:
+                inset 0 2px 4px rgba(0, 0, 0, 0.4),
+                inset 0 -1px 1px rgba(255, 255, 255, 0.2),
+                0 0 16px rgba(0, 229, 255, 0.6);
         }
         .pro-project summary::-webkit-details-marker {
             display: none;
         }
         .pro-project summary h3 {
             font-family: var(--mono);
-            font-size: 1.05rem;
-            font-weight: 500;
+            font-size: 1rem;
+            font-weight: 800;
             margin: 0;
+            color: inherit;
         }
         .pro-project .pro-logo {
-            height: 1.15rem;
+            height: 1.6rem;
             width: auto;
+            max-width: 2.2rem;
+            object-fit: contain;
             display: block;
             flex: 0 0 auto;
-        }
-        .pro-project summary .pro-company {
-            font-family: var(--mono);
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            flex: 0 0 auto;
-        }
-        .pro-project summary i {
-            color: var(--text-muted);
-            font-size: 0.8rem;
-            flex: 0 0 auto;
-            margin-left: auto;
-            transition: transform 0.2s ease;
-        }
-        .pro-project[open] summary i {
-            transform: rotate(180deg);
+            padding: 0.2rem;
+            border-radius: 6px;
+            background: rgba(2, 10, 22, 0.4);
         }
         .pro-body {
             overflow: hidden;
@@ -488,18 +468,18 @@
             font-size: 12px;
         }
         .flow-diagram .flow-box {
-            fill: rgba(0, 8, 20, 0.2);
-            stroke: rgba(0, 8, 20, 0.9);
+            fill: rgba(30, 70, 110, 0.45);
+            stroke: rgba(140, 210, 255, 0.5);
             stroke-width: 1.5;
         }
         .flow-diagram .flow-box-side {
-            fill: rgba(0, 8, 20, 0.55);
-            stroke: rgba(0, 8, 20, 0.9);
+            fill: rgba(20, 50, 85, 0.6);
+            stroke: rgba(140, 210, 255, 0.4);
             stroke-width: 1;
         }
         .flow-diagram .flow-box-bottom {
-            fill: rgba(0, 8, 20, 0.75);
-            stroke: rgba(0, 8, 20, 0.9);
+            fill: rgba(14, 36, 65, 0.75);
+            stroke: rgba(140, 210, 255, 0.35);
             stroke-width: 1;
         }
         .flow-diagram .flow-chip-bg {
@@ -550,9 +530,8 @@
             filter: brightness(1.05) contrast(1) saturate(1.25);
             box-shadow: 0 0 40px rgba(0, 229, 255, 0.14), 0 0 90px rgba(0, 229, 255, 0.07);
         }
-        /* a touch of gaussian blur on just these two, softening them slightly vs.
-           the rest of the project canvases */
-        #ga-canvas, #citra-canvas {
+        /* a touch of gaussian blur, softening all the project canvases the same way */
+        #ga-canvas, #citra-canvas, #calcflow-canvas, #centro-canvas {
             filter: brightness(1.05) contrast(1) saturate(1.25) blur(0.6px);
         }
         .pro-project .article p {
@@ -616,7 +595,7 @@
             color: var(--text-muted);
         }
 
-        @media (max-width: 860px) {
+        @media (max-width: 980px) {
             .page {
                 grid-template-columns: 1fr;
                 padding-top: 2.5rem;
@@ -624,13 +603,16 @@
             .sidebar {
                 position: static;
             }
+            .projector {
+                order: -1;
+            }
             .portfolio-grid {
                 grid-template-columns: 1fr;
             }
         }
 
         @media (prefers-reduced-motion: reduce) {
-            .social-links a, #player-toggle, .portfolio-item a, .pro-project summary i {
+            .social-links a, .portfolio-item a, .pro-project summary {
                 transition: none;
             }
         }
@@ -814,13 +796,20 @@
                 return;
             }
 
+            const CAM_ANGULAR_SPEED = 0.09; // radians/sec — was a fixed per-frame step,
+            // which made rotation speed track actual FPS instead of wall-clock time:
+            // any main-thread contention elsewhere (e.g. the accordion's height
+            // animation) thinned out rAF callbacks and visibly slowed the orbit
             let camAngle = 0;
             let lastStep = 0;
+            let lastFrame = 0;
             let running = true;
             function loop(now) {
                 if (!running) return;
+                const dt = lastFrame ? Math.min((now - lastFrame) / 1000, 0.1) : 0;
+                lastFrame = now;
                 if (now - lastStep > STEP_MS) { tick(); lastStep = now; }
-                camAngle += 0.0015;
+                camAngle += CAM_ANGULAR_SPEED * dt;
                 camera.position.x = Math.cos(camAngle) * CAM_RADIUS;
                 camera.position.z = Math.sin(camAngle) * CAM_RADIUS;
                 camera.position.y = CAM_HEIGHT;
@@ -857,23 +846,18 @@
                 </div>
             </div>
 
-            <div class="music-widget">
-                <span class="music-label">now playing</span>
-                <p id="track-info"></p>
-                <canvas id="viz-canvas" class="viz-canvas" aria-label="Real-time audio visualizer"></canvas>
-                <div class="player-row">
-                    <button id="track-prev" aria-label="Previous track"><i class="fas fa-backward-step"></i></button>
-                    <button id="player-toggle" aria-label="Play"><i class="fas fa-play"></i></button>
-                    <button id="track-next" aria-label="Next track"><i class="fas fa-forward-step"></i></button>
-                    <span id="player-time">0:00</span>
-                    <button id="viz-cycle" aria-label="Change visualization" title="Change visualization"><img src="assets/images/equalizer-icon.png" alt="" class="viz-cycle-icon"></button>
+            <div class="projector">
+                <div class="projector-bezel">
+                    <div class="projector-screen" id="projector-screen">
+                        <div class="projector-idle" id="projector-idle">
+                            <p class="projector-idle-line"><span class="projector-idle-label">Source:</span> HDMI</p>
+                            <p class="projector-idle-line projector-idle-signal">No Signal</p>
+                            <p class="projector-idle-line projector-idle-help">Please click any of the projects on the right</p>
+                        </div>
+                    </div>
                 </div>
-                <div class="volume-row">
-                    <button id="volume-toggle" aria-label="Mute"><i class="fas fa-volume-high"></i></button>
-                    <input id="volume-slider" type="range" min="0" max="100" value="7" aria-label="Volume">
-                </div>
-                <p class="waveform-hint"><span id="viz-preset-name">bars &amp; waves</span>, click to seek</p>
             </div>
+
         </aside>
 
         <main class="content">
@@ -885,7 +869,7 @@
             <section class="section" id="professional-projects">
                 <h2>Professional Projects</h2>
                 <details class="pro-project">
-                    <summary><img class="pro-logo" src="assets/images/grivy-icon.png" alt="Grivy"><h3>Data Clean Room Pipeline</h3><i class="fas fa-chevron-down"></i></summary>
+                    <summary><img class="pro-logo" src="assets/images/grivy-icon.png" alt="Grivy"><h3>Data Clean Room Pipeline</h3></summary>
                     <div class="pro-body">
                     <p class="pro-context">Privacy-preserving Online-to-Offline campaign measurement across organizational boundaries</p>
 
@@ -894,7 +878,7 @@
                         <g>
                             <rect class="flow-chip-bg" x="14" y="10" width="150" height="26" rx="6"></rect>
                             <!-- <rect class="flow-chip-hl" x="18" y="13" width="138" height="3"></rect> -->
-                            <text x="22" y="26" font-size="13">Data Clean Room</text>
+                            <text x="22" y="28" font-size="13">Data Clean Room</text>
                         </g>
 
                         <g transform="translate(0, 30)">
@@ -955,11 +939,11 @@
                 </details>
 
                 <details class="pro-project">
-                    <summary><img class="pro-logo" src="assets/images/grivy-icon.png" alt="Grivy"><h3>Semantic Audience Search</h3><i class="fas fa-chevron-down"></i></summary>
+                    <summary><img class="pro-logo" src="assets/images/grivy-icon.png" alt="Grivy"><h3>Semantic Audience Search</h3></summary>
                     <div class="pro-body">
                     <p class="pro-context">Turning a plain-language audience description into a set of matching users at scale</p>
 
-                    <svg class="flow-diagram" viewBox="0 0 910 220" role="img" aria-label="Diagram: user profiles are embedded monthly using delta detection into a vector store, which a search stored procedure queries directly">
+                    <svg class="flow-diagram" viewBox="0 0 640 400" role="img" aria-label="Diagram: user profiles are embedded monthly using delta detection into a vector store, which a search stored procedure queries directly">
 
                         <g>
                             <rect class="flow-chip-bg" x="14" y="10" width="140" height="26" rx="6"></rect>
@@ -968,44 +952,44 @@
                         </g>
 
                         <g>
-                            <polygon class="flow-box-bottom" points="20,150 28,153 208,153 200,150"></polygon>
-                            <polygon class="flow-box-side" points="200,70 208,73 208,153 200,150"></polygon>
-                            <rect class="flow-box" x="20" y="70" width="180" height="80"></rect>
+                            <polygon class="flow-box-bottom" points="40,150 48,153 298,153 290,150"></polygon>
+                            <polygon class="flow-box-side" points="290,70 298,73 298,153 290,150"></polygon>
+                            <rect class="flow-box" x="40" y="70" width="250" height="80"></rect>
                         </g>
-                        <text x="110" y="105" text-anchor="middle" font-size="14">User Profiles</text>
-                        <text x="110" y="123" text-anchor="middle" class="flow-label">100M+, BigQuery</text>
+                        <text x="165" y="105" text-anchor="middle" font-size="14">User Profiles</text>
+                        <text x="165" y="123" text-anchor="middle" class="flow-label">100M+, BigQuery</text>
 
                         <g>
-                            <polygon class="flow-box-bottom" points="270,150 278,153 478,153 470,150"></polygon>
-                            <polygon class="flow-box-side" points="470,70 478,73 478,153 470,150"></polygon>
-                            <rect class="flow-box" x="270" y="70" width="200" height="80"></rect>
+                            <polygon class="flow-box-bottom" points="350,150 358,153 608,153 600,150"></polygon>
+                            <polygon class="flow-box-side" points="600,70 608,73 608,153 600,150"></polygon>
+                            <rect class="flow-box" x="350" y="70" width="250" height="80"></rect>
                         </g>
-                        <text x="370" y="105" text-anchor="middle" font-size="14">Embedding Pipeline</text>
-                        <text x="370" y="123" text-anchor="middle" class="flow-label">delta detection · batch</text>
+                        <text x="475" y="105" text-anchor="middle" font-size="14">Embedding Pipeline</text>
+                        <text x="475" y="123" text-anchor="middle" class="flow-label">delta detection · batch</text>
 
                         <g>
-                            <polygon class="flow-box-bottom" points="540,150 548,153 698,153 690,150"></polygon>
-                            <polygon class="flow-box-side" points="690,70 698,73 698,153 690,150"></polygon>
-                            <rect class="flow-box" x="540" y="70" width="150" height="80"></rect>
+                            <polygon class="flow-box-bottom" points="350,340 358,343 608,343 600,340"></polygon>
+                            <polygon class="flow-box-side" points="600,260 608,263 608,343 600,340"></polygon>
+                            <rect class="flow-box" x="350" y="260" width="250" height="80"></rect>
                         </g>
-                        <text x="615" y="115" text-anchor="middle" font-size="14">Vector Store</text>
+                        <text x="475" y="305" text-anchor="middle" font-size="14">Vector Store</text>
 
                         <g>
-                            <polygon class="flow-box-bottom" points="750,150 758,153 898,153 890,150"></polygon>
-                            <polygon class="flow-box-side" points="890,70 898,73 898,153 890,150"></polygon>
-                            <rect class="flow-box" x="750" y="70" width="140" height="80"></rect>
+                            <polygon class="flow-box-bottom" points="40,340 48,343 298,343 290,340"></polygon>
+                            <polygon class="flow-box-side" points="290,260 298,263 298,343 290,340"></polygon>
+                            <rect class="flow-box" x="40" y="260" width="250" height="80"></rect>
                         </g>
-                        <text x="820" y="105" text-anchor="middle" font-size="14">Search</text>
-                        <text x="820" y="123" text-anchor="middle" class="flow-label">stored procedure</text>
+                        <text x="165" y="295" text-anchor="middle" font-size="14">Search</text>
+                        <text x="165" y="313" text-anchor="middle" class="flow-label">stored procedure</text>
 
-                        <path class="flow-arrow" d="M200,95 L270,95" marker-end="url(#flow-arrowhead-2)"></path>
-                        <text x="235" y="62" text-anchor="middle" class="flow-label">changed rows only</text>
+                        <path class="flow-arrow" d="M290,95 L350,95" marker-end="url(#flow-arrowhead-2)"></path>
+                        <text x="320" y="62" text-anchor="middle" class="flow-label">changed rows only</text>
 
-                        <path class="flow-arrow flow-arrow-hash" d="M470,95 L540,95"></path>
-                        <text x="505" y="62" text-anchor="middle" class="flow-label">embeddings</text>
+                        <path class="flow-arrow flow-arrow-hash" d="M475,150 L475,260"></path>
+                        <text x="490" y="208" class="flow-label">embeddings</text>
 
-                        <path class="flow-arrow" d="M690,95 L750,95" marker-end="url(#flow-arrowhead-2)"></path>
-                        <text x="720" y="62" text-anchor="middle" class="flow-label">query</text>
+                        <path class="flow-arrow" d="M350,300 L290,300" marker-end="url(#flow-arrowhead-2)"></path>
+                        <text x="320" y="333" text-anchor="middle" class="flow-label">query</text>
                     </svg>
 
                     <div class="article">
@@ -1017,7 +1001,7 @@
                 </details>
 
                 <details class="pro-project">
-                    <summary><img class="pro-logo" src="assets/images/niq-icon.png" alt="NielsenIQ"><h3>Explainable Demand Forecasting</h3><i class="fas fa-chevron-down"></i></summary>
+                    <summary><img class="pro-logo" src="assets/images/niq-icon.png" alt="NielsenIQ"><h3>Explainable Demand Forecasting</h3></summary>
                     <div class="pro-body">
                     <p class="pro-context">Picking model features with a genetic algorithm so the coefficients still make economic sense</p>
 
@@ -1032,7 +1016,7 @@
                 </details>
 
                 <details class="pro-project">
-                    <summary><img class="pro-logo" src="assets/images/citratubindo-icon.png" alt="PT Citra Tubindo Tbk"><h3>Drone Pipe-Count Inference</h3><i class="fas fa-chevron-down"></i></summary>
+                    <summary><img class="pro-logo" src="assets/images/citratubindo-icon.png" alt="PT Citra Tubindo Tbk"><h3>Drone Pipe-Count Inference</h3></summary>
                     <div class="pro-body">
                     <p class="pro-context">Cutting drone inference time 35x by trading a stale YOLOv3 CPU build for a small, better-trained YOLOv5</p>
 
@@ -1050,9 +1034,11 @@
             <section class="section" id="side-projects">
                 <h2>Side Projects</h2>
                 <details class="pro-project">
-                    <summary><img class="pro-logo" src="assets/images/centro-icon.png" alt="Centro Studio"><h3>Centro Studio</h3><i class="fas fa-chevron-down"></i></summary>
+                    <summary><img class="pro-logo" src="assets/images/centro-icon.png" alt="Centro Studio"><h3>Centro Studio</h3></summary>
                     <div class="pro-body">
                     <p class="pro-context">A product design and development studio &middot; <a href="https://www.centro-studio.com/">centro-studio.com</a></p>
+
+                    <canvas id="centro-canvas" class="ga-canvas" aria-label="Halftone poster rendering of the Centro Studio logo, glowing cyan and magenta on black"></canvas>
 
                     <div class="article">
                         <p>Centro Studio is a small studio Dhimas and I started together. He's a senior product designer at Tabsquare (Delivery Hero) in Singapore, I'm on the data side at Grivy, and between the two day jobs we both had opinions about design and engineering that neither of us got to use fully on our own. Centro is where we use them, on client work and on the studio's own site. He leads interface and motion, I lead the software and the parts that have to survive real traffic, but neither of us stays only in our lane, that's the actual point of doing this together instead of separately.</p>
@@ -1062,18 +1048,18 @@
                 </details>
 
                 <details class="pro-project">
-                    <summary><img class="pro-logo" src="assets/images/sadji-icon.png" alt="SADJI"><h3>SADJI</h3><i class="fas fa-chevron-down"></i></summary>
+                    <summary><img class="pro-logo" src="assets/images/sadji-icon.png" alt="SADJI"><h3>SADJI</h3></summary>
                     <div class="pro-body">
                     <p class="pro-context">A point-of-sale, QR ordering, and kitchen display platform for Indonesian restaurants and cafes, built with a friend &middot; <a href="https://sadji.app">sadji.app</a></p>
 
-                    <svg class="flow-diagram" viewBox="0 0 640 402" role="img" aria-label="Diagram: a customer's QR order and a cashier's POS both flow into a shared backend, which pushes tickets to the kitchen display and lets a staff Android app queue orders locally when offline, syncing back through an outbox">
+                    <svg class="flow-diagram" viewBox="0 0 640 420" role="img" aria-label="Diagram: a customer's QR order and a cashier's POS both flow into a shared backend, which pushes tickets to the kitchen display and lets a staff Android app queue orders locally when offline, syncing back through an outbox">
                         <g>
-                            <rect class="flow-chip-bg" x="10" y="2" width="150" height="16" rx="4"></rect>
-                            <!-- <rect class="flow-chip-hl" x="13" y="3.5" width="144" height="2"></rect> -->
-                            <text x="16" y="13" font-size="10">SADJI Architecture</text>
+                            <rect class="flow-chip-bg" x="14" y="10" width="160" height="26" rx="6"></rect>
+                            <!-- <rect class="flow-chip-hl" x="18" y="13" width="138" height="3"></rect> -->
+                            <text x="22" y="28" font-size="13">SADJI Architecture</text>
                         </g>
 
-                        <g transform="translate(0, 12)">
+                        <g transform="translate(0, 30)">
                         <g>
                             <polygon class="flow-box-bottom" points="20,100 28,103 228,103 220,100"></polygon>
                             <polygon class="flow-box-side" points="220,20 228,23 228,103 220,100"></polygon>
@@ -1136,7 +1122,7 @@
                 </details>
 
                 <details class="pro-project">
-                    <summary><img class="pro-logo" src="assets/images/calcflow-icon.svg" alt="CalcFlow"><h3>Calcflow PMM Solver Optimization</h3><i class="fas fa-chevron-down"></i></summary>
+                    <summary><img class="pro-logo" src="assets/images/calcflow-icon.svg" alt="CalcFlow"><h3>Calcflow PMM Solver Optimization</h3></summary>
                     <div class="pro-body">
                     <p class="pro-context">Cutting CalcFlow's biaxial column solver more than 4x per call and 3.55x on a full detailing batch, without changing the underlying math</p>
 
@@ -1198,301 +1184,7 @@
         </main>
     </div>
 
-    <footer>Built with ffmpeg, Web Audio, and too much coffee.</footer>
-
-    <script>
-        (function () {
-            const TRACKS = [
-                { title: 'b2b', artist: 'Charli XCX', src: 'assets/audio/b2b.mp3' },
-                { title: 'Careful', artist: 'D.O.D ft. Izzy Bizu', src: 'assets/audio/careful.mp3' },
-                { title: 'E85', artist: 'Don Toliver', src: 'assets/audio/e85.mp3' },
-                { title: 'Sweet Sour', artist: 'KiiiKiii', src: 'assets/audio/sweet-sour.mp3' },
-                { title: 'soulless', artist: 'sosocamo', src: 'assets/audio/soulless.mp3' },
-            ];
-            const PRESETS = ['bars & waves', 'plasma', 'equalizer'];
-
-            const canvas = document.getElementById('viz-canvas');
-            const ctx = canvas.getContext('2d');
-            const trackInfo = document.getElementById('track-info');
-            const prevBtn = document.getElementById('track-prev');
-            const nextBtn = document.getElementById('track-next');
-            const playBtn = document.getElementById('player-toggle');
-            const playIcon = playBtn.querySelector('i');
-            const timeEl = document.getElementById('player-time');
-            const cycleBtn = document.getElementById('viz-cycle');
-            const presetNameEl = document.getElementById('viz-preset-name');
-            const volumeToggle = document.getElementById('volume-toggle');
-            const volumeIcon = volumeToggle.querySelector('i');
-            const volumeSlider = document.getElementById('volume-slider');
-
-            const audio = new Audio();
-            audio.preload = 'none';
-            audio.volume = (volumeSlider.value / 100) ** 2;
-
-            function volumeIconClass() {
-                const frac = volumeSlider.value / 100;
-                if (audio.muted || frac === 0) return 'fas fa-volume-xmark';
-                if (frac < 0.5) return 'fas fa-volume-low';
-                return 'fas fa-volume-high';
-            }
-            function updateVolumeIcon() {
-                volumeIcon.className = volumeIconClass();
-            }
-            // A linear slider mapped straight to audio.volume feels quadratic:
-            // human loudness perception is roughly logarithmic, so most of the
-            // audible range gets crammed into the top of the slider. Squaring
-            // the slider fraction compensates so the slider feels linear.
-            volumeSlider.addEventListener('input', () => {
-                const frac = volumeSlider.value / 100;
-                audio.volume = frac * frac;
-                if (frac > 0) audio.muted = false;
-                updateVolumeIcon();
-            });
-            volumeToggle.addEventListener('click', () => {
-                audio.muted = !audio.muted;
-                updateVolumeIcon();
-            });
-            updateVolumeIcon();
-
-            let audioCtx, analyser, freqData, timeData;
-            function ensureAudioGraph() {
-                if (audioCtx) return;
-                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                analyser = audioCtx.createAnalyser();
-                analyser.fftSize = 256;
-                freqData = new Uint8Array(analyser.frequencyBinCount);
-                timeData = new Uint8Array(analyser.fftSize);
-                const source = audioCtx.createMediaElementSource(audio);
-                source.connect(analyser);
-                analyser.connect(audioCtx.destination);
-            }
-
-            const scratchAudio = new Audio('assets/audio/scratch.m4a');
-            scratchAudio.preload = 'auto';
-
-            function playScratch() {
-                if (!scratchAudio) return;
-                const frac = volumeSlider.value / 100;
-                if (audio.muted || frac <= 0) return;
-                scratchAudio.currentTime = 0;
-                // A transient percussive cue needs to cut through even when the
-                // ambient track volume is low (default is 7%); tying it to the
-                // same frac^2 curve as the music made it inaudible at low
-                // volumes even though it was technically playing. Floor it
-                // instead of squaring it, so it still scales down when the
-                // user wants things quiet but never disappears.
-                scratchAudio.volume = Math.min(0.2, Math.max(0.15, frac));
-                scratchAudio.play().catch(() => {});
-            }
-
-            // Playing an <audio> element with no user gesture behind the call
-            // (as happens on auto-advance, from the 'ended' handler below) is
-            // only reliably allowed once the browser has seen a real gesture
-            // succeed on that specific element at least once. The main track
-            // gets that for free from the Play button click. scratchAudio
-            // never gets a direct click of its own, so prime it silently on
-            // the first real pointer/key interaction anywhere on the page,
-            // well before the first track can ever end.
-            function primeScratchAudio() {
-                if (!scratchAudio) return;
-                scratchAudio.play().then(() => {
-                    scratchAudio.pause();
-                    scratchAudio.currentTime = 0;
-                }).catch(() => {});
-                // Only unhook once it actually had a scratchAudio to prime -
-                // the offline render may not be ready on the very first
-                // gesture, so keep listening until one succeeds.
-                ['pointerdown', 'keydown'].forEach((type) => {
-                    window.removeEventListener(type, primeScratchAudio);
-                });
-            }
-            ['pointerdown', 'keydown'].forEach((type) => {
-                window.addEventListener(type, primeScratchAudio, { passive: true });
-            });
-
-            let trackIndex = 0;
-
-            function loadTrack(index) {
-                trackIndex = (index + TRACKS.length) % TRACKS.length;
-                const track = TRACKS[trackIndex];
-                const wasPlaying = !audio.paused;
-                audio.pause();
-                audio.src = track.src;
-                trackInfo.innerHTML = `${track.title} <span class="track-artist">by ${track.artist}</span>`;
-                timeEl.textContent = '0:00';
-                if (wasPlaying) {
-                    ensureAudioGraph();
-                    audio.play().catch(err => console.error('Playback failed:', err));
-                } else {
-                    playIcon.className = 'fas fa-play';
-                }
-            }
-
-            loadTrack(0);
-            prevBtn.addEventListener('click', () => { playScratch(); loadTrack(trackIndex - 1); });
-            nextBtn.addEventListener('click', () => { playScratch(); loadTrack(trackIndex + 1); });
-            playBtn.addEventListener('click', () => {
-                ensureAudioGraph();
-                if (audioCtx.state === 'suspended') audioCtx.resume().catch(err => console.error('Audio context resume failed:', err));
-                if (audio.paused) {
-                    audio.play().catch(err => console.error('Playback failed:', err));
-                } else {
-                    audio.pause();
-                }
-            });
-            audio.addEventListener('play', () => { playIcon.className = 'fas fa-pause'; });
-            audio.addEventListener('pause', () => { playIcon.className = 'fas fa-play'; });
-            audio.addEventListener('ended', () => {
-                playScratch();
-                loadTrack(trackIndex + 1);
-                ensureAudioGraph();
-                audio.play().catch(err => console.error('Playback failed:', err));
-            });
-            audio.addEventListener('timeupdate', () => {
-                const mins = Math.floor(audio.currentTime / 60);
-                const secs = String(Math.floor(audio.currentTime % 60)).padStart(2, '0');
-                timeEl.textContent = `${mins}:${secs}`;
-            });
-            canvas.addEventListener('click', (e) => {
-                if (!audio.duration) return;
-                const rect = canvas.getBoundingClientRect();
-                audio.currentTime = ((e.clientX - rect.left) / rect.width) * audio.duration;
-            });
-
-            let presetIndex = 0;
-            cycleBtn.addEventListener('click', () => {
-                presetIndex = (presetIndex + 1) % PRESETS.length;
-                presetNameEl.textContent = PRESETS[presetIndex];
-                eqPeaks = [];
-            });
-
-            function resizeCanvas() {
-                const rect = canvas.getBoundingClientRect();
-                const dpr = Math.min(window.devicePixelRatio || 1, 2);
-                canvas.width = rect.width * dpr;
-                canvas.height = rect.height * dpr;
-            }
-            window.addEventListener('resize', resizeCanvas);
-            resizeCanvas();
-
-            function bandAvg(arr, from, to) {
-                let sum = 0;
-                for (let i = from; i < to; i++) sum += arr[i];
-                return sum / (to - from) / 255;
-            }
-
-            let hueShift = 0;
-            let plasmaT = 0;
-
-            function drawBarsAndWaves(w, h) {
-                ctx.fillStyle = 'rgba(5, 7, 13, 0.35)';
-                ctx.fillRect(0, 0, w, h);
-                hueShift = (hueShift + 0.4) % 360;
-
-                const barCount = 48;
-                const step = Math.floor(freqData.length / barCount);
-                const barWidth = w / barCount;
-                for (let i = 0; i < barCount; i++) {
-                    const v = freqData[i * step] / 255;
-                    const barHeight = v * h * 0.9;
-                    const hue = (i / barCount) * 300 + hueShift;
-                    ctx.fillStyle = `hsl(${hue}, 85%, 55%)`;
-                    ctx.fillRect(i * barWidth, h - barHeight, barWidth - 1, barHeight);
-                }
-
-                ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
-                ctx.lineWidth = 1.5;
-                ctx.beginPath();
-                for (let i = 0; i < timeData.length; i++) {
-                    const x = (i / (timeData.length - 1)) * w;
-                    const y = (timeData[i] / 255) * h;
-                    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-                }
-                ctx.stroke();
-            }
-
-            function drawPlasma(w, h) {
-                ctx.fillStyle = 'rgba(5, 7, 13, 0.25)';
-                ctx.fillRect(0, 0, w, h);
-                plasmaT += 0.012;
-
-                const bass = bandAvg(freqData, 0, 10);
-                const mid = bandAvg(freqData, 10, 50);
-                const treble = bandAvg(freqData, 50, freqData.length);
-                const energies = [bass, mid, treble];
-
-                ctx.globalCompositeOperation = 'lighter';
-                energies.forEach((energy, i) => {
-                    const cx = w / 2 + Math.sin(plasmaT * (0.7 + i * 0.3)) * w * 0.32;
-                    const cy = h / 2 + Math.cos(plasmaT * (0.5 + i * 0.4)) * h * 0.32;
-                    const r = 14 + energy * Math.min(w, h) * 0.5;
-                    const hue = (plasmaT * 35 + i * 120) % 360;
-                    const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
-                    grad.addColorStop(0, `hsla(${hue}, 90%, 60%, 0.9)`);
-                    grad.addColorStop(1, `hsla(${hue}, 90%, 60%, 0)`);
-                    ctx.fillStyle = grad;
-                    ctx.beginPath();
-                    ctx.arc(cx, cy, r, 0, Math.PI * 2);
-                    ctx.fill();
-                });
-                ctx.globalCompositeOperation = 'source-over';
-            }
-
-            let eqPeaks = [];
-
-            function drawEqualizer(w, h) {
-                ctx.fillStyle = '#05070d';
-                ctx.fillRect(0, 0, w, h);
-
-                const barCount = 28;
-                const usableHeight = h * 0.92;
-                const step = Math.floor(freqData.length / barCount);
-                const gap = Math.max(1, w * 0.006);
-                const barWidth = (w / barCount) - gap;
-                const segments = 14;
-                const segHeight = usableHeight / segments;
-
-                if (eqPeaks.length !== barCount) eqPeaks = new Array(barCount).fill(0);
-
-                for (let i = 0; i < barCount; i++) {
-                    const v = freqData[i * step] / 255;
-                    const barHeight = v * usableHeight;
-
-                    eqPeaks[i] = barHeight > eqPeaks[i] ? barHeight : Math.max(barHeight, eqPeaks[i] - usableHeight * 0.025);
-
-                    const x = i * (barWidth + gap);
-                    const litSegments = Math.round((barHeight / usableHeight) * segments);
-                    for (let s = 0; s < litSegments; s++) {
-                        const frac = s / segments;
-                        const hue = 130 - frac * 130;
-                        ctx.fillStyle = `hsl(${hue}, 85%, 50%)`;
-                        const y = h - (s + 1) * segHeight + 1;
-                        ctx.fillRect(x, y, barWidth, segHeight - Math.max(1, segHeight * 0.15));
-                    }
-
-                    const peakY = h - eqPeaks[i] - 2;
-                    ctx.fillStyle = '#d7e6f5';
-                    ctx.fillRect(x, peakY, barWidth, Math.max(2, h * 0.012));
-                }
-            }
-
-            function render() {
-                requestAnimationFrame(render);
-                const w = canvas.width, h = canvas.height;
-                if (analyser) {
-                    analyser.getByteFrequencyData(freqData);
-                    analyser.getByteTimeDomainData(timeData);
-                } else {
-                    freqData = freqData || new Uint8Array(64);
-                    timeData = timeData || new Uint8Array(64).fill(128);
-                }
-                if (presetIndex === 0) drawBarsAndWaves(w, h);
-                else if (presetIndex === 1) drawPlasma(w, h);
-                else drawEqualizer(w, h);
-            }
-            render();
-        })();
-    </script>
+    <footer>Built with HTML, Three.js, and too much coffee.</footer>
 
     <script>
         (function () {
@@ -2195,7 +1887,10 @@
             // "Part N" marker, top-right of the canvas, above whatever else sits there
             function drawPartLabel(n, w, h, fade, y = h * 0.1) {
                 ctx.globalAlpha = fade;
-                drawCaption(w * 0.95, y, `Part ${n} / 3`, Math.max(9, h * 0.036), 'right');
+                // w-based, not h-based: at the fixed 4:3 projector screen this chip and
+                // the title caption chip on the left were both sized off h, which grew
+                // enough at 4:3 to make the title chip wide enough to paint over this one
+                drawCaption(w * 0.95, y, `Part ${n} / 3`, Math.max(9, w * 0.018), 'right');
                 ctx.globalAlpha = 1;
             }
             function warmBackground(w, h) {
@@ -2205,10 +1900,10 @@
             }
 
             const FEATURES = [
-                { name: 'GDP growth', x: 0.16, y: 0.20 },
+                { name: 'GDP growth', x: 0.20, y: 0.20 },
                 { name: 'price index', x: 0.46, y: 0.22 },
                 { name: 'seasonality', x: 0.24, y: 0.55 },
-                { name: 'prior-period sales', x: 0.48, y: 0.72 },
+                { name: 'prior-period sales', x: 0.24, y: 0.45 },
                 { name: 'promo activity', x: 0.20, y: 0.85 },
             ];
             // Each generation is a candidate feature subset the GA tries.
@@ -2291,7 +1986,7 @@
                 const candidate = CANDIDATES[gen];
 
                 ctx.globalAlpha = fade;
-                drawCaption(w * 0.05, h * 0.1, 'feature pool → genetic search', Math.max(10, h * 0.045), 'left');
+                drawCaption(w * 0.05, h * 0.1, 'Genetic Search over Feature Pool', Math.max(10, w * 0.0225), 'left');
                 drawText(`generation ${gen + 1} / ${CANDIDATES.length}`, w * 0.95, h * 0.18, Math.max(10, h * 0.04), 700, COLOR.accent, 'right');
                 ctx.globalAlpha = 1;
 
@@ -2325,7 +2020,10 @@
 
                     ctx.globalAlpha = a;
                     drawIsoBox(fx, fy + h * 0.018 * pulse, 0.85 * pulse, 0.85 * pulse, 1 * pulse, h * 0.026, dotColor, Math.max(1, h * 0.004));
-                    drawText(f.name, f.x < 0.3 ? fx - h * 0.05 : fx + h * 0.05, fy + h * 0.015, Math.max(9, h * 0.035), 500, COLOR.text, f.x < 0.3 ? 'right' : 'left');
+                    // horizontal offset and font width both need to track w, not h —
+                    // at a taller (4:3) canvas, h-based sizing pushed left-anchored
+                    // labels like "GDP growth" clean off the left edge
+                    drawText(f.name, f.x < 0.3 ? fx - w * 0.028 : fx + w * 0.028, fy + h * 0.015, Math.max(9, w * 0.0175), 500, COLOR.text, f.x < 0.3 ? 'right' : 'left');
                     ctx.globalAlpha = 1;
                 });
             }
@@ -2380,9 +2078,9 @@
                 const axisX0 = w * 0.14, axisX1 = w * 0.86;
 
                 ctx.globalAlpha = fade;
-                drawCaption(w * 0.05, h * 0.1, 'coefficient sign → economic rationale', Math.max(10, h * 0.045), 'left');
+                drawCaption(w * 0.05, h * 0.1, 'Beta value as Economic Rationale', Math.max(10, w * 0.0225), 'left');
 
-                drawText('expected:' + ' Beta' + ' (GDP) > 0', w * 0.5, h * 0.24, Math.max(11, h * 0.048), 700, COLOR.accent, 'center');
+                drawText('expected:' + ' Beta' + ' (GDP) ≥ 0', w * 0.5, h * 0.24, Math.max(11, h * 0.048), 700, COLOR.accent, 'center');
 
                 // shared coordinate axes: plain flat lines, no 3D treatment. The baseline
                 // is All-features' own lane; the vertical tick just ties both lanes'
@@ -2427,7 +2125,11 @@
                 const numberAlpha = clamp01(growth / 0.2);
                 if (numberAlpha > 0) {
                     ctx.globalAlpha = fade * numberAlpha;
-                    const numSize = Math.max(13, h * 0.055);
+                    // width-based, not height-based: this has to fit inside a fixed
+                    // w*0.27 gap either side of the pivot, so it must track the
+                    // dimension that gap is measured in or it overlaps at a 4:3 aspect
+                    // (taller canvas) even though it was tuned fine at the original 2:1
+                    const numSize = Math.max(13, w * 0.028);
                     drawText(fmt(coefAll), leftX + w * 0.135, gaY - h * 0.09, numSize, 700, COLOR.warn, 'center');
                     drawText(fmt(coefGA), rightX - w * 0.135, gaY - h * 0.09, numSize, 700, COLOR.accent, 'center');
                     ctx.globalAlpha = fade;
@@ -2439,7 +2141,9 @@
 
                 if (markAlpha > 0) {
                     ctx.globalAlpha = fade * markAlpha;
-                    const markSize = Math.max(10, h * 0.04);
+                    // same w-based fix as numSize above — these two strings sit in a
+                    // fixed w*0.30 gap and were overlapping at the taller 4:3 aspect
+                    const markSize = Math.max(10, w * 0.02);
                     drawText('fails check (Beta < 0)', leftX + w * 0.12, gaY + h * 0.088, markSize, 500, COLOR.warn, 'center');
                     drawText('passes check (Beta ≥ 0)', rightX - w * 0.12, gaY + h * 0.088, markSize, 500, COLOR.accent, 'center');
                     ctx.globalAlpha = 1;
@@ -2454,7 +2158,7 @@
                 const plotX0 = w * 0.1, plotX1 = w * 0.9, plotY0 = h * 0.25, plotY1 = h * 0.85;
 
                 ctx.globalAlpha = fade;
-                drawCaption(w * 0.05, h * 0.1, 'selected features → forecast', Math.max(10, h * 0.045), 'left');
+                drawCaption(w * 0.05, h * 0.1, 'Forecasting with the Model', Math.max(10, w * 0.0225), 'left');
 
                 // quarterly x-axis + a plain y-axis, drawn as reference before the data
                 // quarterly timeline, Q1 '22 through Q1 '26 (17 quarters); only a yearly
@@ -2721,7 +2425,10 @@
             // "Part N" marker, top-right of the canvas, above whatever else sits there
             function drawPartLabel(n, w, h, fade, y = h * 0.1) {
                 ctx.globalAlpha = fade;
-                drawCaption(w * 0.95, y, `Part ${n} / 3`, Math.max(9, h * 0.036), 'right');
+                // w-based — see the NIQ canvas's identical fix: h-based sizing at the
+                // fixed 4:3 screen let the title caption chip grow wide enough to
+                // paint over this badge
+                drawCaption(w * 0.95, y, `Part ${n} / 3`, Math.max(9, w * 0.018), 'right');
                 ctx.globalAlpha = 1;
             }
             function warmBackground(w, h) {
@@ -2831,10 +2538,10 @@
                 const p = clamp01(elapsed / ACT1);
                 const fade = clamp01(elapsed / 300);
                 const r = h * 0.034;
-                drawPartLabel(1, w, h, fade, h * 0.14);
+                drawPartLabel(1, w, h, fade);
 
                 ctx.globalAlpha = fade;
-                drawCaption(w * 0.05, h * 0.14, 'manual labeling → augmentation', Math.max(10, h * 0.045), 'left');
+                drawCaption(w * 0.05, h * 0.1, 'manual labeling → augmentation', Math.max(10, w * 0.0225), 'left');
                 ctx.globalAlpha = 1;
 
                 const labelProgress = clamp01((p - 0.05) / 0.5);
@@ -2884,19 +2591,22 @@
                     drawIsoBox(trackX0 + prog * (trackX1 - trackX0), cy, 0.7, 0.7, 0.8, markerS, color, 1);
                 }
 
+                // w-based, not h-based — this label is right-anchored against a
+                // w-positioned track start, so at 4:3 the old h-based size grew large
+                // enough to run "YOLOv5s · optimized" off the canvas's left edge
                 ctx.globalAlpha = fade;
-                drawText(label, trackX0 - w * 0.02, cy + h * 0.014, Math.max(10, h * 0.038), 500, COLOR.text, 'right');
+                drawText(label, trackX0 - w * 0.02, cy + h * 0.014, Math.max(10, w * 0.019), 500, COLOR.text, 'right');
 
                 if (spawned >= 1) {
-                    drawText(`${(1000 / period).toFixed(1)}/s`, trackX1 + w * 0.02, cy + h * 0.014, Math.max(10, h * 0.038), 700, color, 'left');
+                    drawText(`${(1000 / period).toFixed(1)}/s`, trackX1 + w * 0.02, cy + h * 0.014, Math.max(10, w * 0.019), 700, color, 'left');
                 }
             }
 
             function drawAct2(w, h, elapsed) {
                 const fade = clamp01(elapsed / 300);
-                drawPartLabel(2, w, h, fade, h * 0.14);
+                drawPartLabel(2, w, h, fade);
                 ctx.globalAlpha = fade;
-                drawCaption(w * 0.05, h * 0.14, 'pipes processed per second', Math.max(10, h * 0.045), 'left');
+                drawCaption(w * 0.05, h * 0.1, 'pipes processed per second', Math.max(10, w * 0.0225), 'left');
                 ctx.globalAlpha = 1;
 
                 const OLD_PERIOD = 1400, NEW_PERIOD = 40, TRAVEL = 1000;
@@ -2932,10 +2642,10 @@
                 const p = clamp01(elapsed / ACT3);
                 const fade = clamp01(elapsed / 300);
                 const r = h * 0.034;
-                drawPartLabel(3, w, h, fade, h * 0.14);
+                drawPartLabel(3, w, h, fade);
 
                 ctx.globalAlpha = fade;
-                drawCaption(w * 0.05, h * 0.14, 'drone sweep → automatic count', Math.max(10, h * 0.045), 'left');
+                drawCaption(w * 0.05, h * 0.1, 'drone sweep → automatic count', Math.max(10, w * 0.0225), 'left');
                 ctx.globalAlpha = 1;
 
                 const sweepP = clamp01((p - 0.05) / 0.85);
@@ -2992,7 +2702,7 @@
                 ctx.save();
                 ctx.globalAlpha = 0.4;
                 ctx.filter = 'blur(3px)';
-                ctx.drawImage(ghostCanvas, h * 0.024, 0);
+                ctx.drawImage(ghostCanvas, h * 0.01, 0);
                 ctx.restore();
                 ctx.drawImage(ghostCanvas, 0, 0);
             }
@@ -3200,8 +2910,10 @@
             }
 
             function drawScene(w, h, elapsed) {
-                warmBackground(w, h);
-                drawCaption(w * 0.04, h * 0.11, 'Performance Improvement', Math.max(10, h * 0.05), 'left');
+                // no background fill here — this runs on the (otherwise transparent)
+                // ghost canvas too, and an opaque fill there hides the trailing smear
+                // drawFrame composites below; drawFrame paints the real background
+                drawCaption(w * 0.05, h * 0.1, 'Performance Improvement', Math.max(10, w * 0.0225), 'left');
                 ROWS.forEach((row) => drawRow(w, h, row, elapsed));
             }
 
@@ -3258,38 +2970,294 @@
 
     <script>
         (function () {
+            // Centro Studio's logo, rendered as a vintage-CRT-monitor screen: a
+            // glowing silhouette (Gaussian-blurred color overlay, like an outer glow)
+            // plus a fine colored subpixel/scanline pattern clipped to the logo's own
+            // shape at low opacity — the canvas translation of the classic Photoshop
+            // "CRT effect" recipe (glow layers + a repeating RGB-band pattern applied
+            // through a clipping mask). The shape itself never changes, but the glow
+            // is kept animating at a very low amplitude — a real CRT never sits at a
+            // perfectly fixed brightness — so it reads as a live screen, not a photo.
+            const canvas = document.getElementById('centro-canvas');
+            const ctx = canvas.getContext('2d');
+            const shapeCanvas = document.createElement('canvas');
+            const shapeCtx = shapeCanvas.getContext('2d');
             const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-            document.querySelectorAll('.pro-project').forEach((details) => {
+            const rootStyle = getComputedStyle(document.documentElement);
+            const accentCSS = rootStyle.getPropertyValue('--accent').trim();
+            const accent2CSS = rootStyle.getPropertyValue('--accent2').trim();
+
+            // the logo, collapsed to a clean white silhouette on transparent — collapsing
+            // the chrome mark's own shading to solid white keeps this a legible "sign
+            // that lights up" rather than a photo, and gives the glow/pattern steps a
+            // single flat shape to work from regardless of the source image's colors
+            let silhouette = null; // { canvas, aspect }
+            const img = new Image();
+            img.src = 'assets/images/centro-logo.png';
+            img.onload = () => {
+                const sw = 900;
+                const sh = Math.round(sw * (img.naturalHeight / img.naturalWidth));
+                const raw = document.createElement('canvas');
+                raw.width = sw; raw.height = sh;
+                const rctx = raw.getContext('2d');
+                rctx.drawImage(img, 0, 0, sw, sh);
+                // the source file has no real transparency (it's a flattened white
+                // background, alpha=255 everywhere), so `source-in` on alpha would just
+                // mask the whole bounding rectangle — build the mask from luminance
+                // instead: white background -> 0, black text/dark chrome -> full white
+                const src = rctx.getImageData(0, 0, sw, sh);
+                const out = rctx.createImageData(sw, sh);
+                for (let i = 0; i < src.data.length; i += 4) {
+                    const lum = (src.data[i] + src.data[i + 1] + src.data[i + 2]) / 3;
+                    const intensity = 255 - lum; // dark pixel -> opaque, white bg -> transparent
+                    out.data[i] = 255; out.data[i + 1] = 255; out.data[i + 2] = 255;
+                    out.data[i + 3] = intensity;
+                }
+                const sil = document.createElement('canvas');
+                sil.width = sw; sil.height = sh;
+                sil.getContext('2d').putImageData(out, 0, 0);
+                silhouette = { canvas: sil, aspect: sw / sh };
+                buildPattern();
+                drawFrame(performance.now());
+            };
+
+            // a small repeating tile of thin colored bands — the "CRT subpixel" texture,
+            // clipped onto the logo shape further down via source-atop compositing
+            let pattern = null;
+            function buildPattern() {
+                const band = Math.max(1, Math.round(canvas.height * 0.003)) || 2;
+                const tile = document.createElement('canvas');
+                tile.width = band * 3;
+                tile.height = band * 3;
+                const tctx = tile.getContext('2d');
+                tctx.fillStyle = accentCSS;
+                tctx.fillRect(0, 0, band, tile.height);
+                tctx.fillStyle = accent2CSS;
+                tctx.fillRect(band, 0, band, tile.height);
+                // third band left transparent (the gap) so the pattern reads as fine
+                // separated lines rather than a solid color block
+                pattern = ctx.createPattern(tile, 'repeat');
+            }
+
+            function drawFrame(now) {
+                const w = canvas.width, h = canvas.height;
+                ctx.fillStyle = '#000';
+                ctx.fillRect(0, 0, w, h);
+                if (!silhouette) return;
+
+                const boxW = w * 0.82;
+                let fitW = boxW, fitH = boxW / silhouette.aspect;
+                if (fitH > h * 0.82) { fitH = h * 0.82; fitW = fitH * silhouette.aspect; }
+                const x0 = (w - fitW) / 2, y0 = (h - fitH) / 2;
+
+                // very low-amplitude flicker on the glow only — a real CRT's brightness
+                // never sits perfectly still, so this is what sells "live" rather than
+                // a static picture. Two mismatched sine periods so it doesn't read as
+                // a clean, obviously-looping pulse.
+                const t = reduceMotion ? 0 : now * 0.001;
+                const flicker = reduceMotion ? 1 : 1 + 0.06 * Math.sin(t * 1.7) + 0.03 * Math.sin(t * 4.3 + 1.1);
+
+                // outer glow: two offset colored blurs behind the shape (Gaussian blur +
+                // color overlay), same cyan/magenta duality used across the other projects
+                ctx.save();
+                ctx.shadowColor = accentCSS;
+                ctx.shadowBlur = h * 0.05 * flicker;
+                ctx.shadowOffsetX = -h * 0.01;
+                ctx.drawImage(silhouette.canvas, x0, y0, fitW, fitH);
+                ctx.shadowColor = accent2CSS;
+                ctx.shadowOffsetX = h * 0.01;
+                ctx.drawImage(silhouette.canvas, x0, y0, fitW, fitH);
+                ctx.restore();
+
+                // the crisp shape + CRT pattern are composited on a separate layer first,
+                // so the pattern's source-atop clip sees only the sharp silhouette —
+                // clipped strictly to the logo, not bleeding into the glow's soft falloff
+                if (shapeCanvas.width !== w || shapeCanvas.height !== h) {
+                    shapeCanvas.width = w;
+                    shapeCanvas.height = h;
+                }
+                shapeCtx.clearRect(0, 0, w, h);
+                shapeCtx.drawImage(silhouette.canvas, x0, y0, fitW, fitH);
+                if (pattern) {
+                    shapeCtx.save();
+                    shapeCtx.globalCompositeOperation = 'source-atop';
+                    shapeCtx.globalAlpha = 0.35;
+                    shapeCtx.fillStyle = pattern;
+                    shapeCtx.fillRect(0, 0, w, h);
+                    shapeCtx.restore();
+                }
+                ctx.drawImage(shapeCanvas, 0, 0);
+            }
+
+            function resizeCanvas() {
+                const rect = canvas.getBoundingClientRect();
+                if (!rect.width || !rect.height) return;
+                const dpr = Math.min(window.devicePixelRatio || 1, 2);
+                canvas.width = rect.width * dpr;
+                canvas.height = rect.height * dpr;
+                buildPattern();
+                drawFrame(performance.now());
+            }
+            new ResizeObserver(resizeCanvas).observe(canvas);
+            resizeCanvas();
+
+            if (!reduceMotion) {
+                let inView = false;
+                let looping = false;
+                function loop(now) {
+                    if (!inView) { looping = false; return; }
+                    drawFrame(now);
+                    requestAnimationFrame(loop);
+                }
+                new IntersectionObserver((entries) => {
+                    inView = entries[0].isIntersecting;
+                    if (inView && !looping) {
+                        looping = true;
+                        requestAnimationFrame(loop);
+                    }
+                }, { threshold: 0.1 }).observe(canvas);
+            }
+        })();
+    </script>
+
+    <script>
+        (function () {
+            const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            const screen = document.getElementById('projector-screen');
+            const bezel = document.querySelector('.projector-bezel');
+            const idle = document.getElementById('projector-idle');
+            const sidebar = document.querySelector('.sidebar');
+            const projector = document.querySelector('.projector');
+
+            // Only one project is ever open, so state is a single slot rather than a
+            // details -> controller map — there's nothing to look up.
+            let current = null;
+
+            const projects = Array.from(document.querySelectorAll('.pro-project')).map((details) => {
                 const summary = details.querySelector('summary');
                 const body = details.querySelector('.pro-body');
-                let animation = null;
-
-                function runAnimation(from, to, onFinish) {
-                    if (animation) animation.cancel();
-                    animation = body.animate(
-                        { height: [`${from}px`, `${to}px`] },
-                        { duration: 220, easing: 'ease' }
-                    );
-                    animation.onfinish = () => {
-                        animation = null;
-                        body.style.height = '';
-                        onFinish();
-                    };
+                const visual = body.querySelector(':scope > svg.flow-diagram, :scope > canvas.ga-canvas');
+                let anchor = null;
+                if (visual) {
+                    // never crop a diagram to fill the fixed 4:3 screen — contain-fit
+                    // it instead so nothing gets cut off, canvases size themselves via
+                    // their own aspect-ratio CSS the same way
+                    if (visual.tagName === 'svg') visual.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+                    anchor = document.createComment('projector-anchor');
+                    visual.parentNode.insertBefore(anchor, visual);
                 }
+                // <summary> is natively focusable, and a mouse click focuses it — which
+                // makes the browser do its own default scroll-into-view for the newly
+                // focused element, racing our explicit scrollToProject() below and
+                // showing up as a bounce. Blocking focus on mousedown stops that
+                // native scroll without affecting keyboard activation (Tab, not this).
+                summary.addEventListener('mousedown', (e) => e.preventDefault());
+                return { details, body, visual, anchor, animation: null };
+            });
 
-                summary.addEventListener('click', (e) => {
+            // Moves whichever visual is currently projected back to its own project,
+            // then puts the new one (if any) on screen. Must run before any height is
+            // measured below — relocating a <svg>/<canvas> changes its owner's natural
+            // height, and measuring first gave the collapsing project a stale "from"
+            // height once its diagram came back, causing a visible snap before the
+            // collapse animation even started.
+            function showInProjector(entry) {
+                if (!screen) return;
+                Array.from(screen.children).forEach((child) => {
+                    if (child === idle) return;
+                    const owner = projects.find((p) => p.visual === child);
+                    if (owner) owner.anchor.parentNode.insertBefore(owner.visual, owner.anchor.nextSibling);
+                });
+                if (entry && entry.visual) {
+                    idle.remove();
+                    screen.appendChild(entry.visual);
+                    screen.classList.add('has-visual');
+                    bezel.classList.add('is-live');
+                } else {
+                    screen.appendChild(idle);
+                    screen.classList.remove('has-visual');
+                    bezel.classList.remove('is-live');
+                }
+            }
+
+            // Animates one project's body between two heights, starting from wherever
+            // the box actually is right now rather than an idealized 0/scrollHeight —
+            // otherwise interrupting a still-running animation (rapid clicks) snaps it
+            // before reversing. Returns a promise resolving once settled, so callers
+            // can wait on real layout instead of hand-rolled callback counting.
+            function animateHeight(entry, from, to, onFinish) {
+                if (entry.animation) entry.animation.cancel();
+                if (reduceMotion || from === to) {
+                    entry.body.style.height = '';
+                    onFinish();
+                    return Promise.resolve();
+                }
+                entry.animation = entry.body.animate(
+                    { height: [`${from}px`, `${to}px`] },
+                    { duration: 220, easing: 'ease' }
+                );
+                return entry.animation.finished.then(() => {
+                    entry.animation = null;
+                    entry.body.style.height = '';
+                    onFinish();
+                }, () => {}); // cancelled by a later click — ignore, that click owns the outcome
+            }
+
+            // aligns the clicked project's top rule with the projector's top rule —
+            // both boxes carry their own border-top, so their own top edge is that
+            // line, no need to reach for a specific child element. Only meaningful
+            // while the sidebar is actually sticky (desktop); once it stacks to a
+            // normal block on narrow layouts there's no fixed line to match, so
+            // that falls back to a plain scrollIntoView.
+            function scrollToProject(entry) {
+                const behavior = reduceMotion ? 'auto' : 'smooth';
+                const isSticky = projector && sidebar && getComputedStyle(sidebar).position === 'sticky';
+                if (!isSticky) {
+                    entry.details.scrollIntoView({ behavior, block: 'start' });
+                    return;
+                }
+                const projectorTop = projector.getBoundingClientRect().top;
+                const targetTop = entry.details.getBoundingClientRect().top;
+                window.scrollBy({ top: targetTop - projectorTop, left: 0, behavior });
+            }
+
+            projects.forEach((entry) => {
+                entry.details.querySelector('summary').addEventListener('click', (e) => {
                     e.preventDefault();
-                    if (reduceMotion) {
-                        details.open = !details.open;
+
+                    if (current === entry) {
+                        current = null;
+                        showInProjector(null);
+                        // measured after showInProjector: pulling this project's own
+                        // visual back out of the screen changes its natural height
+                        const from = entry.body.getBoundingClientRect().height;
+                        animateHeight(entry, from, 0, () => { entry.details.open = false; });
                         return;
                     }
-                    if (details.open) {
-                        runAnimation(body.scrollHeight, 0, () => { details.open = false; });
-                    } else {
-                        details.open = true;
-                        runAnimation(0, body.scrollHeight, () => {});
-                    }
+
+                    // measure "from" for the opening project before flipping its own
+                    // details.open — that flip makes the browser show it at full
+                    // height immediately, so reading after would report the
+                    // animation's *end* height instead of its start. It isn't
+                    // affected by showInProjector() below (it's closed either way).
+                    const openingFrom = entry.body.getBoundingClientRect().height;
+                    const previous = current;
+                    current = entry;
+                    showInProjector(entry);
+                    // measured after showInProjector: if the previous project had a
+                    // diagram, relocating it back grows the box before this reads it
+                    const closingFrom = previous ? previous.body.getBoundingClientRect().height : 0;
+
+                    const waits = [];
+                    if (previous) waits.push(animateHeight(previous, closingFrom, 0, () => { previous.details.open = false; }));
+                    entry.details.open = true;
+                    animateHeight(entry, openingFrom, entry.body.scrollHeight, () => {});
+
+                    // if a project above this one is closing, its collapse pulls this
+                    // one upward — scroll only once that settles, or the distance is
+                    // computed against a layout that's about to shift further.
+                    Promise.all(waits).then(() => scrollToProject(entry));
                 });
             });
         })();
