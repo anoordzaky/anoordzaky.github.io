@@ -137,6 +137,13 @@
             flex-direction: column;
             gap: 1.75rem;
         }
+        /* only the name/contact text hugs the column's right edge, closer to the
+           tagline — the projector stays full-width, column/gap stay untouched */
+        .sidebar > .identity,
+        .sidebar > .contact {
+            align-self: flex-end;
+            text-align: right;
+        }
         /* chrome-extruded logo text — the classic Video Toaster / corporate-render
            title-card look, with a slow light sweep to sell the polished-metal read */
         .wordmark {
