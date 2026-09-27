@@ -427,7 +427,7 @@
             flex: 0 0 auto;
             padding: 0.2rem;
             border-radius: 6px;
-            background: rgba(2, 10, 22, 0.4);
+            background: rgba(0, 0, 0, 0.4);
         }
         .pro-body {
             overflow: hidden;
@@ -604,7 +604,11 @@
                 position: static;
             }
             .projector {
-                order: -1;
+                /* sticky-projector routing (JS) only makes sense next to a sticky
+                   sidebar; stacked layout has nowhere stable to show it, and JS
+                   skips relocation here too, so it'd otherwise sit stuck on
+                   "No Signal" forever */
+                display: none;
             }
             .portfolio-grid {
                 grid-template-columns: 1fr;
@@ -655,6 +659,9 @@
         (function () {
             const canvas = document.getElementById('pipes-bg');
             if (!window.THREE || !canvas) return;
+            // skip WebGL entirely on mobile — battery/perf cost isn't worth it for a
+            // background element, .bg-paths' own solid background covers the gap
+            if (window.matchMedia('(max-width: 980px)').matches) return;
             const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
             const BG = 0x05070d;
@@ -3164,6 +3171,10 @@
             // collapse animation even started.
             function showInProjector(entry) {
                 if (!screen) return;
+                // sidebar only sticks on desktop (see the 980px breakpoint) — on a
+                // stacked mobile layout there's no fixed screen to relocate into, so
+                // leave each project's diagram/canvas inline where it already lives
+                if (!sidebar || getComputedStyle(sidebar).position !== 'sticky') return;
                 Array.from(screen.children).forEach((child) => {
                     if (child === idle) return;
                     const owner = projects.find((p) => p.visual === child);
